@@ -19,6 +19,7 @@
     // Override point for customization after application launch.
     NSLog(@"测试代码1");
     NSLog(@"测试代码1123");
+    NSLog(@"测试代码========");
     return YES;
 }
 
