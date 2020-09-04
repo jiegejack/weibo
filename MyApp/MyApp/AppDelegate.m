@@ -19,6 +19,8 @@
     // Override point for customization after application launch.
     NSLog(@"");
     NSLog(@"1");
+    
+    NSLog(@"3");
     return YES;
 }
 
