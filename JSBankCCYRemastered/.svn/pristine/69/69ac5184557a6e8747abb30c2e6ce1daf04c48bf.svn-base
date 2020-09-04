@@ -1,0 +1,40 @@
+//
+//  PCOperationLogModel.h
+//  PCUserDataCollect
+//
+//  Created by 王俣 on 2018/9/15.
+//  Copyright © 2018年 MacBook-陶(tzw). All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface PCDOperationLogModel : NSObject
+
+//操作日志
+@property (nonatomic,copy) NSString *MSG_NO;
+@property (nonatomic,copy) NSString *MSG_VER_NO;
+@property (nonatomic,copy) NSString *MSG_TYPE;
+@property (nonatomic,copy) NSString *COLLECT_TYPE;
+@property (nonatomic,copy) NSString *START_ID;
+@property (nonatomic,copy) NSString *DEVICE_NO;
+@property (nonatomic,copy) NSString *SESSION_ID;
+@property (nonatomic,copy) NSString *USER_ID;
+@property (nonatomic,copy) NSString *ECIF_CUST_NO;
+@property (nonatomic,copy) NSString *BANK_CODE;
+@property (nonatomic,copy) NSString *CHANNEL_ID;
+@property (nonatomic,copy) NSString *COLLECT_SOURCE;
+@property (nonatomic,copy) NSString *CURRENT_TIME;
+@property (nonatomic,copy) NSString *FORM_PATH;
+@property (nonatomic,copy) NSString *PAGE_ID;
+@property (nonatomic,copy) NSString *LOAD_TIME;
+@property (nonatomic,copy) NSString *DURING_TIME;
+@property (nonatomic,copy) NSString *SHARE_FLAG;
+@property (nonatomic,copy) NSString *MODULE_ID;
+@property (nonatomic,copy) NSString *ENTRANCE_PAGEID;
+@property (nonatomic,copy) NSString *EVENT_ID;
+
+- (id)init;
+
+- (NSDictionary *)toDictionary;
+
+@end

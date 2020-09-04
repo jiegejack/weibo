@@ -1,0 +1,26 @@
+//
+//  JSSharedInstance.h
+//  MenuList
+//
+//  Created by Jack on 2019/04/24.
+//  Copyright © 2019年 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@class LoginSession;
+
+@interface JSSharedInstance : NSObject
+/*
+ 是否是注册后登陆
+ */
+@property (nonatomic, strong) UIButton *loginIcon;
+
+@property(nonatomic,strong) LoginSession *loginSession;
+@property(nonatomic,assign) BOOL isBiometryLogin;
+
+@property(nonatomic,strong) NSArray<UIViewController *> *viewControllers;
+
+JSSingletonH(Instance)
+
+@end

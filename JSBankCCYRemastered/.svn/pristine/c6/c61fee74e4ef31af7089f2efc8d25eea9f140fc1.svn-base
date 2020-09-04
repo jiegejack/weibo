@@ -1,0 +1,30 @@
+//
+//  CommonColor.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/21.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface CommonColor : NSObject
+@property (nonatomic, strong) UIFont *buttonTitleColor;
+//@property (nonatomic, strong) UIFont *buttonTitleColor;
+
+@property (nonatomic, strong) UIColor *placeholdColor;
+@property (nonatomic, strong) UIColor *textFieldColor;
+@property (nonatomic, strong) UIColor *naviTitleColor;
+@property (nonatomic, strong) UIColor *protocolColor;
+@property (nonatomic, strong) UIColor *checkBoxColor;
+@property (nonatomic, strong) UIColor *mainColor;
+
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    CommonColor *Color(void);
+#ifdef __cplusplus
+}
+#endif

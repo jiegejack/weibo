@@ -1,0 +1,218 @@
+//
+//  JSRegistViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/16.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSRegistViewController.h"
+#import "JSTextFieldView.h"
+#import "JSCountDownView.h"
+#import "JSCheckBox.h"
+#import "JSSettingPasswordViewController.h"
+
+/**
+ * 枚举输入框类型
+ */
+typedef NS_ENUM(NSInteger, FieldType) {
+    FieldTypePhoneNo = 0,    //号码
+    FieldTypeReferrer,       //推荐人
+    FieldTypeCode,           //验证码
+};
+
+@interface JSRegistViewController ()
+@property (nonatomic, strong) UITextField *phoneNoTextField;
+@property (nonatomic, strong) UITextField *referrerTextField;
+@property (nonatomic, strong) UITextField *codeTextField;
+@property (nonatomic, strong) JSCountDownView *countDownView;
+@property (nonatomic, strong) JSCheckBox *checkBox;
+@property (nonatomic, strong) UIButton *readAgreementButton;
+@property (nonatomic, strong) UIButton *registButton;
+@property (nonatomic, strong) NSMutableArray *items;
+@property (nonatomic, strong) NSMutableArray *fieldItems;
+@property (nonatomic, strong) UIView *bottonView;
+@property (nonatomic, strong) NSArray *placeholds;
+@property (nonatomic, strong) NSArray *titles;
+@property (nonatomic, assign) CGFloat textField_Height;
+
+@end
+@implementation JSRegistViewController
+
+- (void)dealloc {
+    [JSCountDownView invalidTimer];
+}
+
+- (JSCheckBox *)checkBox {
+    if (!_checkBox) {
+        _checkBox = [[JSCheckBox alloc] initWithButton_key:@"readcheckBox_user"];
+        _checkBox.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, 0);
+        _checkBox.selectedImageName = @"agree_select";
+        _checkBox.imageName = @"agree_normal";
+        [_checkBox setTitle:@"同意" forState:UIControlStateNormal];
+        [_checkBox setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+        _checkBox.titleLabel.font = [UIFont systemFontOfSize:14];
+        [_checkBox addTarget:self action:@selector(checkBoxAction:) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:_checkBox];
+    }
+    return _checkBox;
+}
+
+- (JSCountDownView *)countDownView {
+    if (!_countDownView) {
+        _countDownView = [[JSCountDownView alloc] init];
+        _countDownView.color = [UIColor grayColor];
+        _countDownView.tipString = @"重新获取";
+        [_countDownView setTitle:@" 获取验证码 " forState:UIControlStateNormal];
+        _countDownView.backgroundColor = [UIColor colorWithRed:0.30 green:0.60 blue:0.96 alpha:1.00];
+        [_countDownView setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        _countDownView.titleLabel.font = [UIFont systemFontOfSize:15];
+        _countDownView.layer.cornerRadius = 6;
+        [self.view addSubview:_countDownView];
+    }
+    return _countDownView;
+}
+
+- (UIButton *)readAgreementButton {
+    if (!_readAgreementButton) {
+        _readAgreementButton = [[UIButton alloc] init];
+        [_readAgreementButton setTitle:@"《统一用户服务协议》" forState:UIControlStateNormal];
+        _readAgreementButton.hitTestEdgeInsets = UIEdgeInsetsMake(-20, 0, -20, -20);
+        [_readAgreementButton setTitleColor:[UIColor colorWithRed:0.30 green:0.60 blue:0.96 alpha:1.00] forState:UIControlStateNormal];
+        _readAgreementButton.titleLabel.font = [UIFont systemFontOfSize:14];
+        [_readAgreementButton addTarget:self action:@selector(agreeAction) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:_readAgreementButton];
+    }
+    return _readAgreementButton;
+}
+
+- (UIButton *)registButton {
+    if (!_registButton) {
+        _registButton = [[UIButton alloc] init];
+        [_registButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [_registButton setTitle:@"注册" forState:UIControlStateNormal];
+        [_registButton setBackgroundImage:[UIImage imageNamed:@"loginBtnBackImage"] forState:UIControlStateNormal];
+        _registButton.titleLabel.font = [UIFont systemFontOfSize:16];
+        _registButton.layer.cornerRadius = 4;
+        _registButton.clipsToBounds = YES;
+        [_registButton addTarget:self action:@selector(registAction) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:_registButton];
+    }
+    return _registButton;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.title = @"注册";
+    self.navigationBar.backgroundColor = [UIColor whiteColor];
+    self.navigationBar.titleItem.titleColor = [UIColor blackColor];
+    self.navigationBar.separatorColor = [UIColor groupTableViewBackgroundColor];
+    
+    [self initData];
+    [self addSubControls];
+    [self layouSubControls];
+}
+
+- (void)initData {
+    self.textField_Height = 56;
+    self.items = [NSMutableArray array];
+    
+    self.titles = @[@"手机号",
+                    @"推荐人",
+                    @"验证码"];
+    
+    self.placeholds = @[@"请输入手机号",
+                        @"请输入推荐人手机号码",
+                        @"请输入验证码"];
+}
+
+- (void)addSubControls {
+    __weak typeof(self) weakSelf = self;
+    [self.placeholds enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        JSTextFieldView *textFieldItem = [[JSTextFieldView alloc] init];
+        textFieldItem.titleColor = [UIColor blackColor];
+        [textFieldItem.textField setM_mode:YES];
+        textFieldItem.textField.secureTextEntry = NO;
+        textFieldItem.textField.inset = idx ? 0 : 13;
+        textFieldItem.backgroundColor = [UIColor whiteColor];
+        textFieldItem.titleLabel.text = weakSelf.titles[idx];
+        textFieldItem.textField.keyboardType = UIKeyboardTypeNumberPad;
+        textFieldItem.textField.placeholder = weakSelf.placeholds[idx];
+        [weakSelf.view addSubview:textFieldItem];
+        [weakSelf.items addObject:textFieldItem];
+        [weakSelf initItemsWithIndex:idx];
+    }];
+}
+
+- (void)checkBoxAction:(JSCheckBox *)button {
+    NSLog(@"------- %d",button.selected);
+}
+
+- (void)agreeAction {
+    [JSDeftAlert showMessage:@"哈哈哈" completeHandle:nil];
+}
+
+- (void)registAction {
+    [ClientNetManager fetchRegistDataWithPhoneNO:@"" recommentPhone:@"" code:@"" success:^(id resultResponse, id resultModel) {
+        
+    } failure:^(NSError *error, LoginSession *session) {
+        
+    }];
+//    JSSettingPasswordViewController *vc = [[JSSettingPasswordViewController alloc] init];
+//    [self.tabBarController.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)initItemsWithIndex:(NSInteger)index {
+    JSTextFieldView *item = (JSTextFieldView *)self.items[index];
+    switch (index) {
+        case FieldTypePhoneNo:
+            self.phoneNoTextField         = item.textField;
+            item.maxLength = 11;
+            break;
+        case FieldTypeReferrer:
+            self.referrerTextField        = item.textField;
+            item.maxLength = 11;
+            break;
+        case FieldTypeCode:
+            self.codeTextField            = item.textField;
+            item.maxLength = 6;
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)layouSubControls {
+    __weak typeof(self) weakSelf = self;
+    //布局所有输入框
+    [self.items mas_distributeViewsAlongAxis:MASAxisTypeVertical withFixedItemLength:self.textField_Height leadSpacing:self.navigationBarHeight tailSpacing:Height - self.navigationBarHeight - self.placeholds.count * self.textField_Height];
+    [self.items mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left);
+        make.right.mas_equalTo(weakSelf.view.mas_right);
+    }];
+    //布局其他控件
+    [self.checkBox mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left).offset(16);
+        make.top.mas_equalTo(weakSelf.codeTextField.mas_bottom).offset(20);
+        make.height.mas_equalTo(20);
+    }];
+    [self.readAgreementButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left).offset(70);
+        make.top.mas_equalTo(weakSelf.codeTextField.mas_bottom).offset(20);
+        make.bottom.mas_equalTo(weakSelf.checkBox.mas_bottom);
+    }];
+    [self.registButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left).offset(16);
+        make.top.mas_equalTo(weakSelf.readAgreementButton.mas_bottom).offset(25);
+        make.right.mas_equalTo(weakSelf.view.mas_right).offset(-16);
+    }];
+    [self.countDownView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.mas_equalTo(weakSelf.codeTextField.superview.mas_centerY);
+        make.right.mas_equalTo(weakSelf.codeTextField.superview.mas_right).offset(-16);
+        make.height.mas_equalTo(27);
+        make.width.mas_equalTo(100);
+    }];
+}
+
+@end

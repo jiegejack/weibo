@@ -1,0 +1,52 @@
+//
+//  DJAlbumManager.h
+//  DJAlbumManager
+//
+//  Created by Jack on 2017/12/20.
+//  Copyright © 2017年 JaDJDragView. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+/*相册状态*/
+typedef NS_ENUM(NSInteger, PHAlbumState) {
+    PHAlbumStateUserRefusedAuthor = 0, //用户拒绝授权 (首次授权被用户取消)
+    PHAlbumStateUserAuthorAgain,       //用户拒绝授权 (已经拒绝授权,用户重新授权)
+    PHAlbumStateUserAuthorized,        //用户已经授权
+    PHAlbumStateSystemCannotAuthor,    //系统原因无法授权
+    PHAlbumStateSaveFailed,            //保存图片失败
+    PHAlbumStateSaveSuccess,           //保存图片成功
+    PHAlbumStateCreateFolderSuccess,   //创建文件夹成功
+    PHAlbumStateCreateFolderFailed,    //创建文件夹失败
+    PHAlbumStateFolderIsExist          //文件夹已存在
+};
+
+@interface DJAlbumManager : NSObject
+/*
+ *保存视频到相机胶卷
+ */
++ (void)saveVideoToPhotoWithPath:(NSString *)path
+                        complete:(void(^)(PHAlbumState state))completeHandle;
+
+/*
+ *保存视频到自定义相册
+ */
++ (void)saveVideoToCustomPhotoWithPath:(NSString *)path
+                            folderName:(nullable NSString *)folderName
+                              complete:(void(^)(PHAlbumState state))completeHandle;
+
+/*
+ *保存图片到相机胶卷
+ */
++ (void)saveImageToPhotoWithImage:(UIImage *)image
+                         complete:(void(^)(PHAlbumState state))completeHandle;
+
+/*
+ *保存图片到自定义相册
+ */
++ (void)saveImageToCustomPhotoWithImage:(UIImage *)image
+                             folderName:(nullable NSString *)folderName
+                               complete:(void(^)(PHAlbumState state))completeHandle;
+
+@end

@@ -1,0 +1,31 @@
+//
+//  ABPeoplePickerNavigationController+Additions.h
+//  PCKit
+//
+//  Created by wangyong on 16/5/17.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <AddressBookUI/AddressBookUI.h>
+
+/**
+ *  @brief 调取系统通讯录扩展
+ */
+@interface ABPeoplePickerNavigationController (Additions)<ABPeoplePickerNavigationControllerDelegate>
+
+/**
+*  @brief 构造ABPeoplePickerNavigationController
+*
+*  @param parentController 父级控制器
+*  @param completion       点击回调，处理成名字和号码，是否取消
+*
+*  @return ABPeoplePickerNavigationController
+*/
++(nonnull instancetype)pickerWithParentController:(nullable UIViewController *)parentController completion:(void (^_Nullable)(NSString *_Nullable name, NSString *_Nullable phoneNumber, BOOL isCancel))completion;
+
+/**
+ *  @brief 显示
+ */
+-(void)show;
+
+@end

@@ -1,0 +1,235 @@
+//
+//  JSLoginManager.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/6.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSLoginManager.h"
+#import "JSBiometryLoginViewController.h"
+#import "JSLoginViewController.h"
+#import "TouchIDManager.h"
+
+@implementation JSLoginManager
+
+static NSDictionary *_loginParam;
+
++ (BOOL)clientIsLogin {
+    NSInteger status = [JSSharedInstance sharedInstance].loginSession.STATUS.integerValue;
+    
+    return status ? YES : NO;
+}
+
++ (void)logoutClient {
+    if ([JSSharedInstance sharedInstance].loginSession.STATUS.integerValue == 1) {
+        [JSSharedInstance sharedInstance].loginSession = nil;
+//        [PNCMBankGlobal sharedData].openid=nil;
+//        [PNCMBankGlobal sharedData].openURL=nil;
+//        [PNCMBankGlobal sharedData].headImageURL=nil;
+        [self refreshRootViewControllers];
+    }
+}
+
++ (void)refreshRootViewControllers {
+    UIWindow *window= [[[UIApplication sharedApplication] delegate] window];
+    if (window.rootViewController) {
+        for (UINavigationController *nav in [JSSharedInstance sharedInstance].viewControllers) {
+            if ([nav.viewControllers.firstObject isKindOfClass:[JSRootWebViewController class]]) {
+                JSRootWebViewController *rootVC=(JSRootWebViewController *)nav.viewControllers.firstObject;
+                [rootVC doWebRequest];
+            }
+        }
+    }
+}
+
++ (void)indexToHomePage {
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    [navi popToRootViewControllerAnimated:NO];
+    PCDTabBarController *tabBarController = (PCDTabBarController *)navi.viewControllers.lastObject;
+    tabBarController.selectedIndex = 0;
+}
+
++ (void)clientLoginWithTarget:(UIViewController *)target
+                      success:(void(^)(id resultResponse, LoginSession *session))success
+                        faild:(void(^)(NSError *error, LoginSession *session))faild {
+    
+    if ([TouchIDManager biometryType] != DJBiometryTypeNotSupport) {
+        [self biometryLoginWithTarget:target loginSuccess:success loginFaild:faild];
+    } else {
+        [self regularLoginWithTarget:target loginSuccess:success loginFaild:faild];
+    }
+}
+
++ (void)regularLoginWithTarget:(UIViewController *)target
+                  loginSuccess:(void(^)(id resultResponse, LoginSession *session))loginSuccess
+                    loginFaild:(void(^)(NSError *error, LoginSession *session))loginFaild {
+
+    JSLoginViewController *vc = [[JSLoginViewController alloc] initWithSuccessBlock:^(id resultResponse, LoginSession *session) {
+        if (loginSuccess) {
+            loginSuccess(resultResponse, session);return;
+        }
+        [target.tabBarController.navigationController popViewControllerAnimated:NO];
+    } faildBlock:^(NSError *error, LoginSession *session) {
+        if (loginFaild) {
+            loginFaild(error, session);
+        }
+    }];
+    vc.hidesBottomBarWhenPushed = YES;
+    [target.tabBarController.navigationController pushViewController:vc animated:YES];
+}
+
++ (void)biometryLoginWithTarget:(UIViewController *)target
+                   loginSuccess:(void(^)(id resultResponse, LoginSession *session))loginSuccess
+                     loginFaild:(void(^)(NSError *error, LoginSession *session))loginFaild {
+    
+    JSBiometryLoginViewController *vc = [[JSBiometryLoginViewController alloc] initWithSuccessBlock:^(id resultResponse, LoginSession *session) {
+        if (loginSuccess) {
+            loginSuccess(resultResponse, session);return;
+        }
+        [target.tabBarController.navigationController popViewControllerAnimated:NO];
+    } faildBlock:^(NSError *error, LoginSession *session) {
+        if (loginFaild) {
+            loginFaild(error, session);
+        }
+    }];
+    vc.hidesBottomBarWhenPushed = YES;
+    [target.tabBarController.navigationController pushViewController:vc animated:YES];
+}
+
++ (void)loginWithLoginType:(LoginType)type
+                loginParam:(NSDictionary *)loginParam
+                    target:(nullable UIViewController *)target
+                   success:(void(^)(id resultResponse, LoginSession *session))success
+                     faild:(void(^)(NSError *error, LoginSession *session))faild {
+
+    if (type != LoginTypeBiometry && !loginParam.notNull) {return;}
+
+    _loginParam = loginParam;
+    
+    NSMutableDictionary *param = [self setLoginParamWithType:type];
+    NSString *url = [self setLoginPathWithType:type];
+    
+    [ClientNetManager fetchLoginDataWithParam:param loginUrl:url success:^(id resultResponse, id resultModel) {
+        LoginSession *session = (LoginSession *)resultModel;
+        if (!session) {return;}
+        
+        [JSSharedInstance sharedInstance].loginSession = session;
+        
+        if (session.STATUS.integerValue == 1) {
+            [self refreshRootViewControllers];
+            
+            if (success) {
+                success(resultResponse, session);
+            }
+        } else {
+            if (faild) {
+                faild(nil, session);
+            }
+        }
+    } failure:^(NSError *error, LoginSession *session) {
+        if (faild) {
+            faild(error, session);
+        }
+    }];
+}
+
++ (NSMutableDictionary *)setLoginParamWithType:(LoginType)type {
+    NSMutableDictionary *param = [NSMutableDictionary dictionary];
+    NSString *loginType  = @"";
+    NSString *isPassword    = @"";
+    NSString *OPER_TYPE     = @"";
+    NSString *loginflag     = @"";
+
+    switch (type) {
+        case LoginTypePassword:
+            loginType = @"200";
+            isPassword = @"1";
+            OPER_TYPE = @"pwd";
+            loginflag = @"2";
+            break;
+        case LoginTypeBiometry:
+            loginType = @"206";
+            OPER_TYPE = @"finger";
+            loginflag = @"3";
+            break;
+        case LoginTypeCode:
+            loginType = @"201";
+            OPER_TYPE = @"msg";
+            loginflag = @"2";
+            break;
+        case LoginTypeRegister:
+            loginType = @"207";
+            OPER_TYPE = @"finger";
+            loginflag = @"3";
+            break;
+        default:
+            break;
+    }
+    [param setObject:loginType               forKey:@"loginType"];
+    [param setObject:isPassword              forKey:@"isPassword"];
+    [param setObject:OPER_TYPE               forKey:@"OPER_TYPE"];
+    [param setObject:loginflag               forKey:@"loginflag"];
+    [param setObject:[self setPhoneNo]       forKey:@"mobileNo"];
+    [param setObject:[self setLoginPassword] forKey:@"loginPassword"];
+    [param setObject:[self setSMSCode]       forKey:@"code"];
+    [param setObject:[self setRecommend]     forKey:@"recommend"];
+    [param setObject:[self setCustemployeNo] forKey:@"custemployeNo"];
+    [param setObject:@"iOS"                  forKey:@"LoginChannel"];
+    [param setObject:@"0006"                 forKey:@"developChannel"];
+
+    return param;
+}
++ (NSString *)setSMSCode {
+    NSString *code = [_loginParam objectForKey:@"code"];
+    code = code.notNull ? code : @"";
+    
+    return code;
+}
++ (NSString *)setLoginPassword {
+    NSString *pwd = [_loginParam objectForKey:@"loginPassword"];
+    pwd = pwd.notNull ? pwd : @"";
+    
+    return pwd;
+}
++ (NSString *)setCustemployeNo {
+    NSString *custemployeNo = [JSSharedInstance sharedInstance].loginSession.custemployeNo;
+    custemployeNo = custemployeNo.notNull ? custemployeNo : @"";
+    
+    return custemployeNo;
+}
++ (NSString *)setRecommend {
+    NSString *recommend = [_loginParam objectForKey:@"recommend"];
+    recommend = recommend.notNull ? recommend : @"";
+
+    return recommend;
+}
++ (NSString *)setPhoneNo {
+    NSString *phoneNo = [_loginParam objectForKey:@"mobileNo"];
+    phoneNo = phoneNo.notNull ? phoneNo : @"";
+    
+    return phoneNo;
+}
+
++ (NSString *)setLoginPathWithType:(LoginType)type {
+   switch (type) {
+        case LoginTypePassword:
+            return @"custCommon/loginByPassword.do";
+            break;
+        case LoginTypeBiometry:
+            return @"custCommon/loginbyFinger.do";
+            break;
+        case LoginTypeCode:
+            return @"custCommon/loginByCode.do";
+            break;
+        case LoginTypeRegister:
+            return @"custCommon/register.do";
+            break;
+        default:
+            break;
+    }
+    return @"";
+}
+
+@end

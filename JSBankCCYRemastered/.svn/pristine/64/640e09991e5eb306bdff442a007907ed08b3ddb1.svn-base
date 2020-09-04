@@ -1,0 +1,23 @@
+//
+//  JSTabBarController.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface JSTabBarController : PCDTabBarController
+@property(nonatomic,assign) NSUInteger currentSelectedIndex;
+
+/**
+ *  @brief 当前选中索引，默认0
+ */
+@property(nonatomic) JSRootWebViewController *selectedViewController;
+
+@end
+
+NS_ASSUME_NONNULL_END

@@ -1,0 +1,38 @@
+//
+//  PCUploadFileDO.h
+//  PCDNetWorkServiceGet
+//
+//  Created by dk on 2018/1/22.
+//  Copyright © 2018年 dk. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface PCDUploadFileDO : NSObject
+
+/*
+ *  @brief 文件流
+ */
+@property(nonatomic,strong,nullable) NSData *fileData;
+
+/*
+ *  @brief 流包体
+ */
+@property(nonatomic,strong,nullable) NSString *fileBoby;
+
+/*
+ *  @brief 文件名
+ */
+@property(nonatomic,strong,nullable) NSString *fileName;
+
+/*
+ *  @brief 文件类型
+ */
+@property(nonatomic,strong,nullable) NSString *fileType;
+
+/*
+ *  @brief 参数
+ */
+@property(nonatomic,strong,nullable) NSDictionary *fileParam;
+
+@end

@@ -1,0 +1,44 @@
+//
+//  MessageView.h
+//  LivenessDetection
+//
+//  Created by 张英堂 on 15/1/13.
+//  Copyright (c) 2015年 megvii. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@protocol MessageViewDelegate;
+
+@interface MessageView : NSObject
+
+@property (nonatomic, assign) id <MessageViewDelegate> delegate;
+
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic, copy) NSString *cancelTitle;
+
+
+
+/**
+ *  显示
+ */
+- (void)show;
+
++ (instancetype)shareManager;
+
+@end
+
+
+
+@protocol MessageViewDelegate <NSObject>
+
+@required
+/**
+ *  当出现意外时，弹窗提示
+ *
+ *  @param view view
+ *  @param tag  点击的按钮tag
+ */
+- (void)messageView:(MessageView *)view tag:(NSInteger)tag;
+
+@end

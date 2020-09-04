@@ -1,0 +1,38 @@
+//
+//  GetLoginInfo.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/8/5.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "GetLoginInfo.h"
+#import "LoginSession.h"
+#import "MJExtension.h"
+
+@implementation GetLoginInfo
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    JSBaseWebViewController *vc = (JSBaseWebViewController *)context.viewController;
+
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {
+        return;
+    }
+    LoginSession *session = [LoginSession mj_objectWithKeyValues:dict];
+    if (session.STATUS.integerValue != 1) {
+        [JSLoginManager loginFaildWithStatus:session.STATUS msg:session.MSG];
+        return;
+    }
+    [DataCache setCacheString:session.custemployeNo ? session.custemployeNo : @"" forkey:@"ccy_custemployeNo"];
+
+    [JSLoginManager popVCsWithTarget:vc];
+    [vc.tabBarController.navigationController popViewControllerAnimated:NO];
+    
+    [JSSharedInstance sharedInstance].loginSession = session;
+    [DataCache setCacheString:session.custemployeNo ? session.custemployeNo : @"" forkey:@"ccy_custemployeNo"];
+    
+    [JSLoginManager reloadRootViewControllers];
+    [JSLoginManager reloadCurrentPage];
+}
+@end

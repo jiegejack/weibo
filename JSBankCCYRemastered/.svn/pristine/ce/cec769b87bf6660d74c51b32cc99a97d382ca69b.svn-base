@@ -1,0 +1,56 @@
+//
+//  JSLoginManager.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/6.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+typedef NS_ENUM(NSInteger, LoginType) { //登录方式
+    LoginTypePassword = 1, //密码
+    LoginTypeCode,         //验证码
+    LoginTypeBiometry,     //生物验证
+    LoginTypeRegister,     //注册登录
+};
+
+@interface JSLoginManager : NSObject
+
+/**客户端登录
+ * success  : 请求成功回调, msg
+ * failure  : 请求失败回调
+ */
++ (void)clientLoginWithTarget:(UIViewController *)target
+                      success:(nullable void(^)(id resultResponse, LoginSession *session))success
+                        faild:(nullable void(^)(NSError *error, LoginSession *session))faild;
+
+/**
+ * 内部接口方法
+ */
++ (void)loginWithLoginType:(LoginType)type
+                loginParam:(NSDictionary *)loginParam
+                    target:(nullable UIViewController *)target
+                   success:(void(^)(id resultResponse, LoginSession *session))success
+                     faild:(void(^)(NSError *error, LoginSession *session))faild;
+
+/**
+ * 判断用户登录状态
+ */
++ (BOOL)clientIsLogin;
+
+/**
+ * 退出登录状态
+ */
++ (void)logoutClient;
+
+/**
+ * 退首页
+ */
++ (void)indexToHomePage;
+
+@end
+
+NS_ASSUME_NONNULL_END

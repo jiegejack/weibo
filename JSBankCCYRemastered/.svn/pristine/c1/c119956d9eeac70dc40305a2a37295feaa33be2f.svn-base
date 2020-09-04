@@ -1,0 +1,105 @@
+//
+//  JYObuError.h
+//  OBUDemo
+//
+//  Created by ouyanghua on 14-9-1.
+//  Copyright (c) 2014年 GENVICT. All rights reserved.
+//
+
+#ifndef OBU_JYObuError_h
+#define OBU_JYObuError_h
+/* OBU协议状态码 */
+#define STATUS_FAIL         0x01 //操作失败
+#define STATUS_TIMEOUT      0x02 //等待回应超时
+#define STATUS_BAKERR       0x03 //回应包数据错误
+#define STATUS_DES          0x04 //DES计算错误
+#define STATUS_MAC          0x05 //MAC错误
+#define STATUS_DATALEN      0x06 //返回数据错误
+#define STATUS_TRANSMIT_NOW 0x07 //正在发送指令
+
+#define STATUS_FAIL_DESC         @"操作失败。"
+#define STATUS_TIMEOUT_DESC      @"等待回应超时。"
+#define STATUS_BAKERR_DESC       @"返回不正常包。"
+#define STATUS_DES_DESC          @"DES计算错误。"
+#define STATUS_MAC_DESC          @"计算MAC错误。"
+#define STATUS_DATALEN_DESC      @"返回数据错误。"
+#define STATUS_TRANSMIT_NOW_DESC @"正在发送指令，发送通道阻塞。"
+
+
+#define STATUS_OK               0x00  // operating success
+#define PICC_NOTAGERR           0xFE  // no card or PICC response timeout 无卡或卡无回应
+#define PICC_CRCERR             0xFD  // CRC check error CRC错误
+#define PICC_AUTHERR            0xFC  // generic authentication error 认证错误
+#define PICC_PARITYERR          0xFB  // odd/even check error 奇偶校验错误
+#define PICC_CODEERR            0xFA  // when writing or reading,information from card 正在读卡或者写卡中
+#define PICC_SERNRERR           0xF9  // after anticollision process,get a invalid card serial numbers 无效序列号
+#define PICC_KEYERR             0xF8  // the key that had loaded into the eeprom has a error format 写入EEPROM的密钥格式错误
+#define PICC_NOTAUTHERR         0xF7  // invalid operation before authentication 认证前的无效操作
+#define PICC_BITCOUNTERR        0xF6  // received bits not equal to expectation 收到的位数错误
+#define PICC_BYTECOUNTERR       0xF5  // received bytes not equal to expectation 收到字节错误
+#define PICC_FRAMINGERR         0xF4  // frame error 帧错误
+#define PICC_UNKNOWN_COMMAND    0xF3  // Reader IC command invalid,invalid PC command 无效指令
+#define PICC_COLLERR            0xF2  // collision happened IC卡防冲突位异常
+#define PICC_ACCESSTIMEOUT      0xF1  // Reader IC (FM1702_CE) timeout 读IC卡超时
+#define PICC_NOT_IMPLEMENTED    0xF0  // Reader IC not implement the command 读卡器无法执行此指令。
+#define PICC_WRONG_VALUE        0xEF  // invalid parameter 无效参数。
+#define PICC_VALERR             0xEE  // electronic notecase operation using invalid value 使用电子钱包的操作无效值
+#define PICC_WRITEERR           0xED  // write card error 写卡错误
+#define PICC_OVFLERR            0xEC  // Reader IC (FM1702_CE) FIFO overflow  FIFO溢出
+#define BLE_NOTAUTHERR          0xA1  // Reader not authentication 未设备认证
+
+#define STATUS_OK_DESC               @"操作成功"
+#define PICC_NOTAGERR_DESC           @"无卡或卡无回应。"
+#define PICC_CRCERR_DESC             @"CRC错误。"
+#define PICC_AUTHERR_DESC            @"认证错误。"
+#define PICC_PARITYERR_DESC          @"奇偶校验错误。"
+#define PICC_CODEERR_DESC            @"正在读卡或者写卡中。"
+#define PICC_SERNRERR_DESC           @"无效序列号。"
+#define PICC_KEYERR_DESC             @"写入EEPROM的密钥格式错误。"
+#define PICC_NOTAUTHERR_DESC         @"认证前的无效操作。"
+#define PICC_BITCOUNTERR_DESC        @"收到的位数错误。"
+#define PICC_BYTECOUNTERR_DESC       @"收到字节错误。"
+#define PICC_FRAMINGERR_DESC         @"帧错误。"
+#define PICC_UNKNOWN_COMMAND_DESC    @"无效指令。"
+#define PICC_COLLERR_DESC            @"IC卡防冲突位异常。"
+#define PICC_ACCESSTIMEOUT_DESC      @"访问IC卡超时。"
+#define PICC_NOT_IMPLEMENTED_DESC    @"读卡器无法执行此指令。"
+#define PICC_WRONG_VALUE_DESC        @"无效参数。"
+#define PICC_VALERR_DESC             @"使用电子钱包的操作无效值。"
+#define PICC_WRITEERR_DESC           @"写卡错误。"
+#define PICC_OVFLERR_DESC            @"FIFO溢出。"
+#define BLE_NOTAUTHERR_DESC          @"设备未对系统认证。"
+
+#define COS_SW_OK                           @"正确执行。"//9000
+#define COS_SW_DATA_ERROR                   @"回送的数据可能错误。"//6281
+#define COS_SW_INVALID_FILE                 @"选择文件无效，文件或密钥校验错误。"//6283
+#define COS_SW_TRYTIMES                     @"可再试X次。"//63CX
+#define COS_SW_STATUS_NOT_CHANGED           @"状态标志未改变。"//6400
+#define COS_SW_EEPROM_WRITE_FAIL            @"写EEPROM不成功。"//6581
+#define COS_SW_LENGHT_ERROR                 @"错误长度。"//6700
+#define COS_SW_CLA_NOT_MATCH                @"CLA与线路保护要求不匹配。"//6900
+#define COS_SW_STATUS_ERROR                 @"无效的状态。"//6901
+#define COS_SW_CMD_NOT_MATCH                @"命令与文件结构不相容。"//6981
+#define COS_SW_SAFE_NOT_SATISFIED           @"不满足安全状态。"//6982
+#define COS_SW_KEY_LOCKED                   @"密钥被锁死。"//6983
+#define COS_SW_USE_NOT_SATISFIED            @"使用条件不满足。"//6985
+#define COS_SW_NOTSAFE_MESSAGE              @"无安全报文。"//6987
+#define COS_SW_SAFEMESSAGEDATA_ERROR        @"安全报文数据项不正确。"//6988
+#define COS_SW_DATAPRAM_ERROR               @"数据域参数错误。"//6A80
+#define COS_SW_NOT_SUPPORT                  @"功能不支持或卡中无MF或卡片已锁定。"//6A81
+#define COS_SW_FILE_NOT_FOUND               @"文件未找到。"//6A82
+#define COS_SW_RECORD_NOT_FOUND             @"记录未找到。"//6A83
+#define COS_SW_NOT_ENOUNGH_ROOM             @"文件无足够空间。"//6A84
+#define COS_SW_P1P2_ERROR                   @"参数P1P2错误。"//6A86
+#define COS_SW_OFFSET_ERROR                 @"在达到Le/Lc字节之前文件结束，偏移量错误。"//6B00
+#define COS_SW_LE_ERROR                     @"Le错误。"//6Cxx
+#define COS_SW_CLA_INVALID                  @"无效的CLA。"//6E00
+#define COS_SW_DATA_INVALID                 @"数据无效。"//6F00
+#define COS_SW_MAC_ERROR                    @"MAC错误。"//9302
+#define COS_SW_APPLICATION_LOCKED           @"应用已被锁定。"//9303
+#define COS_SW_AMOUNT_INSUFFICIENT          @"金额不足。"//9401
+#define COS_SW_KEY_NOT_FOUND                @"密钥未找到。"//9403
+#define COS_SW_MAC_NOT_USE                  @"所需的MAC不可用。"//9406
+
+
+#endif

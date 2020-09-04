@@ -1,0 +1,289 @@
+//
+//  PCDUtil.h
+//  PCKit
+//
+//  Created by wangyong on 16/3/28.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+
+///**
+// *  @brief 主题皮肤更新字段
+// */
+//UIKIT_EXTERN NSString *_Nonnull const PCDThemeSettingUpdateString;
+
+/**
+ *  @brief PCKit基础工具类
+ */
+@interface PCDUtil : NSObject
+
+/**
+ *获取文件的md5值
+
+ *@param data data
+ *@return md5小写
+ */
++ (NSString *_Nullable)md5StringWithData:(NSData *_Nullable)data;
+/**
+ *根据json文件bundle路径获取字典
+
+ *@param fileName 路径
+ *@return 解析出的字典
+ */
++ (NSDictionary *_Nullable)getDictFromJsonWithFileName:(NSString *_Nullable)fileName;
+
+/**
+ *配置项目
+ *@param dict 参数配置字典
+ */
++ (void)projectConfigWithDictionary:(NSDictionary *)dict;
+
+#pragma mark -是否是发布版本，由configDict控制
+/**
+ *  @brief 是否是发布版本
+ *
+ *  @return 是否是发布版本
+ */
++(BOOL)isReleaseVersion;
+
+/**
+ *获取启动图
+
+ *@return 启动图
+ */
++ (UIImage *_Nullable)getLaunchImg;
+
+#pragma mark - 是否使用网关🕸
+/**
+ *是否使用网关
+
+ *@return 是否使用网关
+ */
++(BOOL)useGateWay;
+
+/**
+ *设置渠道ID
+
+ *@param channelId 渠道ID
+ */
++ (void)setChannelId:(NSString *_Nullable)channelId;
+
+/**
+ *设置是否使用网关
+ */
++ (void)setUseGateWayFlag:(BOOL)flag;
+
+/**
+ *获取渠道ID
+
+ *@return 渠道ID
+ */
++ (NSString *_Nullable)channelId;
+
+/**
+ *获取渠道类型
+ 
+ *@return 渠道类型
+ */
++ (NSString *_Nullable)channelType;
+
+/**
+ *获取法人编号
+ 
+ *@return 法人编号
+ */
++ (NSString *_Nullable) incorpNo;
+
+/**
+ *设置根服务器地址
+
+ *@param serverURL 根服务器
+ */
++ (void)setServerURL:(NSString *_Nullable)serverURL;
+
+
+/**
+ *全局键值保存
+
+ *@param objc objc
+ *@param key key
+ */
++ (void)setObject:(id _Nullable )objc forKey:(NSString *_Nullable)key;
+
+/**
+ *获取全局保存的对象
+
+ *@param key key
+ *@return 保存的对象
+ */
++ (id _Nullable )getObjectForKey:(NSString *_Nullable)key;
+
+/**
+ *设置根资源服务器地址
+
+ *@param resourceServiceAddress 根资源服务器地址
+ */
++ (void)setResourceServiceAddress:(NSString *_Nullable)resourceServiceAddress;
+
+#pragma mark -拼接服务地址
+/**
+ *拼接服务地址获得全路径
+
+ *@param subURL 接口地址
+ *@return 接口全路径
+ */
++(nonnull NSString *)getServerURL:(nullable NSString *)subURL;
+/**
+ *拼接公共服务地址获得全路径
+
+ *@param subURL 接口地址
+ *@return 接口全路径
+ */
++(nonnull NSString *)getPublicServerURL:(nullable NSString *)subURL;
+
+#pragma mark -应用/工程信息
+/**
+ *  @brief 获取应用名
+ *
+ *  @return 应用名
+ */
++(nonnull NSString *)appName;
+/**
+ *  @brief 获取工程名
+ *
+ *  @return 工程名
+ */
++(nonnull NSString *)projectName;
+/**
+ *  @brief 获取应用版本号
+ *
+ *  @return 应用版本号
+ */
++(nonnull NSString *)appVersion;
+/**
+ *  @brief build版本号
+ *
+ *  @return build版本号
+ */
++(nonnull NSString *)appBundleVersion;
+
+#pragma mark -字符串安全处理
+/**
+ 判断字符串是否为空
+
+ @param string 待验证字符串
+ @return 判断结果
+ */
++(BOOL)nilOrEmptyString:(nullable NSString *)string;
+/**
+ 字符串非空返回
+
+ @param string 待验证字符串
+ @return 返回非nil字符串
+ */
++(nonnull NSString *)safeString:(nullable NSString *)string;
+
+#pragma mark -showAlert
+/**
+ *  @brief 显示alert
+ *
+ *  @param title   标题
+ *  @param message 内容
+ */
++(void)showAlert:(nullable NSString *)title message:(nullable NSString *)message;
+
+#pragma mark -用户名缓存
+/**
+ *  @brief 获取缓存用户名
+ *
+ *  @return 缓存用户名
+ */
++(nullable NSString *)cacheUserName;
+/**
+ *  @brief 存储用户名
+ *
+ *  @param userName 待存储用户名，为空或者nil则删除用户名
+ */
++(void)saveCacheUserName:(nullable NSString *)userName;
+/**
+ *  @brief 获取是否记住用户名状态
+ *
+ *  @return 是否记住
+ */
++(BOOL)rememberUserName;
+/**
+ *  @brief 存储记住用户名状态
+ *
+ *  @param isRemember 是否记住
+ */
++(void)saveRememberUserName:(BOOL)isRemember;
+
+#pragma mark -loginSession
+/**
+ *  @brief 获取登录session
+ *
+ *  @return 登录session
+ */
++(nullable id)loginSession;
+
+/**
+ 存储登录session
+
+ @param loginSession 登录session
+ */
++(void)saveLoginSession:(id _Nullable )loginSession;
+
+/**
+ *  @brief 登录校验
+ *
+ *  @return 是否登录
+ */
++(BOOL)logined;
+
+
+//MARK: - 设备相关
++ (BOOL)IsIphoneX;
+
+#pragma mark -手机号/身份证/邮箱判断
+/**
+ *是否是手机号(1开头&&11位纯数字)
+ *@param string 待验证字符串
+ *@return 结果
+ */
++(BOOL)isPhoneNumberFromString:(nullable NSString *)string;
+/**
+ *是否是身份证号(15或者18位身份证号，尾号为X有效，x无效)
+ *
+ *@param string 待验证字符串
+ *@return 结果
+ */
++(BOOL)isIdCardNumberFromString:(nullable NSString *)string;
+/**
+ *是否是邮箱地址
+ *
+ *@param string 待验证字符串
+ *@return 结果
+ */
++(BOOL)isEmailAddressFromString:(nullable NSString *)string;
+
+
+/**
+ 计算md5
+
+ @param str 原始
+ @return md5
+ */
++ (NSString *_Nullable)md5Digest:(NSString *_Nullable)str;
+
+
+/**
+ 获取16位随机字符串
+
+ @return 随机字符串
+ */
++(NSString *_Nonnull)return16LetterAndNumber;
+
+
+@end

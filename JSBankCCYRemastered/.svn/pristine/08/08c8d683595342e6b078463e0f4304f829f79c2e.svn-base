@@ -1,0 +1,390 @@
+//
+//  PCDNetWorkService+Encrypt.m
+//  PCDBank
+//
+//  Created by DK on 2019/1/15.
+//  Copyright © 2019 DK. All rights reserved.
+//
+
+#import "PCDNetWorkService+Encrypt.h"
+
+#import <objc/runtime.h>
+#import "PCDSessionIDManager.h"
+#import "PCDNetWorkEncrypt.h"
+#import "PCDEncryptTokenManager.h"
+
+@implementation PCDNetWorkService (Encrypt)
+
+#pragma mark - Category
+- (void)setUseEncrypt:(BOOL)useEncrypt {
+    objc_setAssociatedObject(self, @"__useEncrypt",@(useEncrypt), OBJC_ASSOCIATION_COPY);
+}
+
+-(void) setEncyptScheme:(NSString *)encyptScheme
+{
+    objc_setAssociatedObject(self, @"__encyptScheme",encyptScheme, OBJC_ASSOCIATION_COPY);
+}
+
+-(void) setH_TIME_OFFSET:(NSString *)H_TIME_OFFSET
+{
+    objc_setAssociatedObject(self, @"__H_TIME_OFFSET",H_TIME_OFFSET, OBJC_ASSOCIATION_COPY);
+}
+
+-(void) setDataCollect:(void (^)(PCDNetWorkItem *item,NSDictionary *info))dataCollect
+{
+    objc_setAssociatedObject(self, @"__dataCollect", dataCollect,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (void)setCurrentWorkItem:(NSMutableArray *)currentWorkItem {
+    objc_setAssociatedObject(self, @selector(currentWorkItem), currentWorkItem, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (NSMutableArray *)currentWorkItem {
+    return objc_getAssociatedObject(self, _cmd);
+}
+
+- (BOOL)useEncrypt{
+    return [objc_getAssociatedObject(self,@"__useEncrypt") boolValue];
+}
+
+-(NSString *)encyptScheme
+{
+    return objc_getAssociatedObject(self,@"__encyptScheme");
+}
+
+-(NSString *)H_TIME_OFFSET
+{
+    return objc_getAssociatedObject(self,@"__H_TIME_OFFSET");
+}
+
+-(void (^)(PCDNetWorkItem *item,NSDictionary *info))dataCollect
+{
+    return objc_getAssociatedObject(self,@"__dataCollect");
+}
+
+#pragma mark -encrypt
+
+- (void)sendRequestWithUrlString:(NSString *)urlString requestType:(NSString * _Nullable)requestType contentType:(NSString * _Nullable)contentType configEncryptBlock:(NSString * (^)(NSString *unencryptJsonString))configEncrypt body:(id)body andCompletionBlock:(void(^)(PCDNetWorkItem *item,BOOL success))completionBlock{
+    
+    @autoreleasepool {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        __block CFAbsoluteTime start = 0.0;
+        
+        __block CFAbsoluteTime end;
+        
+        PCDNetWorkItem *item = [[PCDNetWorkItem alloc] init];
+        
+//        item.certificateStatus = PCCertificateStatusNotValidate;
+        //移交给item管理比较安全 防止异步请求 channelID被覆盖
+        item.channelID = [PCDSessionIDManager defaultManager].currentChannel;
+        //置空
+        [PCDSessionIDManager defaultManager].currentChannel = @"";
+        item.requestMethod = requestType?requestType:@"POST";
+        item.contentType = contentType?contentType:@"application/json";
+        item.urlString = urlString?urlString:@"";
+        
+        if ([PCDUtil useGateWay]) {
+            item.params.head = [[self requestHead:item] copy];
+            
+        }
+        item.params.bUseGateWay = [PCDUtil useGateWay];
+        NSDictionary *paramsDic = [self requestBody:item withBody:body];
+        NSString *key;
+        NetWorkParams *params;
+        NSData *postData = [self encryptInfo:paramsDic Key:&key Params:&params];
+        
+        if (postData) {
+            
+            item.v1RandomKey = key;
+            item.params.body = params.body;
+            NSString *strParams = [[item.params paramsDic] JSONRepresentation];
+            item.postData = [strParams dataUsingEncoding:NSUTF8StringEncoding];
+            
+        }else{
+            
+            //外部加密
+            NSString *encryptString = configEncrypt([paramsDic JSONRepresentation]);
+            if (encryptString) {
+                item.params.body = encryptString;
+                NSString *strParams = [[item.params paramsDic] JSONRepresentation];
+                item.postData = [strParams dataUsingEncoding:NSUTF8StringEncoding];
+            }else{
+                
+                //如果没有自定义加密 在默认走不加密的
+                item.params.body = paramsDic;
+                NSString *strParams = [[item.params paramsDic] JSONRepresentation];
+                item.postData = [strParams dataUsingEncoding:NSUTF8StringEncoding];
+            }
+        }
+        
+        
+        __block typeof(completionBlock) tempCompletionBlock =completionBlock;
+        item.completionBlock = ^(id _Nullable obj) {
+            
+            PCDNetWorkItem *networkItem = (PCDNetWorkItem *)obj;
+           
+            
+            
+            if ([networkItem.requestMethod isEqualToString:@"POST"]) {
+                //报文解密
+                if ([PCDNetWorkServiceGet().encyptScheme isEqualToString:@"v1"]) {
+                    
+                    PCDNetWorkEncrypt *encrypt = [[PCDNetWorkEncrypt alloc] init];
+                    encrypt.decrypt = [PCDNetWorkEncrypt sharedWorkEncrypt].decrypt;
+                    networkItem.responseString = [[PCDNetWorkEncrypt sharedWorkEncrypt] responseString:networkItem.responseData withRandomKey:networkItem.v1RandomKey];
+                    
+                }else if ([PCDNetWorkServiceGet().encyptScheme isEqualToString:@"v2"]){
+                    
+                    PCDNetWorkEncrypt *encrypt = [[PCDNetWorkEncrypt alloc] init];
+                    encrypt.decrypt = [PCDNetWorkEncrypt sharedWorkEncrypt].decrypt;
+                    networkItem.responseString = [encrypt responseString:networkItem.responseData withRandomKey:nil];
+                    
+                }
+            }
+            
+            NSLog(@"networkItem  URL:%@ \n Data:%@",networkItem.urlString,networkItem.responseString);
+            end = CFAbsoluteTimeGetCurrent();
+            
+            NSString *loadTime = [NSString stringWithFormat:@"%f",end-start];
+            
+            NSDictionary *info = @{@"timeConsuming":loadTime};
+            
+            if (self.dataCollect) {
+                //网络日志采集 为了和行为采集库解耦 采用回调形式
+                
+                self.dataCollect(networkItem,info);
+            }
+            
+            if (tempCompletionBlock) {
+                tempCompletionBlock(networkItem,YES);
+                
+                tempCompletionBlock  = nil;
+            }
+            
+        };
+        
+        item.failureBlock = ^(id  _Nullable obj) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                PCDNetWorkItem *networkItem = (PCDNetWorkItem *)obj;
+                if (completionBlock) {
+                    completionBlock(networkItem,NO);
+                }
+            });
+        };
+        [self addNetWork:item];
+        self.currentWorkItem = item;
+        
+            start = CFAbsoluteTimeGetCurrent();
+        });
+    }
+    
+}
+
+#pragma mark -获取请求参数
+- (NSDictionary *) requestHead {
+    NSDictionary *dic =@{@"H_CHNL_ID"    : [PCDUtil channelId],
+                         @"H_SYSTEM_TYPE": @"APP",
+                         @"H_TIME"       : [NSString stringWithFormat:@"%ld",(long)[PCDNetWorkItem getNowTimestamp]],
+                         @"H_TIME_OFFSET": PCDNetWorkServiceGet().H_TIME_OFFSET?PCDNetWorkServiceGet().H_TIME_OFFSET:@"0",
+                         @"H_NONCE"      : [NSUUID UUID].UUIDString,
+                         @"loadequipmentid"    : [PCDevice uniqueIdentifier],
+                         @"loadcoordinate"    : [PCDevice getMacAddress]};
+    
+    return dic;
+}
+
+-(id)requestHead:(PCDNetWorkItem *)item
+{
+    if ([item.requestMethod isEqualToString:@"POST"]) {
+        
+        NSString *loginSID = [[PCDSessionIDManager defaultManager].loginSIDs objectForKey:![PCDUtil nilOrEmptyString:item.channelID]?item.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@""];
+        NSString *connectSID = [[PCDSessionIDManager defaultManager].connectSIDs objectForKey:![PCDUtil nilOrEmptyString:item.channelID]?item.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@""];
+        NSString *gatewaySID = [[PCDSessionIDManager defaultManager].gatewaySIDs objectForKey:![PCDUtil nilOrEmptyString:item.channelID]?item.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@""];
+        
+        NSString *H_UPS_SID = loginSID?loginSID:connectSID?connectSID:gatewaySID?gatewaySID:@"";
+        
+        NSMutableDictionary *tmpDict = [NSMutableDictionary dictionaryWithDictionary:[self requestHead]];
+        
+        [tmpDict setObject:![PCDUtil nilOrEmptyString:item.channelID]?item.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@"" forKey:@"H_CHNL_ID"];
+        
+        [tmpDict setObject:H_UPS_SID forKey:@"H_UPS_SID"];
+        
+        
+        return tmpDict;
+    }
+    
+    return nil;
+}
+
+-(id) requestBody:(PCDNetWorkItem *)item withBody:(id)body{
+    
+    if ([item.requestMethod isEqualToString:@"POST"]) {
+
+        NSMutableDictionary *tmpBody =nil;
+        
+        if ([body JSONValue]) {
+            tmpBody =[NSMutableDictionary dictionaryWithDictionary:[body JSONValue]];
+        }else{
+            tmpBody = [NSMutableDictionary dictionaryWithDictionary:body] ;
+        }
+        //
+        [tmpBody setObject:[PCDUtil incorpNo] forKey:@"INCORP_NO"];
+        [tmpBody setObject:[PCDUtil channelType]  forKey:@"CHNL_TYPE"];
+        [tmpBody setObject:@"I" forKey:@"CLIENT_OS"];
+        
+        return tmpBody;
+    }
+    
+    return nil;
+}
+
+#pragma mark -加密处理
+
+-(id)encryptInfo:(id)body Key:(NSString **)key Params:(NetWorkParams **)requestParams
+{
+    
+    NetWorkParams *requestHeadParams = [[NetWorkParams alloc] init];
+    if ([PCDUtil useGateWay]) {
+        requestHeadParams.head = [body copy];
+    }
+    requestHeadParams.bUseGateWay = [PCDUtil useGateWay];
+    
+    NSData *dataParams = nil;
+    
+    //加密判断
+    if (self.useEncrypt) {
+        
+        NSString *encyptScheme = self.encyptScheme;
+        
+        if ([encyptScheme isEqualToString:@"v1"]) {
+            
+            //使用老方法加密
+            [PCDNetWorkEncrypt sharedWorkEncrypt].encrypt = PCDRequestEncryptSM;
+            [PCDNetWorkEncrypt sharedWorkEncrypt].decrypt = PCDRequestDecryptSM4;
+            //数据加密
+            NSString *encryKey;
+            NSString *encrString = [[PCDNetWorkEncrypt sharedWorkEncrypt] getCryptString:[body JSONRepresentation] withKey:&encryKey];
+            requestHeadParams.body = encrString;
+            *key = encryKey;
+            NSString *strParamsJson = [[requestHeadParams paramsDic] JSONRepresentation];
+            dataParams =  [strParamsJson dataUsingEncoding:NSUTF8StringEncoding];
+            
+        }else if ([encyptScheme isEqualToString:@"v2"]){
+            
+            //token 获取
+            
+            if (![[PCDEncryptTokenManager shareManager] checkTokenAvailable]) {
+                
+                if (![PCDEncryptTokenManager shareManager].requesting) {
+                    [[PCDEncryptTokenManager shareManager] requestTokenUseSynchronization:YES];
+                }
+            }
+            
+            //使用新方法加密
+            [PCDNetWorkEncrypt sharedWorkEncrypt].encrypt = PCDRequestEncryptSMVer2;
+            [PCDNetWorkEncrypt sharedWorkEncrypt].decrypt = PCDRequestDecryptSM4Ver2;
+            NSString *key = nil;
+            NSString *encrString = [[PCDNetWorkEncrypt sharedWorkEncrypt] getCryptString:[body JSONRepresentation] withKey:&key];
+            requestHeadParams.body = encrString;
+            NSString *strParamsJson = [[requestHeadParams paramsDic] JSONRepresentation];
+            dataParams = [strParamsJson dataUsingEncoding:NSUTF8StringEncoding];
+            
+        }else{
+            dataParams = nil;
+        }
+    }else{
+        //不加密
+        requestHeadParams.body = body;
+        NSString *strParamsJson = [[requestHeadParams paramsDic] JSONRepresentation];
+        dataParams = [strParamsJson dataUsingEncoding:NSUTF8StringEncoding];
+    }
+    
+    *requestParams = requestHeadParams;
+    
+    return dataParams;
+}
+
+#pragma mark -解密处理
+-(void) decrypt:(PCDNetWorkItem *)netWorkItem
+{
+    PCDSessionIDManager *sidManager = [PCDSessionIDManager defaultManager];
+    
+
+    if ([netWorkItem.requestMethod isEqualToString:@"POST"]) {
+        
+        //报文解密
+        if ([PCDNetWorkServiceGet().encyptScheme isEqualToString:@"v1"]) {
+            PCDNetWorkEncrypt *encrypt = [[PCDNetWorkEncrypt alloc] init];
+            encrypt.decrypt = [PCDNetWorkEncrypt sharedWorkEncrypt].decrypt;
+            netWorkItem.responseString = [[PCDNetWorkEncrypt sharedWorkEncrypt] responseString:netWorkItem.responseData withRandomKey:netWorkItem.v1RandomKey];
+        }else if ([PCDNetWorkServiceGet().encyptScheme isEqualToString:@"v2"]){
+            PCDNetWorkEncrypt *encrypt = [[PCDNetWorkEncrypt alloc] init];
+            encrypt.decrypt = [PCDNetWorkEncrypt sharedWorkEncrypt].decrypt;
+            netWorkItem.responseString = [encrypt responseString:netWorkItem.responseData withRandomKey:nil];
+        }
+    }
+    
+    ///!!!: 如果使用网关 则处理responseString 如果有head 把head里的H_STATUS和H_MSG放到body里去
+    if ([PCDUtil useGateWay]) {
+        
+        NSDictionary *dict = [netWorkItem.responseString JSONValue];
+        NSDictionary *head = dict[@"head"];
+        NSDictionary *body = dict[@"body"];
+        
+        if (head) {
+            
+            if (head[@"H_UPS_SID"]) {
+                
+                //MARK: - 保存会话ID 2018年10月12日:新增按照多渠道存储
+                [sidManager.gatewaySIDs setObject:head[@"H_UPS_SID"] forKey:![PCDUtil nilOrEmptyString:netWorkItem.channelID]?netWorkItem.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@""] ;
+                
+                if ([netWorkItem.urlString includeString:sidManager.getConnectUrl]){
+                    
+                    [sidManager.connectSIDs setObject:head[@"H_UPS_SID"] forKey:![PCDUtil nilOrEmptyString:netWorkItem.channelID]?netWorkItem.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@""];
+                    
+                }
+                //2018年10月11日 可能还需要登录到其他功能
+                if (sidManager.loginUrls.count>0) {
+                    [sidManager.loginUrls enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                        NSString *loginUrl = (NSString *)obj;
+                        if ([netWorkItem.urlString includeString:loginUrl]) {
+                            [sidManager.gatewaySIDs setObject:head[@"H_UPS_SID"] forKey:![PCDUtil nilOrEmptyString:netWorkItem.channelID]?netWorkItem.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@""];
+                            [sidManager.connectSIDs setObject:head[@"H_UPS_SID"] forKey:![PCDUtil nilOrEmptyString:netWorkItem.channelID]?netWorkItem.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@""];
+                            ///!!!: 键值有待替换
+                            [sidManager.loginSIDs setObject:head[@"H_UPS_SID"] forKey:![PCDUtil nilOrEmptyString:netWorkItem.channelID]?netWorkItem.channelID:![PCDUtil nilOrEmptyString:[PCDUtil channelId]]?[PCDUtil channelId]:@""];
+                        }
+                    }];
+                }
+            }
+            NSString *status = head[@"H_STATUS"];
+            NSString *message = head[@"H_MSG"];
+            if (![status isEqualToString:@"1"]) {
+                
+                if ([status isEqualToString:@"security.message.decode.fail"]) {
+
+                    [PCDEncryptTokenManager shareManager].tokenBornTime = 0;
+                }
+                
+                if (netWorkItem.failureBlock) {
+                    
+                    netWorkItem.responseString = [@{@"STATUS":status,@"MSG":message} JSONRepresentation];
+                    
+                    netWorkItem.failureBlock(netWorkItem);
+                    
+                    return;
+                }
+            }else{
+                //把body取出来放进responseString
+                netWorkItem.responseString = [body JSONRepresentation];
+            }
+        }
+    }//否则不处理
+    
+    if (netWorkItem.completionBlock) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            netWorkItem.completionBlock(netWorkItem);
+        });
+    }
+}
+
+@end

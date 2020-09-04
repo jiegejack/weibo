@@ -1,0 +1,25 @@
+//
+//  JSRecordManager.h
+//  录音
+//
+//  Created by Jack on 2019/3/8.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface JSRecordManager : NSObject
+
++ (id)shareInstance;
+
+- (void)playRecord;
+
+- (void)startRecord;
+
+- (void)stopRecordCompleted:(void(^)(NSString *recordBase64))completed;
+
+@end
+
+NS_ASSUME_NONNULL_END

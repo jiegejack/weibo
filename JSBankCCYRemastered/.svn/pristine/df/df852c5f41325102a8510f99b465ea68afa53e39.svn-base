@@ -1,0 +1,37 @@
+//
+//  PCEncryptTokenManager.h
+//  PCDNetWorkServiceGet
+//
+//  Created by 王俣 on 2018/10/29.
+//  Copyright © 2018 P&C. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface PCDEncryptTokenManager : NSObject
+
+/**
+ 是否正在请求token
+ */
+@property (nonatomic,assign) BOOL requesting;
+
+@property (nonatomic,copy) NSString *token;
+
+//token生成时的时间戳
+@property (nonatomic,assign) NSInteger tokenBornTime;
+
+//token有效期
+@property (nonatomic,copy) NSString *expiry;
+
+
+- (BOOL)requestTokenUseSynchronization:(BOOL)synchronize;
+
+- (BOOL)checkTokenAvailable;
+
++ (instancetype)shareManager;
+
+@end
+
+NS_ASSUME_NONNULL_END

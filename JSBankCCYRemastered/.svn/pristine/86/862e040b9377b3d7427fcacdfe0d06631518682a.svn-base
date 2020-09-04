@@ -1,0 +1,104 @@
+//
+//  PCCrashLogDo.h
+//  PCUserDataCollect
+//
+//  Created by Mac-陶(tzw) on 2018/5/28.
+//  Copyright © 2018年 MacBook-陶(tzw). All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+/**
+ 崩溃日志基本的数据
+ */
+@interface PCDCrashLogDo : NSObject
+/**
+ 日志版本号
+ */
+@property (nonatomic,copy) NSString *MSG_VER_NO;
+/**
+ 消息类型
+ */
+@property (nonatomic,copy) NSString *MSG_TYPE;
+/**
+ 采集类型
+ */
+@property (nonatomic,copy) NSString * COLLECT_TYPE;
+/**
+ 启动时间
+ */
+@property (nonatomic,copy) NSString *START_TIME;
+/*
+ * 行别编码
+ */
+@property (nonatomic ,copy) NSString *BANK_CODE;
+/*
+ * 渠道ID
+ */
+@property (nonatomic ,copy) NSString *CHANNEL_ID;
+/**
+ 启动id
+ */
+@property (nonatomic,copy) NSString *START_ID;
+/*
+ * 网络供应商
+ */
+@property (nonatomic ,copy) NSString *CARRIER_NAME;
+
+/**
+ 网络类型 2G 3G 4G 5G WIFI
+ */
+@property (nonatomic,copy) NSString *NETWORK;
+/*
+ * 设备类型 e.g iOS Android
+ */
+@property (nonatomic ,copy) NSString *CLI_TYPE;
+/*
+ * 设备唯一标示
+ */
+@property (nonatomic ,copy) NSString *DEVICE_NO;
+/*
+ * 设备型号 e.g 5s、6、6p
+ */
+@property (nonatomic ,copy) NSString *DEVICE_MODEL;
+/*
+ * 设备系统版本
+ */
+@property (nonatomic ,copy) NSString *SYSTEM_VERSION;
+/*
+ * app 版本号
+ */
+@property (nonatomic ,copy) NSString *BUNDLE_VERSION;
+/**
+ 是否越狱
+ */
+@property (nonatomic,copy) NSString *IS_JAILBREAK;
+/**
+ 经纬度
+ */
+@property (nonatomic,copy) NSString *GPS;
+/**
+ 地址
+ */
+@property (nonatomic,copy) NSString *ADDRESS;
+/**
+ 页面编号
+ */
+@property (nonatomic,copy) NSString *PAGE_ID;
+/*
+ * 崩溃时间
+ */
+@property (nonatomic ,copy) NSString *CRASH_TIME;
+/**
+ 崩溃类型
+ */
+@property (nonatomic,copy) NSString *CRASH_TYPE;
+/*
+ * 崩溃原因
+ */
+@property (nonatomic ,copy) NSString *CRASH_LOG;
+
+-(id)init;
+
+-(NSDictionary *)toDictionary;
+
+@end

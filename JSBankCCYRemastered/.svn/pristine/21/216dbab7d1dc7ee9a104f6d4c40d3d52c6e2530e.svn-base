@@ -1,0 +1,352 @@
+//
+//  JSLoginManager.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/6.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSLoginManager.h"
+#import "JSLoginViewController.h"
+#import "TouchIDManager.h"
+#import "JSSettingPasswordViewController.h"
+#import "JSFaceRecordViewController.h"
+#import "JSTabBarController.h"
+
+@implementation JSLoginManager
+
+static NSString *const reloadFunc = @"login.loginCallback()";
+
+static NSDictionary     *_loginParam;
+static LoginType         _type;
+static UIViewController *_target;
+static JSLoginViewController *_loginVC;
+
++ (BOOL)clientIsLogin {
+    NSInteger status = [JSSharedInstance sharedInstance].loginSession.STATUS.integerValue;
+    
+    return status ? YES : NO;
+}
+
++ (void)logoutClient {
+    if ([JSSharedInstance sharedInstance].loginSession.STATUS.integerValue == 1) {
+        [JSSharedInstance sharedInstance].loginSession = nil;
+        [self reloadRootViewControllers];
+    }
+}
+
++ (void)reloadRootViewControllers {
+    UIWindow *window= [[[UIApplication sharedApplication] delegate] window];
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    PCDTabBarController *tabBarController = (PCDTabBarController *)navi.viewControllers.firstObject;
+    if (window.rootViewController) {
+        for (UINavigationController *nav in tabBarController.viewControllers) {
+            if ([nav.viewControllers.firstObject isKindOfClass:[JSRootWebViewController class]]) {
+                JSRootWebViewController *rootVC=(JSRootWebViewController *)nav.viewControllers.firstObject;
+                if ([rootVC respondsToSelector:@selector(excuteJSFunc:)]) {
+                    [rootVC excuteJSFunc:reloadFunc];
+                }
+            }
+        }
+    }
+}
+
++ (void)reloadCurrentPage {
+    JSBaseWebViewController *baseWebVC = [self currentVC];
+    if ([baseWebVC respondsToSelector:@selector(excuteJSFunc:)]) {
+        [baseWebVC excuteJSFunc:reloadFunc];
+    }
+}
+
++ (JSBaseWebViewController *)currentVC {
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    id vc = navi.viewControllers.lastObject;
+    JSBaseWebViewController *baseWebVC;
+    if ([vc isKindOfClass:[JSBaseWebViewController class]]) {
+        baseWebVC = vc;
+    }
+    if ([vc isKindOfClass:[JSTabBarController class]]) {
+        JSTabBarController *tabBar = vc;
+        if ([tabBar.selectedViewController isKindOfClass:[JSBaseWebViewController class]]) {
+            baseWebVC = tabBar.selectedViewController;
+        }
+    }
+    return baseWebVC;
+}
+
++ (void)indexToHomePage:(NSInteger)page {
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    [navi popToRootViewControllerAnimated:NO];
+    JSTabBarController *tabBarController = (JSTabBarController *)navi.viewControllers.lastObject;
+    tabBarController.tabBar.selectedItem = tabBarController.tabBar.items[page];
+    tabBarController.selectedIndex = page;
+    tabBarController.currentSelectedIndex = page;
+    tabBarController.selectedViewController = (JSRootWebViewController *)tabBarController.vcs[page];
+}
+
++ (void)popVCsWithTarget:(UIViewController *)target {
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    NSMutableArray *vcs = [NSMutableArray arrayWithArray:navi.viewControllers];
+    for (id vc in navi.viewControllers) {
+        if ([vc isKindOfClass:[JSBaseViewController class]]) {
+            JSBaseViewController *webVC = (JSBaseViewController *)vc;
+            if (webVC.isShouldPopPage) {
+                [vcs removeObject:vc];
+            }
+        }
+    }
+    [navi setViewControllers:vcs animated:YES];
+}
+
++ (UINavigationController *)getNavi {
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    JSTabBarController *tabBarController = (JSTabBarController *)navi.viewControllers.lastObject;
+    return tabBarController.navigationController;
+}
+
++ (void)clientLoginSuccess:(nullable void(^)(id resultResponse, LoginSession *session))success
+                        faild:(nullable void(^)(NSString *MSG, NSString *STATUS, id resultResponse))faild {
+    
+    JSLoginViewController *vc = [[JSLoginViewController alloc] initWithSuccessBlock:^(id resultResponse, LoginSession *session) {
+        if (success) {
+            success(resultResponse, session);return;
+        }
+        [[self getNavi] popViewControllerAnimated:NO];
+    } faildBlock:^(NSString *MSG, NSString *STATUS, id resultResponse) {
+        if (faild) {
+            faild(MSG, STATUS, resultResponse);
+        }
+    }];
+    if (([TouchIDManager biometryType] != DJBiometryTypeNotSupport) && [TouchIDManager getBiometryState]) {
+        vc.isBiometryLoginInterface = YES;
+    }
+    vc.isShouldPopPage = YES;
+    vc.hidesBottomBarWhenPushed = YES;
+    _loginVC = vc;
+    [[self getNavi] pushViewController:vc animated:YES];
+}
+
++ (void)loginWithLoginType:(LoginType)type
+                loginParam:(NSDictionary *)loginParam
+                   success:(nullable void(^)(id resultResponse, LoginSession *session))success
+                     faild:(nullable void(^)(NSString *MSG, NSString *STATUS, id resultResponse))faild {
+
+    if (type != LoginTypeBiometry && !loginParam.notNull) {return;}
+
+    _loginParam = loginParam;
+    _type       = type;
+    
+    NSString *loadText = type == LoginTypeRegister ? @"请稍后..." : @"登录中...";
+    [LoadIndicator showLoadingIndicatorWithText:loadText shouldTap:NO];
+    
+    __weak typeof(self) weakSelf = self;
+    [ClientNetManager fetchLoginDataWithParam:[self setLoginParamWithType:type]
+                                  RequestPath:[self loginPathWithType:type]
+                                      success:^(id resultResponse, id resultModel) {
+                                          //10000693021   -
+                                          //10000712026
+        LoginSession *session = (LoginSession *)resultModel;
+        if (!session) {return;}
+        [JSSharedInstance sharedInstance].loginSession = session;
+        [DataCache setCacheString:session.custemployeNo ? session.custemployeNo : @"" forkey:@"ccy_custemployeNo"];
+        
+        NSString *msg = type == LoginTypeRegister ? @"注册成功" : @"登录成功";
+                                          
+        [self reloadRootViewControllers];
+                                          
+        if (success) {
+            success(resultResponse, session);
+        }
+        [weakSelf showMsg:msg status:session.STATUS];
+    } failure:^(NSString *MSG, NSString *STATUS, id resultResponse) {
+        [weakSelf loginFaildWithStatus:STATUS msg:MSG];
+        if (faild) {
+            faild(MSG, STATUS, resultResponse);
+        }
+    }];
+}
+
++ (void)loginFaildWithStatus:(NSString *)status msg:(NSString *)msg {
+  if ([status isEqualToString:@"PP01014"] || [status isEqualToString:@"PP01013"]) {
+      [DataCache setCacheString:@"" forkey:@"ccy_custemployeNo"];
+      if ([TouchIDManager getBiometryState]) {
+          [TouchIDManager resetBiometryState];
+      }
+      [self logoutClient];
+
+      [JSDeftAlert showMessage:msg afterDelay:1.6 completeHandle:^{
+          if (_type == LoginTypeBiometry) {
+              [_loginVC changeLoginWay];
+          }
+      }];
+  } else if ([status isEqualToString:@"FQZ02"] || //加强认证
+               [status isEqualToString:@"FQZ04"]) { //视频认证
+
+      [self showAuthenticationWithFlag:status];
+  } else {
+      [self showMsg:msg status:status];
+  }
+}
+
++ (void)showMsg:(NSString *)msg status:(NSString *)status {
+    if (msg.notNull) {
+        __weak typeof(self) weakSelf = self;
+        [JSDeftAlert showMessage:msg afterDelay:1.5 completeHandle:^{
+            if (_type == LoginTypeRegister && status.integerValue == 1) {
+                [JSDeftAlert showAlert:@"请设置登录密码" doneTitle:@"确定" cancelTitle:nil doneHandle:^{
+                    [weakSelf gotoSettingPwd];
+                } cancelHandle:nil];
+            }
+        }];
+    }
+}
+
++ (void)tipBiometry {
+    if (([TouchIDManager biometryType] != DJBiometryTypeNotSupport) && ![TouchIDManager getBiometryState] && [JSLoginManager clientIsLogin] && ![TouchIDManager isWithinPeriod]) {
+        [JSDeftAlert showAlert:@"是否开启指纹登录" doneTitle:@"立即开启" cancelTitle:@"一周内不提示" doneHandle:^{
+            [JSBaseWebViewController goWebViewWithUrl:@"page/12/02/01/P0201.html?pageType=setting"];
+        } cancelHandle:^{
+            [TouchIDManager saveBiometryStateDate];
+        }];
+    }
+}
+
++ (void)showAuthenticationWithFlag:(NSString *)flag {
+    __weak typeof(self) weakSelf = self;
+    NSString *content = [NSString stringWithFormat:@"为了您的账户安全，即将进入%@认证流程",[flag isEqualToString:@"FQZ04"] ? @"视频" : @"短信"];
+    AlertExtension *alert = [[[AlertExtension alloc] init] alertWithTitle:@"温馨提示"
+                                                                  message:content type:AlertTypeRegular];
+    alert.titleFont = [UIFont boldSystemFontOfSize:17];
+    alert.messageFont = [UIFont systemFontOfSize:15];
+    
+    alert.cancelButtonTitle = @"取消";
+    alert.otherButtonTitle = @"去认证";
+    
+    alert.otherBlock = ^{
+        if ([flag isEqualToString:@"FQZ04"]) {
+            UIWindow *window = [UIApplication sharedApplication].delegate.window;
+            UINavigationController *navi = (UINavigationController *)window.rootViewController;
+//
+//            [navi popViewControllerAnimated:NO];
+            
+            JSFaceRecordViewController *faceVC = [[JSFaceRecordViewController alloc]init];
+            faceVC.type       = @"03";
+            faceVC.loginParam = _loginParam;
+            faceVC.loginType  = _type;
+            faceVC.isShouldPopPage = YES;
+            [navi pushViewController:faceVC animated:YES];
+        }
+        if ([flag isEqualToString:@"FQZ02"]) {
+            [weakSelf excuteAuthenticationWithFlag:flag];
+        }
+    };
+    [alert showAlert];
+}
+
++ (void)excuteAuthenticationWithFlag:(NSString *)flag {
+    NSString *mobileNo = [DataCache getCacheStringForkey:@"ccy_mobileNo"];
+    mobileNo = mobileNo.notNull ? mobileNo : @"";
+
+    NSString *type = (_type == LoginTypeBiometry) ? @"loginFinger" : @"login";
+    NSString *url = [NSString stringWithFormat:@"page/PP01/PP0105/PP0105.html?validateType=msg&mobileNo=%@&smsType=%@", mobileNo, type];
+    [JSBaseWebViewController goWebViewWithUrl:url];
+}
+
++ (void)gotoSettingPwd {
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    JSSettingPasswordViewController *setVC = [[JSSettingPasswordViewController alloc] init];
+    setVC.isShouldPopPage = YES;
+    [navi pushViewController:setVC animated:YES];
+}
+
++ (NSMutableDictionary *)setLoginParamWithType:(LoginType)type {
+    NSMutableDictionary *param = [NSMutableDictionary dictionary];
+
+    switch (type) {
+        case LoginTypePassword:
+            param = Param().pwdLogin;
+            [param setObject:[self setPhoneNo] forKey:@"mobileNo"];
+            [param setObject:[self setLoginPassword] forKey:@"loginPassword"];
+            break;
+        case LoginTypeBiometry:
+            param = Param().biometryLogin.mutableCopy;
+            [param setObject:[self custemployeNo] forKey:@"custemployeNo"];
+            break;
+        case LoginTypeCode:
+            param = Param().codeLogin;
+            [param setObject:[self setSMSCode] forKey:@"code"];
+            [param setObject:[self setPhoneNo] forKey:@"mobileNo"];
+            break;
+        case LoginTypeRegister:
+            param = Param().registerLogin;
+            [param setObject:[self setSMSCode] forKey:@"code"];
+            [param setObject:[self setPhoneNo] forKey:@"mobileNo"];
+            [param setObject:[self setRecommend] forKey:@"recommend"];
+            break;  
+        default:
+            break;
+    }
+    [JSSharedInstance sharedInstance].loginParam = param;
+
+    return param;
+}
+
++ (NSString *)custemployeNo {
+    NSString *custemployeNo = [DataCache getCacheStringForkey:@"ccy_custemployeNo"];
+    custemployeNo = custemployeNo.notNull ? custemployeNo : @"";
+    
+    return custemployeNo;
+}
+
++ (NSString *)setSMSCode {
+    NSString *code = [_loginParam objectForKey:@"code"];
+    code = code.notNull ? code : @"";
+    
+    return code;
+}
++ (NSString *)setLoginPassword {
+    NSString *pwd = [_loginParam objectForKey:@"loginPassword"];
+    pwd = pwd.notNull ? pwd : @"";
+    
+    return pwd;
+}
+
++ (NSString *)setRecommend {
+    NSString *recommend = [_loginParam objectForKey:@"recommend"];
+    recommend = recommend.notNull ? recommend : @"";
+
+    return recommend;
+}
++ (NSString *)setPhoneNo {
+    NSString *phoneNo = [_loginParam objectForKey:@"mobileNo"];
+    phoneNo = phoneNo.notNull ? phoneNo : @"";
+    
+    return phoneNo;
+}
+
++ (NSString *)loginPathWithType:(LoginType)type {
+   switch (type) {
+        case LoginTypePassword:
+            return Request().loginPassword;
+            break;
+        case LoginTypeBiometry:
+            return Request().biometryLogin;
+            break;
+        case LoginTypeCode:
+            return Request().SMSCodeLogin;
+            break;
+        case LoginTypeRegister:
+            return Request().registerLogin;
+            break;
+        default:
+            break;
+    }
+    return @"";
+}
+
+@end

@@ -1,0 +1,104 @@
+//
+//  JLConvert.h
+//  JLObuSDK
+//
+//  Created by 吕祎佩 on 2017/11/2.
+//  Copyright © 2017年 juli.comm.cn. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface JLConvert : NSObject
+
+/**
+ String转Byte数据  如：@“12345678” 转  {0x12,0x34,0x56,0x78}
+ */
++(NSData *)jl_StringToByte:(NSString *)str;
+
+
+/**
+ String转16进制Ascil
+ */
++(NSString *)jl_GetAcil:(NSString *)str;
+
+
+/**
+ nsdata 转 nsstring
+ */
++(NSString *)jl_DataToStr:(NSData *)data;
+
+
+/**
+ String转Hex
+ */
++(NSData *)jl_StringToHex:(NSString *)str;
+
+
+/**
+ 报文组包
+ */
++(NSString *)jl_AppendStr:(NSString *)str leng:(int)len;
+
+
+/**
+ 十进制转16进制
+ */
++(NSString *)jl_TenToHex:(long long int)tmpid;
+
+
+/**
+ *  在报文上0
+ *  len  加几个0
+ *  type 0 在报文前加0  1 在报文后加0
+ */
++(NSString *)jl_AddZero:(NSString *)str leng:(int)len type:(int)type;
+
+
+/**
+ 每两个字符用空格分隔
+ */
++(NSString *)jl_TwoSpace:(NSString *)str;
+
+
+/**
+ 万能的JSON解析方法
+ */
++(id)jl_AnalyJson:(id)jsonData;
+
+
+/**
+ 将16进制转化为二进制
+ */
++(NSString *)jl_HexToBinary:(NSString *)hex;
+
+
+/**
+ 16进制转10进制
+ */
++(NSNumber *)jl_HexToDeci:(NSString *)hex;
+
+/**
+ 字符串转char数组
+ */
++(void)jl_StrToByte:(NSString *)str chData:(unsigned char[])ch chLen:(unsigned char *)chLen;
+
+
+/**
+ 字符串转数字
+ */
++(long)jl_HexToInt:(NSString *)hexString;
+
+
+/**
+ bytes转NSString
+ */
++(NSString *)jl_BytesToStr:(Byte *)bytes bytesLen:(int)bytesLen;
+
+
+/**
+ Data转int
+ 
+ */
++ (int)jl_DataToInt:(NSData*)sourceData;
+
+@end

@@ -1,0 +1,56 @@
+//
+//  PCDAlignButton.h
+//  PCKit
+//
+//  Created by wangyong on 16/5/19.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+/**
+ 对齐样式
+
+ - PCDAlignHorizontalTextLeft: 横向对齐方式，文字在左
+ - PCDAlignHorizontalTextRight: 横向对齐方式，文字在右
+ - PCDAlignVerticalTextTop: 竖向对齐方式，文字在上
+ - PCDAlignVerticalTextBottom: 竖向对齐方式，文字在下，默认
+ */
+typedef NS_ENUM(NSUInteger,PCDAlignButtonStyle) {
+    PCDAlignHorizontalTextLeft =0,
+    PCDAlignHorizontalTextRight,
+    PCDAlignVerticalTextTop,
+    PCDAlignVerticalTextBottom,
+};
+
+/**
+ *  @brief 图文对齐按钮
+ */
+@interface PCDAlignButton : UIButton
+
+/**
+ *  @brief 样式，默认PCDAlignVerticalTextBottom样式
+ */
+@property(nonatomic,assign) PCDAlignButtonStyle alignStyle;
+
+/**
+ *  @brief 标题是否自动调整字体大小来适应宽度，默认YES
+ */
+@property(nonatomic,assign) BOOL titleAutoFit;
+
+/**
+ 图片大小，如不设置，则取图片自身的大小
+ */
+@property(nonatomic,assign) CGSize iconSize;
+
+/**
+ *  @brief 图片和文字间隔，默认为10.0f
+ */
+@property(nonatomic,assign) CGFloat interval;
+
+/**
+ *  @brief 图片文字内容填充，默认CGPointZero
+ */
+@property(nonatomic,assign) CGPoint contentInsets;
+
+@end

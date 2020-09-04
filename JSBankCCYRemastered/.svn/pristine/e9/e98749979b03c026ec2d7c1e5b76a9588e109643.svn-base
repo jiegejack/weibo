@@ -1,0 +1,18 @@
+//
+//  JSSharedInstance.m
+//  MenuList
+//
+//  Created by Jack on 2019/04/24.
+//  Copyright © 2019年 Jack. All rights reserved.
+//
+
+#import "JSSharedInstance.h"
+@interface JSSharedInstance ()
+
+@end
+
+@implementation JSSharedInstance
+
+JSSingletonM(Instance)
+
+@end

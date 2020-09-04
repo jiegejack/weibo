@@ -1,0 +1,131 @@
+//
+//  PCDScrollGridEditView.h
+//  PCKit
+//
+//  Created by 张瑞 on 14-7-29.
+//  Copyright (c) 2014年 P&C. All rights reserved.
+//  来自丁丁的支持
+
+#import "PCDScrollGridView.h"
+
+@class PCDScrollGridItem,PCDScorllGridEditItemView;
+@protocol DDGridEditViewDelegate;
+
+/**
+ *  @brief 可编辑菜单视图,继承于 PCDScrollGridView。初始化方式与PCDScrollGridView一致。
+ *  添加，删除，换位操作。
+ *
+ */
+@interface PCDScrollGridEditView : PCDScrollGridView
+
+/**
+ *  单击手势事件源
+ */
+@property (nonatomic,strong) UITapGestureRecognizer *singleTapRecognizer;
+
+/**
+ *  滑动手势事件源
+ */
+@property (nonatomic,strong) UIPanGestureRecognizer *panRecognizer;
+
+/**
+ *  时间程，用于延迟执行
+ */
+@property (nonatomic,strong) NSTimer *timerOfDelayScorll;
+
+/**
+ *  是否处于编辑状态
+ */
+@property(nonatomic,readonly) BOOL isEditing;
+
+/**
+ *  是否允许拖动
+ */
+@property (nonatomic,setter = setAbleDrag:) BOOL isAbleDrag;
+
+/**
+ *   刷新后是否处于编辑编辑状态，默认NO
+ */
+@property(nonatomic,assign) BOOL editingAfterReload;
+
+/**
+ *  是否连续操作，默认NO。YES表示长按后可直接拖动
+ */
+@property (nonatomic,assign) BOOL coherentOperation;
+
+/**
+ *  委托
+ */
+@property (nonatomic,assign) id <DDGridEditViewDelegate> gridDelegate;
+
+/**
+ *  添加一个item
+ *
+ *  @param item 按钮数据项
+ */
+
+-(void)addItem:(PCDScrollGridItem *)item;
+
+/**
+ *  添加一组items
+ *
+ *  @param array 按钮数据项组合
+ */
+-(void)addItems:(NSArray *)array;
+
+/**
+ *  插入一个item，放在index后面
+ *
+ *  @param item  待插入的数据项
+ *  @param index 放在index后面
+ */
+-(void)insertItem:(PCDScrollGridItem *)item atIndex:(NSInteger)index;
+
+/**
+ *  插入一组items,放在index后面
+ *
+ *  @param array 待插入的数据项组合
+ *  @param index 放在index后面
+ */
+-(void)insertItems:(NSArray *)array atIndex:(NSInteger)index;
+
+/**
+ *   结束编辑状态
+ */
+-(void)endEditingOfGridEditView;
+
+@end
+
+
+@protocol DDGridEditViewDelegate <UIScrollViewDelegate>
+@optional
+
+/**
+ *  是否允许移除某个item，默认为YES，允许
+ *
+ *  @param gridView 当前PCDScrollGridEditView实例
+ *  @param Item     待移除的按钮数据项
+ *
+ *  @return 是否删除成功
+ */
+
+-(BOOL)gridView:(PCDScrollGridEditView *)gridView shouldRemoveItem:(PCDScrollGridItem *)Item;
+
+/**
+ *  已经移除某个item
+ *
+ *  @param gridView 当前PCDScrollGridEditView实例
+ *  @param Item     删除成功回调
+ */
+-(void)gridView:(PCDScrollGridEditView *)gridView didRemoveItem:(PCDScrollGridItem *)Item;
+
+/**
+ *  已经插入某一个item之前
+ *
+ *  @param gridView 当前PCDScrollGridEditView实例
+ *  @param Item      已经插入按钮数据项
+ *  @param toItem    被插队按钮数据项
+ */
+-(void)gridView:(PCDScrollGridEditView *)gridView didInsertItem:(PCDScrollGridItem *)Item toItem:(PCDScrollGridItem *)toItem;
+
+@end

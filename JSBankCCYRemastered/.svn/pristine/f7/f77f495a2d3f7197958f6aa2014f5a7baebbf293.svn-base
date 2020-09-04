@@ -1,0 +1,28 @@
+//
+//  OBUBluetoothState.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/29.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+#if TARGET_IPHONE_SIMULATOR
+#else
+
+#import "OBUBluetoothState.h"
+#import "OBUManager.h"
+
+@implementation OBUBluetoothState
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    NSString *callback = [dict objectForKey:@"callback"];
+    callback = callback.notNull ? callback : @"";
+    
+    OBUManager *device = [OBUManager shareInstance];
+    [device getBluetoothStatus:^(Boolean status, NSDictionary *dict, NSString *msg) {
+        evaluateJavaScriptOnMainThread_quotes(self, callback, [dict JSONRepresentation]);
+    }];
+}
+
+@end
+#endif

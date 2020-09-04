@@ -1,0 +1,17 @@
+//
+//  AppDelegate.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/2.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
+
+@property (strong, nonatomic) UIWindow *window;
+
+
+@end
+

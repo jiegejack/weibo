@@ -1,0 +1,60 @@
+//
+//  SCBaseDO.m
+//  SmartCampus
+//
+//  Created by dk on 2018/4/16.
+//  Copyright © 2018年 fy. All rights reserved.
+//
+
+#import "PCDBaseDO.h"
+
+@implementation PCDBaseDO
+
+-(id)initWithDict:(NSDictionary *)dict{
+    
+    if (self =[super init]) {
+        
+        [self loadHead:dict];
+    
+    }
+    return self;
+}
+
+-(void)loadHead:(NSDictionary *)dict
+{
+    NSDictionary *headDic = [dict objectForKey:@"head"];
+    if (headDic) {
+        self.hMsg = [headDic objectForKey:@"H_MSG"];
+        self.hStatus = [headDic objectForKey:@"H_STATUS"];
+        self.hSetCookie = [headDic objectForKey:@"head"];
+        self.HPath = [headDic objectForKey:@"head"];
+        self.HTransUrl = [headDic objectForKey:@"head"];
+        self.HBusiTraceNo = [headDic objectForKey:@"head"];
+        self.HChnlNo = [headDic objectForKey:@"H_CHNL_ID"];
+    }else{
+        self.hStatus = @"1";
+    }
+
+    NSDictionary *bodyDic = [dict objectForKey:@"body"];
+    if (!bodyDic) {
+        bodyDic = dict;
+    }
+    
+    
+    self.bMsg = [bodyDic objectForKey:@"MSG"];
+    self.bStatus = [bodyDic objectForKey:@"STATUS"];
+    self.data = bodyDic;
+    
+    if (![self.hStatus isEqual:@"1"]) {
+        self.Status = self.hStatus;
+        self.Msg = self.hMsg;
+        
+    }else {
+        
+        self.Status = self.bStatus;
+        self.Msg = self.bMsg;
+    }
+
+}
+
+@end

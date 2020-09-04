@@ -1,0 +1,37 @@
+//
+//  DJDateManager.h
+//  Demo
+//
+//  Created by Jack on 2017/12/28.
+//  Copyright © 2017年 JaDJDragView. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface DJDateManager : NSObject
+
++ (NSDate *)getDateFromDateString:(NSString *)dateString dateFormate:(NSString *)formate;
+
++ (NSString *)getDateStringFromDate:(NSDate *)date dateFormate:(NSString *)formate;
+
++ (NSDate *)formateDate:(NSDate *)date dateFormate:(NSString *)formate;
+
++ (NSInteger)getDaysForMonthAtDate:(NSDate *)date;
+
++ (NSInteger)getStartDayWithDate:(NSDate *)day;
+
++ (NSInteger)getEndDayWithDate:(NSDate *)day;
+
++ (NSDate *)getLastDate:(NSDate *)date;
+
++ (NSDate *)getNextDate:(NSDate *)date;
+
++ (NSDate *)getNextSingleDate:(NSDate *)date;
+
++ (NSDate *)getLastSingleDate:(NSDate *)date;
+
++ (NSString *)getWeekDayStringWithDate:(NSDate *)date;
+
++ (NSInteger)numberOfDaysWithFromDate:(NSDate *)fromDate toDate:(NSDate *)toDate;
+
+@end

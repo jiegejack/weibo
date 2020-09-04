@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Singleton</key>
+	<dict>
+		<key>RELEASE_FLAG</key>
+		<false/>
+		<key>LOG_FLAG</key>
+		<true/>
+		<key>CHANNEL_ID</key>
+		<string>0001</string>
+		<key>CHNL_TYPE</key>
+		<string>MB</string>
+		<key>INCORP_NO</key>
+		<string>000</string>
+		<key>USE_GATEWAY</key>
+		<true/>
+		<key>RELEASE_URL</key>
+		<string>https://ccytest.jsbchina.cn:9000/ares-api-gateway</string>
+		<key>RELEASE_RESOURCE_URL</key>
+		<string>https://ccytest.jsbchina.cn:9000/page/client.html#</string>
+		<key>PRE_RELEASE_URL</key>
+		<string>https://ccytest.jsbchina.cn:9000/ares-api-gateway</string>
+		<key>PRE_RELEASE_RESOURCE_URL</key>
+		<string>https://ccytest.jsbchina.cn:9000/page/client.html#</string>
+		<key>DEBUG_URL</key>
+		<string>https://ccytest.jsbchina.cn:9000/ares-api-gateway</string>
+		<key>DEBUG_RESOURCE_URL</key>
+		<string>https://ccytest.jsbchina.cn:9000/page/client.html#</string>
+	</dict>
+</dict>
+</plist>

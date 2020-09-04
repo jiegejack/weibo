@@ -1,0 +1,17 @@
+//
+//  JSSettingPasswordViewController.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/9.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSBaseViewController.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface JSSettingPasswordViewController : JSBaseViewController
+
+@end
+
+NS_ASSUME_NONNULL_END

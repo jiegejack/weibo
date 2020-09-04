@@ -1,0 +1,65 @@
+//
+//  PCDScrollGridItemView.h
+//  PCKit
+//
+//  Created by 张瑞 on 14-7-29.
+//  Copyright (c) 2014年 P&C. All rights reserved.
+//  来自丁丁的支持
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+@class PCDScrollGridItem;
+
+/**
+ *  @brief 网格菜单ItemView，通过PCDScrollGridItem控制，无需暴露
+ */
+@interface PCDScrollGridItemView : UIControl
+
+/**
+*  @brief 按钮数据项
+*/
+@property(nonatomic,strong) PCDScrollGridItem *item;
+
+/**
+ *  @brief 图片视图
+ */
+@property(nonatomic,strong) UIButton *imageBtn;
+
+/**
+ *  @brief 标题视图
+ */
+@property(nonatomic,strong) UILabel *titleLabel;
+
+/**
+ *  @brief 背景图片视图
+ */
+@property(nonatomic,strong) UIImageView *backgroundImageView;
+
+/**
+ *  @brief 标识位
+ */
+@property(nonatomic) NSInteger index;
+
+/**
+ *  @brief 按钮视图初始化
+ *
+ *  @param item 按钮数据项
+ *
+ *  @return PCDScrollGridItemView实例
+ */
+-(instancetype)initWithItem:(PCDScrollGridItem *)item;
+
+/**
+ *  @brief 初始化子视图，允许子类复写
+ */
+-(void)initContentView;
+
+/**
+ *  @brief 有效区域
+ *
+ *  @return 有效区域
+ */
+-(CGRect)vaildRect;
+
+@end

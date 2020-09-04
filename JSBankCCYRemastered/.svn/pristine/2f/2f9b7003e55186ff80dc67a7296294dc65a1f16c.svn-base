@@ -1,0 +1,34 @@
+//
+//  RequestUrl.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/21.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface RequestUrl : NSObject
+@property (nonatomic, copy) NSString *loginPassword;
+@property (nonatomic, copy) NSString *registerLogin;
+@property (nonatomic, copy) NSString *biometryLogin;
+@property (nonatomic, copy) NSString *SMSCodeLogin;
+@property (nonatomic, copy) NSString *SMSCode;
+@property (nonatomic, copy) NSString *versionUpdate;
+@property (nonatomic, copy) NSString *placeholder;
+@property (nonatomic, copy) NSString *setPassword;
+@property (nonatomic, copy) NSString *tabBarIcon;
+@property (nonatomic, copy) NSString *faceRecord;
+@property (nonatomic, copy) NSString *splashRequest;
+
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    RequestUrl *Request(void);
+#ifdef __cplusplus
+}
+#endif
+
+

@@ -1,0 +1,137 @@
+//
+//  PCDCUtil.h
+//  PCUserDataCollect
+//
+//  Created by Mac-陶(tzw) on 2018/6/20.
+//  Copyright © 2018年 MacBook-陶(tzw). All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface PCDCUtil : NSObject
+
+/**
+ 获取当前操作时间
+
+ @return 时间字符串
+ */
++(NSString *)getCurrentTime1;
+
+/**
+ 获取CPU类型
+
+ @return cpu类型
+ */
++(NSString*)DC_getCPUType;
+
+/**
+ ip地址
+
+ @return ip
+ */
++(NSString *)getIPAddress;
+
+/**
+ 获取网络供应商
+
+ @return 网络供应商
+ */
++(NSString *)getNetProvider;
+
+/**
+ 行为采集的文件路径
+ 
+ @return 路径地址
+ */
++ (NSString *)getUserBehaviourFilePath;
+
+/**
+ 存储数据
+
+ @param dic 采集的数据
+ */
++ (void)saveCollectData:(NSDictionary *)dic;
+
+
+/**
+ 删除采集的日志文件
+ */
++ (void)deleteCollectData;
+
+/**
+ app名称
+
+ @return App名称
+ */
++(NSString *)PCDC_appName;
+
+/**
+ 项目名称
+
+ @return 项目名称
+ */
++(NSString *)PCDC_projectName;
+
+/**
+ app版本号
+
+ @return 版本号
+ */
++(NSString *)PCDC_appVersion;
+
+/**
+ app build 版本号
+
+ @return build版本号
+ */
++(NSString *)PCDC_appBundleVersion;
+
+/**
+ 系统版本
+
+ @return 系统版本号
+ */
++(NSString *)PCDC_systemVersion;
+
+/**
+ 设备类型 e.g 5s 6p iphone X
+
+ @return 设备类型
+ */
++(NSString *)PCDC_deviceModel;
+
+/**
+ 设备唯一标示
+
+ @return 唯一标示
+ */
++(NSString *)PCDC_uniqueIdentifier;
+
+/**
+ 获取启动时间
+ */
++(NSString *)getCurrentTime2;
+
+/**
+ 获取uuid作为启动id
+
+ @return uuid(启动id)
+ */
++ (NSString *)getUUID;
+
+/**
+获取网络类型
+
+ @return 网络类型 wifi 4g 3g 2g 
+ */
++ (NSString *)getNetworkType;
+
+/**
+ 获取分辨率
+
+ @return 分辨率
+ */
++ (NSString *)getResolution;
+
+
+@end

@@ -1,0 +1,33 @@
+//
+//  CarLifeInfo.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/23.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "CarLifeInfo.h"
+
+@implementation CarLifeInfo
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    NSString *callback = [dict objectForKey:@"callback"];
+    callback = callback.notNull ? callback : @"";
+    
+    [ClientNetManager fetchCarLifeDataSuccess:^(id resultResponse) {
+        NSDictionary *result = (NSDictionary *)resultResponse;
+        if (result.notNull) {
+            NSString *transData = [result objectForKey:@"transData"];
+            if (transData.notNull) {
+                evaluateJavaScriptOnMainThread_quotes(self, callback, transData);
+            }
+        }
+    } failure:^(NSString *MSG) {
+        if (MSG.notNull) {
+            [JSDeftAlert showMessage:MSG afterDelay:1.6 completeHandle:nil];
+        }
+    }];
+}
+
+@end

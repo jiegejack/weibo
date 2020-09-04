@@ -1,0 +1,21 @@
+//
+//  CheckLoginState.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/17.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "CheckLoginState.h"
+
+@implementation CheckLoginState
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    NSString *callback =[dict objectForKey:@"callback"];
+    callback = callback.notNull ? callback : @"";
+    BOOL isLogin = [JSLoginManager clientIsLogin];
+    evaluateJavaScriptOnMainThread(self, callback, isLogin ? @"1" : @"0");
+}
+    
+@end

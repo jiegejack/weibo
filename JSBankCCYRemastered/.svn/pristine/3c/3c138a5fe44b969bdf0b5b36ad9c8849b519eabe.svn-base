@@ -1,0 +1,21 @@
+//
+//  JSLoginViewController.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/16.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface JSLoginViewController : JSBaseViewController
+@property (nonatomic, assign) BOOL isBiometryLoginPush;
+@property (nonatomic, strong) id obj;
+@property (nonatomic, assign) BOOL isBiometryLoginInterface;
+
+
+- (id)initWithSuccessBlock:(void(^)(id resultResponse, LoginSession *session))successBlock
+                faildBlock:(void(^)(NSString *MSG, LoginSession *session, id resultResponse))faildBlock;
+
+@end
+

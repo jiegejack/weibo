@@ -1,0 +1,22 @@
+//
+//  JSProperty.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/26.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface JSProperty : NSObject
+@property (nonatomic, strong) PCDTabBarController *tabBarController;
+
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    JSProperty *App(void);
+#ifdef __cplusplus
+}
+#endif

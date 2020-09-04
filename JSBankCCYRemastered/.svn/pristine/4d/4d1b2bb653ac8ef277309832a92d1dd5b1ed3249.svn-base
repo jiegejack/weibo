@@ -1,0 +1,96 @@
+//
+//  PCUrlConfig.h
+//  PNCMobileBank
+//
+//  Created by Mac-陶(tzw) on 2018/3/6.
+//  Copyright © 2018年 MacBook-陶(tzw). All rights reserved.
+//
+
+#ifndef PCDURLModeConfig
+#define PCDURLModeConfig
+
+
+//首页 －精选
+#define Server_JingXunPage_URL @"page/newPage/index.html"
+
+//金融
+#define Server_FindPage_URL @"page/newPage/finance.html"
+
+//信用卡
+#define Server_CardLifePage_URL @"page/common/custinfo.html"
+
+//豆趣
+#define Server_DouquPage_URL @"page/newPage/douqu.html"
+
+//我的
+#define Server_MinePage_URL @"page/newPage/myhtml.html"
+
+
+
+
+
+//Common
+//菜单
+#define COMMON_MenuList_URL @"common/menuListQry.do"
+
+//图片验证码
+#define COMMON_ImgCode_URL @"/common/imageCode.do"
+
+//公告分页查询
+#define COMMON_NoticePage_URL @"common/noticePageQry.do"
+//公告详情查询
+#define COMMON_NoticeDetail_URL @"common/noticeQry.do"
+
+//App
+
+//版本检查
+#define APP_Version_URL  @"app/appVerQry.do"
+
+//启动页
+#define APP_StartLaunch_URL @"app/appStartListQry.do"
+
+//接口数据缓存版本查询
+#define APP_CacheVer_URL @"app/cacheVerListQry.do"
+
+//广告查询
+#define APP_AAdverList_URL @"app/adverListQry.do"
+
+//设备绑定
+#define APP_DeviceBind_URL @"app/deviceBind.do"
+
+//login
+//登录
+#define LOGIN_LoginBYPwd_URL  @"login/loginByPwd.do"
+
+//手势登录
+#define LOGIN_LoginBYGesture_URL  @"login/loginByGesture.do"
+
+//手势设置
+#define LOGIN_SetGesture_URL  @"login/loginSetGesture.do"
+
+//手势设置查询
+#define LOGIN_QueryGesture_URL  @"login/loginModeQuery.do"
+
+//FaceID登录
+#define LOGIN_LoginBYFinger_URL  @"login/loginByFinger.do"
+
+//安全退出
+#define LOGIN_LoginOut_URL  @"login/logout.do"
+
+//附近网点查询
+#define App_NetServiceList_URL @"common/brchNearPageQry.do"
+//省市区
+#define App_NetProvince_URL @"common/brchProvListQry.do"
+#define App_NetCity_URL @"common/brchCityListQry.do"
+#define App_NetCounty_URL @"common/brchTownListQry.do"
+//省市区所有信息
+#define App_NetAllArea_URL @"common/brchAresTreeQry.do"
+
+//sms
+//发送短信验证码
+#define SMS_SmsSend_URL @"sms/smsSend.do"
+
+#endif /* PCUrlConfig_h */
+
+
+

@@ -1,0 +1,15 @@
+//
+//  YTKeyboardEncryptProtocol.h
+//  YTKeyboardDemo3.0
+//
+//  Created by 李培辉 on 2017/8/9.
+//  Copyright © 2017年 李培辉. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@protocol YTKeyboardEncryptProtocol <NSObject>
+@required
+- (NSString *)encryptStr:(NSString *)str;
+- (NSString *)decryptStr:(NSString *)str;
+@end

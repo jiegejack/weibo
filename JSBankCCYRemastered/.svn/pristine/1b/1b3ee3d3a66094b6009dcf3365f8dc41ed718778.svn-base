@@ -1,0 +1,25 @@
+//
+//  JSCheckBox.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/17.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+
+@interface JSCheckBox : UIButton
+
+- (id)initWithButton_key:(NSString *)key __attribute__((nonnull (1)));
+
+@property (nonatomic, assign) BOOL      isSelectedBox;
+@property (nonatomic, copy)   NSString *selectedImageName;
+@property (nonatomic, copy)   NSString *imageName;
+@property (nonatomic, copy)   NSString *button_key;
+
+
+- (id)init NS_AUTOMATED_REFCOUNT_UNAVAILABLE __attribute__((unavailable("use method: initWithButton_key")));
+- (id)initWithFrame:(CGRect)frame NS_AUTOMATED_REFCOUNT_UNAVAILABLE __attribute__((unavailable("use method: initWithButton_key")));
+@end
+

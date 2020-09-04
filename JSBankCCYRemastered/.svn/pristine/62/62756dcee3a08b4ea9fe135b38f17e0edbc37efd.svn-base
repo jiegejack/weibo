@@ -1,0 +1,70 @@
+//
+//  JSHomeViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSHomeViewController.h"
+#import "JSSettingPasswordViewController.h"
+#import "InitPageTitle.h"
+#import "JSBiometryLoginViewController.h"
+#import "JSLoginViewController.h"
+#import "ShareReceiptH5Plugin.h"
+
+#import "CheckBiometrySupport.h"
+#import "CheckBiometryStatus.h"
+#import "BiometryObserver.h"
+#import "PickImage.h"
+
+@interface JSHomeViewController () <UIScrollViewDelegate>
+
+@end
+
+@implementation JSHomeViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(16 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        PCDContext *context = [[PCDContext alloc] init];
+//        context.eventTargetList = self.tabBarController.viewControllers;
+//
+//    NSString *hrefUrl = @"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1558674686335&di=a7b00710781a099c2af67baab3203489&imgtype=0&src=http%3A%2F%2Fbpic.ooopic.com%2F16%2F52%2F43%2F16524370-cd984bb7b1d57a69843592f5db93b40d-3.jpg";
+//
+//    NSString *imgUrl = @"http://pic34.nipic.com/20131103/9422601_173208318000_2.jpg";
+//
+//    NSDictionary *dic = @{@"hrefUrl" : hrefUrl, @"title" : @"串串盈分享", @"content" : @"分享内容", @"type" : @"WX,PYQ,WB", @"imgUrl" : imgUrl};
+//    [[[ShareReceiptH5Plugin alloc] init] handler:dic andContext:context ResponseCallback:nil];
+//
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//
+//        PCDContext *context = [[PCDContext alloc] init];
+//        context.eventTargetList = self.tabBarController.viewControllers;
+//        [[[PickImage alloc] init] handler:self andContext:context ResponseCallback:^(id responseData) {
+//            //
+//        }];
+//    });
+//    });
+    
+//    JSLoginViewController *lgvc = [[JSLoginViewController alloc] init];
+//    lgvc.hidesBottomBarWhenPushed = YES;
+//    [self.tabBarController.navigationController pushViewController:lgvc animated:YES];
+}
+
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
+    
+    return YES;
+}
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    [self.bankWebView.scrollView.mj_header endRefreshing];
+
+}
+- (void)webViewDidStartLoad:(UIWebView *)webVie {}
+
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+    [self.bankWebView.scrollView.mj_header endRefreshing];
+}
+@end

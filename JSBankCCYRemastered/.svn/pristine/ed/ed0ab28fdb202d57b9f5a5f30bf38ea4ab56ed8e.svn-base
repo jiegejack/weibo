@@ -1,0 +1,32 @@
+//
+//  JSBaseViewController.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <PCDUIBaseClass/PCDUIBaseClass.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface JSBaseViewController : PCDViewController
+@property (nonatomic, strong) UIColor *backButtonColor;
+
+//@property (nonatomic,retain) UIWebView *bankWebView;
+
+//@property (nonatomic, copy) NSString *requestUrl;
+//
+////webView重加载
+//- (void)doWebRequest;
+//
+///**
+// webView可见的时候调用
+// */
+//- (void)webViewDidVisible;
+
+- (void)backBarButtonPressed;
+
+@end
+
+NS_ASSUME_NONNULL_END

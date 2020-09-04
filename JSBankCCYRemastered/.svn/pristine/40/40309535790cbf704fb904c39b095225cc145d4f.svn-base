@@ -1,0 +1,17 @@
+//
+//  CarLifeAuth.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/24.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <PCDH5Container/PCDH5Container.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface CarLifeAuth : PCAPIjsbBaseObiect
+
+@end
+
+NS_ASSUME_NONNULL_END

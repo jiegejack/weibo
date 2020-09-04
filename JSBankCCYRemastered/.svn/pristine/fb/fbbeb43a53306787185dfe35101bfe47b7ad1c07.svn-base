@@ -1,0 +1,41 @@
+//
+//  PCDUISingleton.h
+//  PCKit
+//
+//  Created by wangyong on 16/5/6.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "PCDThemeModle.h"
+/**
+ *  @brief 单例，PCDUIBaseClass私有类，工程外部请使用PCDUtil的setSingletonObject:forKey:和singletonObjectForKey:进行单例级数据存取
+ */
+@interface PCDUISingleton : NSObject
+
+@property (nonatomic,strong) PCDThemeModle *themeModel;
+
+/**
+ *  @brief 单例化
+ *
+ *  @return 单例话对象
+ */
++(nonnull PCDUISingleton *)shareInstance;
+
+
+/**
+ 自定义单例存储数据
+
+ @param object 对象
+ @param key 键值
+ */
++(void)setObject:(nullable id)object forKey:(nonnull NSString *)key;
+
+/**
+ 获取单例存储数据
+
+ @param key 键值
+ @return 存储对象
+ */
++(nullable id)objectForKey:(nonnull NSString *)key;
+@end

@@ -1,0 +1,107 @@
+//
+//  PCDWebRPC.m
+//  PCDH5Container
+//
+//  Created by dk on 2018/6/6.
+//  Copyright © 2018年 dk. All rights reserved.
+//
+/*
+ {
+ failure = "yt_gen_10002";
+ params =     {
+ channel = 2;
+ type = credit;
+ };
+ success = "yt_gen_10001";
+ url = "/informationCommon/getImageInfo.do";
+ }
+ */
+#import "PCDWebRPC.h"
+
+@interface PCDWebRPC()
+@property(nonatomic,assign) BOOL bCheckLogin;
+
+@end
+
+@implementation PCDWebRPC
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    
+    NSDictionary *dict = [self objectForDic:data];
+    
+    id object =[dict objectForKey:@"params"];
+    
+    NSString *successJsEv = [dict objectForKey:@"success"];
+    NSString *failureJsEv = [dict objectForKey:@"failure"];
+    
+    NSString *strUrl =[dict objectForKey:@"url"];
+    NSString *path = [PCDUtil getServerURL:strUrl];
+    
+    //动态防护
+//    NSString *urlString = [MSecClient getUrlWithToken:path];
+//    urlString = urlString.notNull ? urlString : @"";
+    
+    __block NSString *tempSuccessJsEv = successJsEv;
+     __block NSString *tempFailureJsEv = failureJsEv;
+    
+        [PCDNetWorkServiceGet() sendRequestWithUrlString:path requestType:REQUEST_METHOD_DEFAULT contentType:REQUEST_CONTENTTYPE_DEFAULT configEncryptBlock:^NSString * _Nonnull(NSString * _Nonnull unencryptJsonString) {
+            NSLog(@"unencryptJsonString : %@",unencryptJsonString);
+            return nil;
+        } body:object andCompletionBlock:^(PCDNetWorkItem * _Nonnull item, BOOL success) {
+            NSLog(@"responseString : %@",item.responseString);
+            //动态防护
+//            MSecClient *client = [MSecClient getClient:urlString];
+//            [client onResponseHeader:[item.params.head objectForKey:[client getHeaderKey]]];
+            
+            NSDictionary *responseDict = [item.responseString JSONValue];
+            NSDictionary *dict = [responseDict objectForKey:@"body"];
+            NSString *status = [dict objectForKey:@"STATUS"];
+            NSDictionary *head = [responseDict objectForKey:@"head"];
+            if (!status.notNull) {
+                status = [head objectForKey:@"H_STATUS"];
+            }
+            if ([status isEqualToString:@"gw.upstream.connect.error"]) {
+                [JSDeftAlert showMessage:@"加载超时，请稍后再试" afterDelay:1.6 completeHandle:nil];
+            }
+            if (success) {
+                
+                NSString *str = item.responseString;
+                NSDictionary * dicOfResponse = [str JSONValue];
+                PCDBaseDO *baseDo = [[PCDBaseDO alloc] initWithDict:dicOfResponse];
+                NSString *statu = baseDo.Status;
+                
+                UIWebView *tempWeb =  self.bsContext.webView;
+                
+                if ([statu isEqualToString:@"login_out"]) {
+                    [JSLoginManager logoutClient];
+                }
+                
+                    if (![statu isEqual:@"1"]) {
+                        [baseDo.data setObject:baseDo.Status forKey:@"STATUS"];
+                        [baseDo.data setObject:baseDo.Msg forKey:@"MSG"];
+                    }
+                    
+                    NSString *strJs = [NSString stringWithFormat:@"%@(%@)",tempSuccessJsEv,[baseDo.data JSONRepresentation]];
+                    
+                    [tempWeb performSelectorOnMainThread:@selector(stringByEvaluatingJavaScriptFromString:) withObject:strJs waitUntilDone:NO];
+//                }
+                
+            }else{
+                
+                //            //更换回调方法，使用以前那套
+                UIWebView *tempWeb = self.bsContext.webView;
+                
+                NSString *strJs = [NSString stringWithFormat:@"%@(%@)",tempFailureJsEv,item.responseString?item.responseString:[item.error domain]];
+                [tempWeb performSelectorOnMainThread:@selector(stringByEvaluatingJavaScriptFromString:) withObject:strJs waitUntilDone:NO];
+                
+            }
+            
+            tempFailureJsEv = nil;
+            tempSuccessJsEv = nil;
+        }];
+    
+    
+
+}
+
+@end

@@ -1,0 +1,32 @@
+//
+//  GetClientInfoPlugin.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/9.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "GetClientInfoPlugin.h"
+
+@interface GetClientInfoPlugin ()
+
+@end
+
+@implementation GetClientInfoPlugin
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    JSBaseWebViewController *viewController = (JSBaseWebViewController *)context.eventTargetList.firstObject;
+    NSString *jsonString = (NSString *)data;
+    if (!jsonString.notNull) {return;}
+    NSDictionary *dict = [jsonString JSONValue];
+    NSString *callback = [dict objectForKey:@"callback"];
+    NSString *jsCallBack=[NSString stringWithFormat:@"%@('%@')",callback,[self getClientInfo]];
+//    [viewController evalJs:jsCallBack];
+}
+
+- (NSString *)getClientInfo {
+    
+    return @"";
+}
+
+@end

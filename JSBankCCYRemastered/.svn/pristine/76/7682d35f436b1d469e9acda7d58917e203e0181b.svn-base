@@ -1,0 +1,49 @@
+//
+//  JSProgressHUD.h
+//
+//
+//  Created by yitong on 14-12-18.
+//  Copyright (c) 2014年 屹通. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface JSProgressHUD : NSObject
+
+/**
+*  @author yanlong.gao, 14-12-24 10:12:38
+*
+*  @brief  显示Toast
+*  自动根据文本长度定显示时间
+*
+*  @param view    将显示在的View
+*  @param message 提示信息
+*  @param completion 结束后的回调
+*/
++ (void)showProgressHUDInView:(UIView *)view message:(NSString *)message;
+
++ (void)showProgressHUDInView:(UIView *)view message:(NSString *)message completion:(void (^)())completion;
+
+/**
+ *  @author yanlong.gao, 15-01-28 15:01:15
+ *
+ *  添加等待菊花
+ *  移除菊花
+ *
+ *  @param view 附着到的View (单利初始化)
+ */
++ (void)showWaitingIndicatorInView:(UIView *)view withMessage:(NSString *)message;
++ (void)showWaitingIndicatorInView:(UIView *)view;
++ (void)showWhiteWaitingIndicatorInView:(UIView *)view;
+
++ (void)showWaitingIndicatorCanTouchInView:(UIView *)view;
++ (void)showWaitingIndicatorCanTouchInView:(UIView *)view withMessage:(NSString *)message;
+
++ (void)hideWaiting;
++ (void)hideUnAnimationWaiting;
+
+
+// 不是单利初始化, 可以对个view 不同的等待层
++ (void)showWaitingWithIndicatorInView:(UIView *)view withMessage:(NSString *)message;
++ (void)hideHUDForView:(UIView *)view;
+@end

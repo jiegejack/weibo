@@ -1,0 +1,24 @@
+//
+//  IndexTab.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/28.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "IndexTab.h"
+
+@implementation IndexTab
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+    
+    NSInteger index = [[dict objectForKey:@"index"] integerValue];
+    index = index - 1;
+    if (index >= 0) {
+        [JSLoginManager indexToHomePage:index];
+    }
+}
+
+@end

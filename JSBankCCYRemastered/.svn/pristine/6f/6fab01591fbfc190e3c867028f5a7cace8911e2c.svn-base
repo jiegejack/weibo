@@ -1,0 +1,344 @@
+//
+//  JSSplashScreenViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/12.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSSplashScreenViewController.h"
+#import "SplashModel.h"
+#import "JSImageEngineView.h"
+
+static NSString * const _filePath=@"loadingImagePath";
+static NSString * const _defaultKey=@"loadingShowDefaultKey";
+static NSString * const _defaultImageType=@"loadingShowImageType";
+static NSString * const _defaultTimeKey=@"loadingShowTime";
+static NSString * const _defaultEndTimeKey=@"loadingShowEndTime";
+static NSString * const _defaultImageURL =@"loadingShowImageURL";
+static NSString * const _splashURL =@"splashURL";
+
+@interface JSSplashScreenViewController ()
+@property(nonatomic,strong)JSImageEngineView *imageView;
+@property(nonatomic,strong)UIImageView *logoView;
+//@property(nonatomic,strong)SplashModel *splashModel;
+@property(nonatomic,strong)UIButton *skipButton;
+@property(nonatomic,assign)NSInteger time;
+
+@property(nonatomic,strong)NSTimer *timer;
+
+@end
+
+@implementation JSSplashScreenViewController
+
+- (id)init {
+    if (self = [super init]) {
+        [self initView];
+        [self layouSubControls];
+        [self addTimer];
+    }
+    return self;
+}
+
+- (void)stopTimer {
+    if (self.timer && [self.timer isValid]) {
+        [self.timer invalidate];
+        self.timer = nil;
+    }
+}
+
+- (void)addTimer {
+    if(!self.timer) {
+        self.timer = [NSTimer timerWithTimeInterval:1.0f target:self selector:@selector(timerTrack) userInfo:nil repeats:YES];
+        [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+    }
+}
+
+- (void)timerTrack {
+    if (self.time) {
+        self.time -= 1;
+        [self.skipButton setTitle:[NSString stringWithFormat:@"  跳过 %ld  ",self.time] forState:UIControlStateNormal];
+    }
+    
+    if (!self.time && self.timer) {
+        [self dismiss];
+    }
+}
+
+- (JSImageEngineView *)imageView {
+    if (!_imageView) {
+        _imageView = [[JSImageEngineView alloc] init];
+        _imageView.userInteractionEnabled = YES;
+        _imageView.contentMode = UIViewContentModeScaleAspectFit;
+    }
+    return _imageView;
+}
+
+- (UIImageView *)logoView {
+    if (!_logoView) {
+        _logoView = [[UIImageView alloc] init];
+        _logoView.userInteractionEnabled = YES;
+        _logoView.contentMode = UIViewContentModeScaleAspectFit;
+    }
+    return _logoView;
+}
+
+- (UIButton *)skipButton {
+    if (!_skipButton) {
+        _skipButton = [[UIButton alloc] init];
+        _skipButton.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.3];
+        [_skipButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        _skipButton.titleLabel.font = [UIFont systemFontOfSize:14];
+        _skipButton.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+        [self.view addSubview:_skipButton];
+        [_skipButton addTarget:self action:@selector(skipClick) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _skipButton;
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    
+    self.skipButton.layer.cornerRadius = self.skipButton.frame.size.height / 2;
+}
+
+- (void)initView {
+    self.view.backgroundColor = [UIColor groupTableViewBackgroundColor];
+    self.view.userInteractionEnabled = YES;
+    
+//    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"image" ofType:@"gif"];
+    NSData *imageData = [self getLocalImageData];//[NSData dataWithContentsOfFile:filePath];
+    self.imageView.image = [JSImageKernel imageWithData:imageData];
+    [self.view addSubview:self.imageView];
+    
+    self.logoView = [[UIImageView alloc] init];
+    self.logoView.image = [UIImage imageNamed:@"new_splash_logo.png"];
+    self.logoView.userInteractionEnabled = YES;
+    self.logoView.contentMode = UIViewContentModeScaleAspectFit;
+    [self.view addSubview:self.logoView];
+    
+    NSDictionary *dict = [[DataCache getCacheStringForkey:_defaultKey] JSONValue];
+    if (dict.notNull) {
+        NSString *time = [dict objectForKey:_defaultTimeKey];
+        self.time = time.notNull ? time.integerValue : 3;
+    } else {
+        self.time = 3;
+    }
+    [self.skipButton setTitle:[NSString stringWithFormat:@"  跳过 %ld  ",self.time] forState:UIControlStateNormal];
+    [self.view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapClick:)]];
+}
+
+- (void)skipClick {
+    [self dismiss];
+}
+
+- (void)tapClick:(UIGestureRecognizer *)gesture {
+    NSString *url = [DataCache getCacheStringForkey:_splashURL];
+
+    if (!url.notNull) {return;}
+    [self dismiss];
+    [self goWebViewWithUrl:url];
+}
+
+- (void)goWebViewWithUrl:(NSString *)url {
+    if (!url.notNull) {
+        return;
+    }
+    if (![url hasPrefix:@"https://"] && ![url hasPrefix:@"http://"]) {
+        url = [PCDUtil js_getPublicServerURL:url];
+    }
+    NSDictionary *param = @{@"url" : url};
+    NSDictionary *expando = [PCDUtil IsIphoneX]?@{@"NSLayoutAttributeTop":@"88"}:@{@"NSLayoutAttributeTop":@"64"};
+    
+    JSBaseWebViewController *webVC = [PCDWServiceGet() createPCDViewController:param viewControllerClass:[JSBaseWebViewController class] contentViewClass:nil withExpando:expando];
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    [navi pushViewController:webVC animated:YES];
+}
+
+- (void)dismiss {
+    [self stopTimer];
+    
+    if (self.dissmisBlock) {
+        self.dissmisBlock();
+    }
+}
+
+- (void)fetchSplashInfo {
+    __weak typeof(self) weakSelf = self;
+    [ClientNetManager fetchSplashScreenDataWithSuccess:^(id resultResponse, id resultModel) {
+        if (!resultModel) {
+            return;
+        }
+        SplashModel *splashModel = resultModel;
+//        splashModel.MSG = @"交易成功";
+//        splashModel.STATUS = @"1";
+//
+//        List *list = [[List alloc] init];
+//        list.ENDTIME = @"2019-05-03 11:07:08";
+//        list.IMGURL = @"https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=486442445,3347908913&fm=15&gp=0.jpg";
+//        list.STARTTIME = @"2020-01-02 11:07:05";
+//        list.LINK_URL = @"https://www.baidu.com";
+//        list.nowTime = @"2019-06-25 14:46:24";
+//        list.SHOW_SECOND = @"6";
+//        list.MEDIA_TYPE = @".jpg";
+
+//        splashModel.list = @[list];
+        
+        if (splashModel.STATUS.integerValue == 1) {
+            List *list = splashModel.list.firstObject;
+            NSString *downUrl= list.IMGURL;
+            NSString *jsonString = [DataCache getCacheStringForkey:_defaultKey];
+            NSDictionary *defaultDict = (NSDictionary *)[jsonString JSONValue];
+            NSString *defaultURL;
+            if (defaultDict.notNull) {
+                defaultURL=[defaultDict objectForKey:_defaultImageURL];
+            }
+            //保存闪屏跳转url
+            NSString *jumpUrl = list.LINK_URL.notNull ? list.LINK_URL : @"";
+            [DataCache setCacheString:jumpUrl forkey:_splashURL];
+
+            if (![downUrl isEqualToString:defaultURL]) {
+                [weakSelf downloadSplashImageDataWithSplashModel:splashModel];
+            }
+        }
+    } failure:^(NSString *MSG, LoginSession *session, id resultResponse) {
+
+    }];
+}
+
+- (void)downloadSplashImageDataWithSplashModel:(SplashModel *)model {
+    if (!model) {
+        return;
+    }
+    List *list = model.list.firstObject;
+    NSString *url = list.IMGURL;
+    if (!url.notNull) {
+        return;
+    }
+    url = [url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    
+    NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:url]];
+    UIImage *image = [UIImage imageWithData:imageData];
+    if (image) {
+        NSString *endTime = list.ENDTIME;
+        NSString *imgUrl = url;
+        NSString *imageType = list.MEDIA_TYPE;
+        NSString * time = [NSString stringWithFormat:@"%@",list.SHOW_SECOND];
+        NSMutableDictionary * imageDict = [[NSMutableDictionary alloc] init];
+        if (imageType!=nil) {
+            [imageDict setObject:imageType forKey:_defaultImageType];
+            [imageDict setObject:time forKey:_defaultTimeKey];
+            [imageDict setObject:endTime forKey:_defaultEndTimeKey];
+            [imageDict setObject:imgUrl forKey:_defaultImageURL];
+            [DataCache setCacheString:[imageDict JSONRepresentation] forkey:_defaultKey];
+        }
+        //保存闪屏图
+        [self saveCacheData:imageData inPath:_filePath];
+    }
+}
+
+- (void)saveCacheData:(NSData * _Nullable )data inPath:(NSString *)path {
+    [data writeToFile:[self flashAdCachePath:path] atomically:YES];
+}
+
+- (NSData *)getLocalImageData {return [self getCacheWithPath:_filePath];}
+
++ (BOOL)canShowImage {
+    NSDictionary *dict = [[DataCache getCacheStringForkey:_defaultKey] JSONValue];
+    if (!dict.notNull) {
+        return NO;
+    }
+    NSString *endTime=[dict objectForKey:_defaultEndTimeKey];
+    
+    NSInteger result = [self compareDateWith:endTime];
+    if (result==1 || result==0) { //结束时间大于现在时间
+        if ([[[self alloc] init] getLocalImageData]) {return YES;}
+    }
+    [DataCache setCacheString:@"" forkey:_defaultKey];
+    NSFileManager *manager=[NSFileManager defaultManager];
+    [manager removeItemAtPath:[[[self alloc] init] flashAdCachePath:_filePath] error:nil];
+
+    return NO;
+}
+
+- (void)layouSubControls {
+    [self.imageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(self.view);
+    }];
+    [self.logoView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.view.mas_centerX);
+        make.bottom.mas_equalTo(self.view.mas_bottom).offset(-50);
+        make.width.mas_equalTo(250);
+    }];
+    
+    
+    [self.skipButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.view.mas_top).offset(STATUSBAR_HEIGHT);
+        make.right.mas_equalTo(self.view.mas_right).offset(-10);
+        make.height.mas_equalTo(20);
+    }];
+}
+
+
+
+
+
+
+
+
+
+
+
+/** 以下代码可用PCDUtil*/
+- (NSData *)getCacheWithPath:(NSString *)path {
+    NSData *cacheFlashAd = nil;
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    NSString *strPath =[self flashAdCachePath:path];
+    if ([fileManager fileExistsAtPath:strPath]) {
+        cacheFlashAd =[NSData dataWithContentsOfFile:strPath];
+    }
+    return cacheFlashAd;
+}
+- (NSString *)flashAdCachePath:(NSString *)path {
+    return [[[self fileDocDir] init] stringByAppendingPathComponent:path];
+}
+- (NSString *)fileDocDir {
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *docDir = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
+    return docDir;
+}
++ (NSInteger)compareDateWith:(NSString *)endDate
+{
+    NSDateFormatter *formater=[[NSDateFormatter alloc]init];
+    [formater setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+    NSString *nowDateStr=[formater stringFromDate:[NSDate date]];
+    NSDate *date=[formater dateFromString:nowDateStr];
+    NSInteger result=0;
+    NSDateFormatter *dateformater = [[NSDateFormatter alloc] init];
+    [dateformater setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+    NSDate *dta = [[NSDate alloc] init];
+    
+    dta = [dateformater dateFromString:endDate];
+    
+    NSComparisonResult comparResult = [date compare:dta];
+    
+    if (comparResult==NSOrderedSame)
+    {
+        //相等
+        result=0;
+        
+    }else if (comparResult==NSOrderedAscending)
+    {
+        //endDate比date大
+        result=1;
+    }else if (comparResult==NSOrderedDescending)
+    {
+        //endDate比date小
+        
+        result=-1;
+    }
+    return result;
+}
+
+@end

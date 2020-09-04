@@ -1,0 +1,40 @@
+//
+//  OCRrecognitionPlugin.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/9.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "OCRrecognitionPlugin.h"
+#if TARGET_IPHONE_SIMULATOR
+#else
+#import "JSFaceRecordViewController.h"
+#endif
+
+@interface OCRrecognitionPlugin ()
+
+@end
+
+@implementation OCRrecognitionPlugin
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+#if TARGET_IPHONE_SIMULATOR
+#else
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+    NSString *callback =[dict objectForKey:@"callback"];
+    
+    JSFaceRecordViewController *faceDetect=[[JSFaceRecordViewController alloc]init];
+    faceDetect.type = [dict objectForKey:@"type"];
+    faceDetect.callBackHandle =^(NSDictionary *dictData) {
+        evaluateJavaScriptOnMainThread(self, callback, [dictData JSONRepresentation]);
+    };
+    [navi pushViewController:faceDetect animated:YES];
+#endif
+}
+
+@end

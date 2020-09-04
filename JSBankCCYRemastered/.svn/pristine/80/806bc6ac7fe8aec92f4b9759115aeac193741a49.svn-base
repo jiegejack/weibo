@@ -1,0 +1,24 @@
+//
+//  ExtensionTextField.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/22.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "ExtensionTextField.h"
+
+@implementation ExtensionTextField
+
+//- (CGRect)textRectForBounds:(CGRect)bounds {
+//    CGFloat inset = 50;
+//    return CGRectMake(bounds.origin.x, bounds.origin.y, bounds.size.width - inset, bounds.size.height);
+//}
+
+//- (CGRect)rightViewRectForBounds:(CGRect)bounds {
+//
+//    return CGRectMake(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+//}
+
+
+@end

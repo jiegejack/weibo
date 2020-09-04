@@ -1,0 +1,46 @@
+//
+//  AlertExtension.h
+//  AlertView
+//
+//  Created by Jack on 2019/5/16.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+typedef void(^CancelBlock)(void);
+typedef void(^OtherBlock)(void);
+
+typedef NS_ENUM(NSInteger, AlertType) {
+    AlertTypeRegular = 0,
+    AlertTypeCustom
+};
+
+@interface AlertExtension : NSObject
+
+@property (nonatomic, strong) UIColor *titleColor;
+@property (nonatomic, strong) UIFont *titleFont;
+
+@property (nonatomic, strong) UIColor *messageColor;
+@property (nonatomic, strong) UIFont *messageFont;
+
+@property (nonatomic, copy) NSString *cancelButtonTitle;
+@property (nonatomic, copy) NSString *otherButtonTitle;
+
+@property (nonatomic, strong) UIColor *cancelButtonColor;
+@property (nonatomic, strong) UIColor *otherButtonColor;
+
+@property (nonatomic, copy) CancelBlock cancelBlock;
+@property (nonatomic, copy) OtherBlock  otherBlock;
+
+
+- (id)alertWithTitle:(NSString *)title message:(NSString *)message type:(AlertType)type;
+
+- (void)showAlert;
+
+@end
+
+NS_ASSUME_NONNULL_END

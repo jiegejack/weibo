@@ -1,0 +1,99 @@
+//
+//  InitPageTitle.m
+//  H5Container
+//
+//  Created by dk on 2018/6/7.
+//  Copyright © 2018年 dk. All rights reserved.
+//
+
+#import "InitPageTitle.h"
+#import <PCDUIBaseClass/PCDUIBaseClass.h>
+
+@interface InitPageTitle()
+
+@end
+
+@implementation InitPageTitle
+
+/*
+ 
+ {
+ leftButton =     {
+ exist = true;
+ func = "YT.prevPage()";
+ icon = back;
+ name = "\U8fd4\U56de";
+ sort = 0;
+ };
+ rightButton =     {
+ exist = false;
+ };
+ title = "\U666e\U901a\U9875\U9762";
+ }
+ 
+ */
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+//    UINavigationController *nav = context.eventTargetList.firstObject;
+//    if ([nav.viewControllers.firstObject isKindOfClass:[JSRootWebViewController class]]) {
+//        JSRootWebViewController *rootVC=(JSRootWebViewController *)nav.viewControllers.firstObject;
+//        rootVC.hiddenNaviBar = YES;
+//    }
+
+    JSBaseWebViewController *viewController = (JSBaseWebViewController *)context.eventTargetList.firstObject;
+
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+
+    NSString *titleColorStr   = [dict valueForKey:@"tcolor"];
+    NSString *naviBarColorStr = [dict valueForKey:@"background"];
+    NSString *hide_Flag       = [dict valueForKey:@"hide"];
+    //标题颜色
+    UIColor *titleColor       = titleColorStr.notNull ? [UIColor colorFormString:titleColorStr]     : [UIColor blackColor];
+    //导航栏颜色
+    UIColor *naviBarColor     = naviBarColorStr.notNull ? [UIColor colorFormString:naviBarColorStr] : [UIColor whiteColor];
+
+    //隐藏导航栏
+    BOOL hiddenNaviBar = NO;
+    if (hide_Flag.notNull) {hiddenNaviBar = hide_Flag.boolValue;}
+    if (hiddenNaviBar) {
+        viewController.hiddenNaviBar = YES;
+        return;
+    }
+    //初始化导航栏模型
+    PCDWebNavigationDO *navDO = [[PCDWebNavigationDO alloc] initWithDict:dict];
+    NSString *naviTitle = navDO.title.notNull ? navDO.title : @"";
+    NSString *rightBarTitle = navDO.rightItemDO.itemTitle.notNull ? navDO.rightItemDO.itemTitle : @"";
+    NSString *rightFunc = navDO.rightItemDO.functionName ? navDO.rightItemDO.functionName : @"";
+    NSString *leftFunc = navDO.leftItemDO.functionName ? navDO.leftItemDO.functionName : @"";
+
+    //设置标题
+    viewController.title = naviTitle;
+    //设置左按钮
+    if (navDO.leftItemDO.isExist) {
+        viewController.navLeftButtonFun = leftFunc;
+    } else {
+        viewController.navLeftButtonFun = nil;
+        viewController.navigationBar.leftBarButtonItem = nil;
+    }
+    //设置右边按钮
+    if (navDO.rightItemDO.isExist) {
+        viewController.navigationBar.rightBarButtonItem.title = rightBarTitle;
+        viewController.navRightButtonFun = rightFunc;
+    } else {
+        viewController.navRightButtonFun = nil;
+        viewController.navigationBar.rightBarButtonItem = nil;
+    }
+    //导航栏背景色
+    viewController.navigationBar.backgroundColor = naviBarColor;
+
+    //导航栏元素
+    viewController.navigationBar.titleItem.titleColor          = titleColor;
+    viewController.navigationBar.leftBarButtonItem.titleColor  = titleColor;
+    viewController.navigationBar.rightBarButtonItem.titleColor = titleColor;
+    
+    
+    [viewController.navigationBar setNeedsLayout];
+}
+
+@end

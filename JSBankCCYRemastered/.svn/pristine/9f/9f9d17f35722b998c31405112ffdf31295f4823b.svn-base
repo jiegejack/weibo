@@ -1,0 +1,102 @@
+//
+//  JSBaseViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSBaseViewController.h"
+#import "JSLoginViewController.h"
+#import "SocialShare.h"
+#import "JSBiometryLoginViewController.h"
+
+@interface JSBaseViewController () <UIWebViewDelegate>
+@property (nonatomic,assign) BOOL shouldObserve;
+
+@end
+
+@implementation JSBaseViewController
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    
+    [self.view endEditing:YES];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+//    [self resettingLeftButtonItem];
+    [self.navigationController.navigationBar setHidden:YES];
+}
+
+//- (void)resettingLeftButtonItem {
+//    if (![self isRootViewController]) {
+//        PCDBarButtonItem *leftItem = [[PCDBarButtonItem alloc] initWithCustomView:[JSSharedInstance sharedInstance].loginIcon];
+//        leftItem.contentInsets = UIEdgeInsetsMake(0, 10, 0, 0);
+//        self.navigationBar.leftBarButtonItem = leftItem;
+//    }
+//}
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    self.view.backgroundColor = [UIColor whiteColor];
+}
+
+- (void)loginAction {
+}
+
+- (void)menuAction {
+
+}
+
+- (void)serverAction {
+    [SocialShare share:@[] shareController:self shareNumber:nil completeHandle:^(NSString *callback) {
+        
+    }];
+}
+
+#pragma mark - 自定义返回按钮样式
+- (PCDBarButtonItem *)backBarButtonItem {
+    if (self.hideBackBtn) {return nil;}
+
+//    if ([self.navigationBar.backgroundColor isEqual:[UIColor whiteColor]]) {
+//        NSLog(@"---+++ : 导航栏是白色");
+//    } else if ([self.navigationBar.backgroundColor isEqual:[UIColor blueColor]]) {
+//        NSLog(@"---+++ : 导航栏是蓝色");
+//    }
+//    else {
+//        NSLog(@"---+++ : 导航栏是其他白色");
+//    }
+
+    if (self.navigationController.viewControllers.count) {
+        UIImage *backImage = [self.navigationBar.backgroundColor isEqual:[UIColor whiteColor]] ? [UIImage imageNamed:@"arrow_white"] : [UIImage imageNamed:@"arrow_black"];
+        PCDBarButtonItem *backBarButtonItem =[[PCDBarButtonItem alloc]initWithImage:backImage style:PCDBarButtonItemPlain target:self action:@selector(backBarButtonPressed:)];
+        backBarButtonItem.imageInsets = UIEdgeInsetsMake(0, 5, 0, 0);
+        backBarButtonItem.imageSize = CGSizeMake(20, 20);
+        
+        return backBarButtonItem;
+    } else {
+        return nil;
+    }
+}
+- (void)backBarButtonPressed {}
+
+#pragma mark -定制导航条
+- (void)initNavigationBar {
+    [super initNavigationBar];
+    
+    PCDBarItem *titleBarItem = [[PCDBarItem alloc] init];
+    titleBarItem.titleColor = [UIColor whiteColor];
+    self.navigationBar.titleItem = titleBarItem;
+    self.navigationBar.backgroundColor = [UIColor blueColor];
+    self.navigationBar.titleItem.font = [UIFont systemFontOfSize:20];
+}
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [self.view endEditing:YES];
+}
+
+@end

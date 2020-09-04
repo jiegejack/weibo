@@ -1,0 +1,153 @@
+//
+//  JSSettingPasswordViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/9.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSSettingPasswordViewController.h"
+#import "JSTextFieldView.h"
+#import "CoverButton.h"
+
+@interface JSSettingPasswordViewController ()
+@property (nonatomic, strong) NSArray        *placeholds;
+@property (nonatomic, strong) NSArray        *titles;
+@property (nonatomic, assign) CGFloat         textField_Height;
+@property (nonatomic, strong) NSMutableArray *items;
+@property (nonatomic, strong) CoverButton    *coverView;
+@property (nonatomic, strong) UIButton       *completeButton;
+@property (nonatomic, strong) UITextField    *loginPassword;
+@property (nonatomic, strong) UITextField    *confirmPsaaword;
+@property (nonatomic, assign) CGFloat         coverTop;
+@property (nonatomic, assign) CGFloat         coverHeight;
+
+
+@end
+
+@implementation JSSettingPasswordViewController
+
+- (UIButton *)coverView {
+    if (!_coverView) {
+        _coverView = [[CoverButton alloc] init];
+        _coverView.userInteractionEnabled = NO;
+        _coverView.imageView.contentMode = UIViewContentModeScaleAspectFit;
+        [_coverView setBackgroundImage:[UIImage imageNamed:@"login_cover"] forState:UIControlStateNormal];
+        [_coverView setTitle:@"请设置登录密码" forState:UIControlStateNormal];
+        _coverView.titleLabel.font = [UIFont systemFontOfSize:15];
+        [_coverView setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [self.view addSubview:_coverView];
+        _coverView.backgroundColor = [UIColor cyanColor];
+    }
+    return _coverView;
+}
+
+- (UIButton *)completeButton {
+    if (!_completeButton) {
+        _completeButton = [[UIButton alloc] init];
+        [_completeButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [_completeButton setTitle:@"完成" forState:UIControlStateNormal];
+        [_completeButton setBackgroundImage:[UIImage imageNamed:@"loginBtnBackImage"] forState:UIControlStateNormal];
+        _completeButton.titleLabel.font = [UIFont systemFontOfSize:16];
+        _completeButton.layer.cornerRadius = 4;
+        _completeButton.clipsToBounds = YES;
+        [_completeButton addTarget:self action:@selector(completeAction) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:_completeButton];
+    }
+    return _completeButton;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    [self initBaseUI];
+    [self initBaseData];
+    [self addSubControls];
+    [self layoutSubControls];
+}
+
+- (void)initBaseUI {
+    self.title = @"注册";
+    self.navigationBar.backgroundColor = [UIColor whiteColor];
+    self.navigationBar.titleItem.titleColor = [UIColor blackColor];
+    self.navigationBar.separatorColor = [UIColor groupTableViewBackgroundColor];
+}
+
+- (void)initBaseData {
+    self.titles = @[@"登录密码",
+                    @"确认密码"];
+    
+    self.placeholds = @[@"必须为8-16位数字和字母组合",
+                        @"请再次输入登录密码"];
+    self.items = [NSMutableArray array];
+    
+    self.coverTop                      = 13;
+    self.coverHeight                   = 30;
+    self.textField_Height              = 56;
+    self.navigationBar.separatorHeight = 1.0;
+}
+
+- (void)initItemsWithIndex:(NSInteger)index {
+    JSTextFieldView *item = (JSTextFieldView *)self.items[index];
+    switch (index) {
+        case 0:
+            self.loginPassword   = item.textField;
+            break;
+        case 1:
+            self.confirmPsaaword = item.textField;
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)completeAction {
+    [ClientNetManager fetchSettingPasswordDataWithPwd:self.loginPassword.text verifyPwd:self.confirmPsaaword.text success:^(id resultResponse, id resultModel) {
+        
+    } failure:^(NSError *error, LoginSession *session) {
+        
+    }];
+}
+
+- (void)addSubControls {
+    __weak typeof(self) weakSelf = self;
+    [self.placeholds enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        JSTextFieldView *textFieldItem = [[JSTextFieldView alloc] init];
+        textFieldItem.titleColor = [UIColor blackColor];
+        textFieldItem.titleLabel.text = weakSelf.titles[idx];
+        textFieldItem.showTopSeparator = !idx ? YES : NO;
+        textFieldItem.textField.placeholder = weakSelf.placeholds[idx];
+        [weakSelf.view addSubview:textFieldItem];
+        [weakSelf.items addObject:textFieldItem];
+        [weakSelf initItemsWithIndex:idx];
+    }];
+}
+
+- (void)layoutSubControls {
+    __weak typeof(self) weakSelf = self;
+
+    CGFloat totalFieldHeight = self.placeholds.count * self.textField_Height;
+    CGFloat fieldTop         = self.navigationBarHeight + self.coverHeight + self.coverTop;
+    CGFloat tailSpacing      = Height - fieldTop - totalFieldHeight;
+
+    [self.items mas_distributeViewsAlongAxis:MASAxisTypeVertical withFixedItemLength:self.textField_Height leadSpacing:self.navigationBarHeight + self.coverHeight + self.coverTop tailSpacing:tailSpacing];
+    [self.items mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left);
+        make.right.mas_equalTo(weakSelf.view.mas_right);
+    }];
+
+    [self.coverView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left);
+        make.top.mas_equalTo(weakSelf.view.mas_top).offset(self.navigationBarHeight + self.coverTop);
+        make.width.mas_equalTo(Width / 2);
+        make.height.mas_equalTo(self.coverHeight);
+    }];
+    
+    [self.completeButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left).offset(16);
+        make.top.mas_equalTo(weakSelf.confirmPsaaword.mas_bottom).offset(25);
+        make.right.mas_equalTo(weakSelf.view.mas_right).offset(-16);
+    }];
+}
+
+@end

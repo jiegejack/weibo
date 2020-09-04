@@ -1,0 +1,44 @@
+//
+//  AlertViewInfo.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/13.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "AlertViewInfo.h"
+
+@implementation AlertViewInfo
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+    NSString *tipText = [dict objectForKey:@"msg"];
+    NSString *title = [dict objectForKey:@"title"];
+    NSString *ok_text = [dict objectForKey:@"ok_text"];
+    NSString *cancel_text = [dict objectForKey:@"cancel_text"];
+    NSString *ok_func = [dict objectForKey:@"ok_func"];
+    NSString *cancel_func = [dict objectForKey:@"cancel_funct"];
+    NSString *type = [dict objectForKey:@"type"];
+
+
+    __weak typeof(self) weakSelf = self;
+    AlertType alertType = [type isEqualToString:@"ALERT2"] ? AlertTypeCustom : AlertTypeRegular;
+    AlertExtension *alert = [[[AlertExtension alloc] init] alertWithTitle:title
+                                                                  message:tipText type:alertType];
+    alert.titleFont = [UIFont boldSystemFontOfSize:17];
+    alert.messageFont = [UIFont systemFontOfSize:15];
+    alert.messageColor = [UIColor colorFormString:@"#3B3233"];
+    alert.cancelButtonTitle = cancel_text;
+    alert.otherButtonTitle = ok_text;
+    alert.cancelButtonColor = [UIColor grayColor];
+    alert.otherBlock = ^{
+        evaluateJavaScriptOnMainThread(weakSelf, ok_func, @"");
+    };
+    alert.cancelBlock = ^{
+        evaluateJavaScriptOnMainThread(weakSelf, cancel_func, @"");
+    };
+    [alert showAlert];
+}
+
+@end

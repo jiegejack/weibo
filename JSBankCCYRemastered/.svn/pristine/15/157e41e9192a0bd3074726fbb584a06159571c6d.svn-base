@@ -1,0 +1,28 @@
+//
+//  PCDContext.h
+//  ExampleApp-iOS
+//
+//  Created by dk on 2018/1/8.
+//  Copyright © 2018年 Marcus Westin. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+#import <UIKit/UIKit.h>
+
+@interface PCDContext : NSObject
+
+@property(nonatomic, readonly) UIEvent *event;
+@property(nonatomic, retain) NSArray *eventTargetList; // 事件链路
+
+/*
+ * @breif viewController
+ */
+@property(nonatomic, weak) id viewController;
+
+/*
+ * @breif webView
+ */
+@property(nonatomic, weak) id webView;
+
+@end

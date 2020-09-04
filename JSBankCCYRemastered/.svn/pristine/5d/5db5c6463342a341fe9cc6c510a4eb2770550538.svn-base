@@ -1,0 +1,45 @@
+//
+//  VersionModel.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/21.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface VersionModel : NSObject
+/**
+ * 信息
+ */
+@property (nonatomic, copy) NSString *MSG;
+/**
+ * 状态码
+ */
+@property (nonatomic, copy) NSString *STATUS;
+/**
+ * 版本
+ */
+@property (nonatomic, copy) NSString *APP_VER_NO;
+/**
+ * 平台
+ */
+@property (nonatomic, copy) NSString *CLIENT_OS;
+/**
+ * 连接
+ */
+@property (nonatomic, copy) NSString *APP_VER_URL;
+/**
+ * 更新标志: 0必须；1不更新；2可选
+ */
+@property (nonatomic, copy) NSString *APP_IS_UPDATE;
+/**
+ * 大小
+ */
+@property (nonatomic, copy) NSString *APP_SIZE;
+/**
+ * 更新内容
+ */
+@property (nonatomic, copy) NSString *APP_VER_DESC;
+
+@end

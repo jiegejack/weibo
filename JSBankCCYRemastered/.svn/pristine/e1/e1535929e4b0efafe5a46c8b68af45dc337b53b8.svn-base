@@ -1,0 +1,13 @@
+//
+//  DeviceModel.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/18.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "DeviceModel.h"
+
+@implementation DeviceModel
+
+@end

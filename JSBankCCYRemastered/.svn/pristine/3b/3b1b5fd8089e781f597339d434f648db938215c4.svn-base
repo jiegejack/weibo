@@ -1,0 +1,21 @@
+//
+//  SplashModel.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/15.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "SplashModel.h"
+
+@implementation SplashModel
+
++ (NSDictionary *)mj_objectClassInArray {
+    return @{@"LIST"  : [List class]};
+}
+
+@end
+
+@implementation List
+
+@end

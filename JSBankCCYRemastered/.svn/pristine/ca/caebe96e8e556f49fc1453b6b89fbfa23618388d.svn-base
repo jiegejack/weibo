@@ -1,0 +1,16 @@
+//
+//  PCAPIMange.h
+//  ExampleApp-iOS
+//
+//  Created by dk on 2018/1/9.
+//  Copyright © 2018年 Marcus Westin. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <objc/runtime.h>
+
+@interface PCAPIMange : NSObject
+
++(NSArray *) getApiList;
+
+@end

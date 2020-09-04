@@ -1,0 +1,28 @@
+//
+//  WordConfig.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/4.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "WordConfig.h"
+
+@implementation WordConfig
+
+- (id)init {
+    if (self = [super init]) {
+//        self.loginPassword = @"custCommon/loginByPassword.do";
+//        self.registerLogin = @"custCommon/register.do";
+//        self.biometryLogin = @"custCommon/loginbyFinger.do";
+//        self.SMSCodeLogin  = @"custCommon/loginByCode.do";
+//        self.SMSCode       = @"common/sendMsgCode.do";
+//        self.versionUpdate = @"app/appVerQry.do";
+//        self.placeholder = @"";
+//        self.tabBarIcon = @"informationCommon/getBottonMenuImage.do";
+//        self.setPassword = @"custCommon/setLoginPassword.do";
+    }
+    return self;
+}
+
+@end

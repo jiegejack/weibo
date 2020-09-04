@@ -1,0 +1,27 @@
+//
+//  WebNavigationItem.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/13.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "WebNavigationItem.h"
+
+@implementation WebNavigationItem
+
++ (NSDictionary *)mj_objectClassInArray {
+    return @{@"rightButton"  : [RightButton class],
+             @"leftButton"  : [LeftButton class]};
+}
+
+@end
+
+@implementation LeftButton
+
+
+@end
+@implementation RightButton
+
+
+@end

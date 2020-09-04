@@ -1,0 +1,118 @@
+//
+//  LocationManager.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/16.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "LocationManager.h"
+#import <AMapFoundationKit/AMapFoundationKit.h>
+#import <AMapLocationKit/AMapLocationKit.h>
+#define DefaultLocationTimeout  6
+#define DefaultReGeocodeTimeout 6
+
+@interface LocationManager ()<AMapLocationManagerDelegate>
+@property (nonatomic, copy) AMapLocatingCompletionBlock completionBlock;
+
+
+@property(nonatomic,strong) NSDictionary *locationDict;
+
+@property(nonatomic,strong)AMapLocationManager *locationManager;
+
+@property(nonatomic,copy) void (^locationBlock)(NSDictionary *location);
+
+@end
+
+@implementation LocationManager
+
+-(NSDictionary *)locationDict
+{
+    if (!_locationDict)
+    {
+        _locationDict=[NSDictionary dictionary];
+    }
+    return _locationDict;
+}
+
+- (AMapLocationManager *)locationManager {
+    if (!_locationManager) {
+
+    _locationManager = [[AMapLocationManager alloc] init];
+    
+    [_locationManager setDelegate:self];
+    
+    //设置期望定位精度
+    [_locationManager setDesiredAccuracy:kCLLocationAccuracyHundredMeters];
+    
+    //设置不允许系统暂停定位
+    [_locationManager setPausesLocationUpdatesAutomatically:NO];
+    
+    //设置允许在后台定位
+//    [_locationManager setAllowsBackgroundLocationUpdates:YES];
+    
+    //设置定位超时时间
+    [_locationManager setLocationTimeout:DefaultLocationTimeout];
+    
+    //设置逆地理超时时间
+    [_locationManager setReGeocodeTimeout:DefaultReGeocodeTimeout];
+    
+    //设置开启虚拟定位风险监测，可以根据需要开启
+    [self.locationManager setDetectRiskOfFakeLocation:NO];
+    }
+    return _locationManager;
+}
+
+- (void)initCompleteBlock {
+    __weak typeof(self) weakSelf = self;
+    self.completionBlock = ^(CLLocation *location, AMapLocationReGeocode *regeocode, NSError *error) {
+        NSString *adcode = regeocode.adcode.notNull ? regeocode.adcode : @"";
+        NSString *cityName = regeocode.city.notNull ? regeocode.city : @"";
+        double latitude = location.coordinate.latitude;
+        double longitude = location.coordinate.longitude;
+        NSString *lat = !latitude ? @"" : [NSString stringWithFormat:@"%f",latitude];
+        NSString *lng = !longitude ? @"" : [NSString stringWithFormat:@"%f",longitude];
+        
+        weakSelf.locationDict = @{@"city"     : adcode,
+                                  @"cityName" : cityName,
+                                  @"lat" : lat,
+                                  @"lng": lng};
+        if (weakSelf.locationBlock) {
+            weakSelf.locationBlock(weakSelf.locationDict);
+        }
+    };
+}
+
++ (LocationManager *)shareInstance {
+    static LocationManager *locationModel = nil;
+    static dispatch_once_t token;
+    dispatch_once(&token, ^{
+        locationModel = [[LocationManager alloc] init];
+    });
+    return locationModel;
+}
+
+- (id)init {
+    if (self = [super init]) {
+        [AMapServices sharedServices].apiKey = Config().baidu_appKey;
+        [self initCompleteBlock];
+    }
+    return self;
+}
+
+- (void)amapLocationManager:(AMapLocationManager *)manager doRequireLocationAuth:(CLLocationManager *)locationManager
+{
+    if (@available(iOS 8.0, *)) {
+        [locationManager requestAlwaysAuthorization];
+    } else {
+        // Fallback on earlier versions
+    }
+}
+
+#pragma mark -定位成功回调
+- (void)locationComplete:(void (^)(NSDictionary *))complete {
+    self.locationBlock = complete;
+    [self.locationManager requestLocationWithReGeocode:YES completionBlock:self.completionBlock];
+}
+
+@end

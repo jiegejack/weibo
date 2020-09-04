@@ -1,0 +1,296 @@
+//
+//  AppDelegate.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/2.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "AppDelegate.h"
+#import "JSTabBarController.h"
+#import "JSSplashScreenViewController.h"
+/**
+ *分享SDK
+ */
+#import "WXApi.h"
+#import "WeiboSDK.h"
+#import <ShareSDK/ShareSDK.h>
+#import <ShareSDKConnector/ShareSDKConnector.h>
+
+#import "PCDEncryptTokenManager.h"
+#import "LocationManager.h"
+
+#import "CCYVersionAlertView.h"
+#import "NetWorkObserver.h"
+
+@interface AppDelegate ()
+@property(nonatomic, strong) UIView *coverView;
+@property(nonatomic, strong) JSSplashScreenViewController *splashVC;
+@property(nonatomic, strong) UIWindow *rootWindow;
+
+@end
+
+@implementation AppDelegate
+
+- (UIView *)coverView {
+    if (!_coverView) {
+        _coverView = [[UIView alloc] init];
+        _coverView.frame = self.window.bounds;
+        
+        if (@available(iOS 8.0, *)) {
+            UIBlurEffect *blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
+            UIVisualEffectView *effectview = [[UIVisualEffectView alloc] initWithEffect:blur];
+            effectview.frame = _coverView.frame;
+            [_coverView addSubview:effectview];
+        } else {
+            UIToolbar *toolbar = [[UIToolbar alloc] initWithFrame:_coverView.frame];
+            toolbar.barStyle = UIBarStyleDefault;
+            [_coverView addSubview:toolbar];
+        }
+    }
+    return _coverView;
+}
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // 启动图片延时: 1秒
+//    [NSThread sleepForTimeInterval:2.0];
+    self.rootWindow = [UIApplication sharedApplication].delegate.window;
+
+    [self initNetWorkConfig];
+    [self checkVersion];
+    [[[JSSplashScreenViewController alloc] init] fetchSplashInfo];
+
+    [self initShareSDK];
+    
+    [self startRootView];
+
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(6. * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        [JSLoginManager indexToHomePage:1];
+//    });
+    
+    return YES;
+}
+
+- (void)initNetWorkConfig {
+    PCDNetWorkServiceGet().useEncrypt = YES;
+    PCDNetWorkServiceGet().encyptScheme = @"v2";
+    [PCDNetWorkServiceGet() start];
+}
+
+- (void)checkDeviceNet {
+    [[NetWorkObserver shareInstance] observerNetWorkState:^(NetworkStatus state) {
+        if (state == ReachableViaWiFi) {
+            [JSDeftAlert js_showMessage:@"您正在使用wifi网络，请确保网络安全（您已切换至wifi网络，请确保网络安全）" isCentered:NO afterDelay:1.5 completeHandle:nil];
+        }
+    }];
+}
+
+- (void)initShareSDK {
+    [ShareSDK registPlatforms:^(SSDKRegister *platformsRegister) {
+        
+        //微博
+        [platformsRegister setupSinaWeiboWithAppkey:@"729557064"
+                                          appSecret:@"59e3f5686eae268bd4331effb86d7947"
+                                        redirectUrl:@"https://vbank.jsbchina.cn/wxcm/index.do"];
+        
+        //微信
+        [platformsRegister setupWeChatWithAppId:@"wx9971e098cdaa49e7"
+                                      appSecret:@"60abaf6330712ea730af2708b2d93575"];
+    }];
+}
+
+#pragma mark - 初始化主页
+- (void) startRootView {
+    CGFloat buttonWidth = Width / 3 + 16;
+    CGFloat buttonH     = 40;
+
+    UILabel *label = [[UILabel alloc] init];
+    label.backgroundColor = Color().MainBlue;
+    label.frame = CGRectMake(0, 0, buttonWidth, buttonH);
+    label.textAlignment = NSTextAlignmentCenter;
+    label.textColor = Color().White;
+    label.font = [UIFont systemFontOfSize:16];
+    label.layer.shadowColor = Color().Black.CGColor;
+    label.layer.shadowRadius = 3;
+    label.layer.shadowOpacity = 0.3;
+    label.layer.shadowOffset = CGSizeMake(-1, 3);
+    label.layer.cornerRadius = label.frame.size.height / 2;
+    label.layer.masksToBounds = YES;
+    label.text = @"立即体验";
+    
+    __weak typeof(self) weakSelf = self;
+    
+    
+//    AppDelegate *appdele =(AppDelegate *)[UIApplication sharedApplication].delegate;
+//    UIWindow *rootWindow = appdele.window;
+    
+    if ([PCDGuidenceViewController appFirstLaunch]) {
+//        [PCDataCollectionManager shareModel].launchLogModel.IS_NEW_DEVICE = @"1";
+        //引导页
+        NSArray *resource = [self guidenceResource];
+        PCDGuidenceViewController *guidenceVC =[[PCDGuidenceViewController alloc]initWithImagesName:resource];
+        guidenceVC.pageControl.hidden = YES;
+        guidenceVC.doneBtnImage = label.imageGraphics;
+        guidenceVC.doneBtnOffset = CGPointMake(0, BANG_SCREEN ? 10 : 20);
+        [guidenceVC setDismiss:^{
+            [weakSelf initRootViewController];
+        }];
+        self.rootWindow.rootViewController = guidenceVC;
+        [self.rootWindow makeKeyAndVisible];
+    } else {
+//        [PCDataCollectionManager shareModel].launchLogModel.IS_NEW_DEVICE = @"0";
+        //闪屏
+        if ([JSSplashScreenViewController canShowImage]) {
+            self.splashVC = [[JSSplashScreenViewController alloc] init];
+            self.splashVC.dissmisBlock = ^{
+                [weakSelf initRootViewController];
+            };
+            self.rootWindow.rootViewController = self.splashVC;
+            [self.rootWindow makeKeyAndVisible];
+        } else {
+            [self initRootViewController];
+        }
+    }
+    [self checkDeviceRoot];
+}
+
+- (NSArray *)guidenceResource {
+    NSInteger imageCount = 4;
+    NSMutableArray *imagesResource = [NSMutableArray array];
+    NSString *screen_Resolution = SCREENSIZE_IS_XR ? @"828x1792" : ScreenResolution;//xr分辨率(750x1624)
+    for (NSInteger index = 1; index < imageCount + 1; index++) {
+        NSString *imageName = [NSString stringWithFormat:@"GuideImage%@-%ld.png",screen_Resolution,index];
+        [imagesResource addObject:imageName];
+    }
+    return (NSArray *)imagesResource;
+}
+
+- (void)checkDeviceRoot {
+    BOOL isJailbreak = [PCDevice isJailbreak];
+    if (isJailbreak) {
+        [self.splashVC stopTimer];
+        [JSDeftAlert showAlert:@"您的手机设备不安全" doneTitle:@"确定" cancelTitle:nil doneHandle:^{
+            exit(0);
+        } cancelHandle:nil];
+    }
+}
+
+- (void)initRootViewController {
+    JSTabBarController *tabBarController =[[JSTabBarController alloc]init];
+    
+    UINavigationController *rootNav =[[UINavigationController alloc] initWithRootViewController:tabBarController];
+    rootNav.navigationBarHidden = YES;
+    
+//    AppDelegate *appdele =(AppDelegate *)[UIApplication sharedApplication].delegate;
+//    UIWindow *rootWindow = appdele.window;
+    self.rootWindow.rootViewController = rootNav;
+    self.rootWindow.backgroundColor = [UIColor whiteColor];
+    [self.rootWindow makeKeyAndVisible];
+    
+//    NSLog(@"font------- %@", Font().placeholdFont);
+    
+    AlertExtension *alert = [[[AlertExtension alloc] init] alertWithTitle:@"温馨提示"
+                                                                  message:@"您的银行账户在我行已开户您的银行账户在我行已开户您的银行账户在我行已开户您的银行账户在我行已开户" type:AlertTypeRegular];
+//    alert.titleFont = [UIFont boldSystemFontOfSize:17];
+//    alert.messageFont = [UIFont systemFontOfSize:15];
+    
+    alert.okButtonImage = [UIImage imageNamed:@"service.png"];
+    alert.cancelButtonTitle = @"知道了";
+    alert.otherButtonTitle = @"问苏苏";
+//    alert.otherButtonFont = [UIFont systemFontOfSize:14];
+    alert.cancelButtonColor = [UIColor redColor];
+    alert.otherBlock = ^{
+        
+    };
+//    [alert showAlert];
+
+    [self checkDeviceNet];
+}
+
+- (void)checkVersion {
+    [ClientNetManager fetchVersionUpdateWithSuccess:^(id resultResponse, id resultModel) {
+        NSLog(@"resultResponse : %@",resultResponse);
+        [self versionUpdateWithVersionModel:resultModel];
+    } failure:nil];
+}
+
+- (void)versionUpdateWithVersionModel:(VersionModel *)model {
+    if (!model) {
+        return;
+    }
+    NSString *versionInfo = model.APP_VER_NO.notNull ? model.APP_VER_NO : @" ";
+    NSString *updateInfo = model.APP_VER_DESC.notNull ? model.APP_VER_DESC : @"";
+//    NSString *appSize = list.APP_SIZE.notNull ? [NSString stringWithFormat:@"(%@)",list.APP_SIZE] : versionInfo;
+    NSString *versionTitle = [NSString stringWithFormat:@"版本%@",versionInfo];
+    updateInfo = [updateInfo stringByReplacingOccurrencesOfString:@"<br>" withString:@"\n"];
+    
+    [self.splashVC stopTimer];
+
+    if (model.APP_IS_UPDATE.integerValue == 2) {
+        CCYVersionAlertView *alertView=[[CCYVersionAlertView alloc]initVersionAlertView:versionTitle versionDetails:updateInfo doneTitle:@"立即更新" cancelTitle:@"下次再说" doneHandle:^{
+            [self.splashVC addTimer];
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:model.APP_VER_URL]];
+        } cancelHandle:^{
+            [self.splashVC addTimer];
+        }];
+        [alertView show];
+    } else if (model.APP_IS_UPDATE.integerValue == 0) {
+        CCYVersionAlertView *alertView=[[CCYVersionAlertView alloc]initVersionAlertView:versionTitle versionDetails:updateInfo doneTitle:@"立即更新" cancelTitle:nil doneHandle:^{
+            if (@available(iOS 10.0, *)) {
+                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:model.APP_VER_URL] options:@{} completionHandler:^(BOOL success) {
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        exit(0);
+                    });
+                }];
+            } else {
+                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:model.APP_VER_URL]];
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    exit(0);
+                });
+            }
+        } cancelHandle:nil];
+        [alertView show];
+    }
+}
+
+- (void)applicationWillResignActive:(UIApplication *)application {
+    // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+    // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+    NSLog(@"applicationWillResignActive");
+
+}
+
+
+- (void)applicationDidEnterBackground:(UIApplication *)application {
+    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
+    // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    NSLog(@"applicationDidEnterBackground");
+//    [[UIApplication sharedApplication].delegate.window addSubview:self.coverView];
+}
+
+
+- (void)applicationWillEnterForeground:(UIApplication *)application {
+    // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+    NSLog(@"applicationWillEnterForeground");
+    if (_coverView) {
+        [_coverView removeFromSuperview];
+        _coverView = nil;
+    }
+}
+
+
+- (void)applicationDidBecomeActive:(UIApplication *)application {
+    // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    NSLog(@"applicationDidBecomeActive");
+    
+}
+
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+    NSLog(@"applicationWillTerminate");
+
+    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+
+@end

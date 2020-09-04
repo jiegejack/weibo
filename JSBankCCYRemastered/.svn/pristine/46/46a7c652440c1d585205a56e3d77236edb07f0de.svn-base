@@ -1,0 +1,143 @@
+//
+//  JSTabBarController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSTabBarController.h"
+#import "CTMediator.h"
+#import "CTMediator+CTMediatorModuleActions.h"
+#import "JSBaseWebViewController.h"
+#import "TabBarModel.h"
+#import "UIImageView+WebCache.h"
+#import "MJExtension.h"
+#import "JSRootWebViewController.h"
+
+@interface JSTabBarController () <PCDTabBarDelegate>
+@property(nonatomic,strong) UINavigationController *nav0,*nav1,*nav3,*nav4;
+@property(nonatomic,strong) NSMutableArray *navis;
+@property(nonatomic,assign) NSUInteger itemCount;
+
+@end
+
+@implementation JSTabBarController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+}
+
+- (void)initTabBar {
+    [super initTabBar];
+    
+//    CustomURLCache *urlCache = [[CustomURLCache alloc] initWithMemoryCapacity:20 * 1024 * 1024
+//                                                                 diskCapacity:200 * 1024 * 1024
+//                                                                     diskPath:nil
+//                                                                    cacheTime:0];
+//    [CustomURLCache setSharedURLCache:urlCache];
+    self.tabBarHeight = 53;
+    self.bottomHeight = 53;
+    self.tabBar.separatorWidth = 0;
+    self.itemCount = 3;
+
+    [ClientNetManager fetchTabBarIconWithSuccess:^(id resultResponse, TabBarModel *tabBarModel) {
+        [self updateTabBarIconWithModel:tabBarModel];
+        NSString *jsonString = [resultResponse JSONRepresentation];
+        [DataCache setCacheString:jsonString forkey:@"ccy_tabBar_icon"];
+    } failure:^(NSString *MSG, TabBarModel *tabBarModel, id resultResponse) {
+        if (MSG.notNull) {
+            [JSDeftAlert js_showMessage:MSG isCentered:NO afterDelay:1.5 completeHandle:nil];
+        }
+    }];
+    [self updateTabBarIconWithModel:nil];
+}
+
+- (void)updateTabBarIconWithModel:(TabBarModel *)model {
+    NSArray *images = @[@"jingxuan.png", @"jinrong.png", @"mine.png"];
+    NSArray *selected_images = @[@"jingxuan_selected.png", @"jinrong_selected.png", @"mine_selected.png"];
+    NSArray *titles = @[@"精选", @"卡金融", @"我的"];
+    NSArray *urls = @[@"page/101/01/P10101.html", @"page/102/01/P10201.html", @"page/12/01/P01.html"];
+
+    CGSize imageSize = CGSizeMake(23, 23);
+    
+    UIColor *titleColorHL = Color().Black;
+    NSMutableArray *items = [NSMutableArray array];
+    self.navis = [NSMutableArray array];
+    self.vcs = [NSMutableArray array];
+
+    NSDictionary *expando = [PCDUtil IsIphoneX]?@{@"NSLayoutAttributeTop":@"88"}:@{@"NSLayoutAttributeTop":@"64"};
+    
+    __weak typeof(self) weakSelf = self;
+    for (NSInteger index = 0; index < self.itemCount; index++) {
+        Menu *menu = model.menu[index];
+        NSString *title = menu.NAME_CN.notNull ? menu.NAME_CN : titles[index];
+        PCDTabBarItem *item = [[PCDTabBarItem alloc] initWithTitle:title image:[UIImage imageNamed:images[index]] selectedImage:[UIImage imageNamed:selected_images[index]]];
+        item.titleInsets =UIEdgeInsetsMake(6, 0, 5, 0);
+        item.titleColorHL =titleColorHL;
+        item.imageSize = imageSize;
+        item.font = [UIFont systemFontOfSize:12];
+
+        item.title = menu.NAME_CN.notNull ? menu.NAME_CN : titles[index];
+        
+        NSString *subUrl = menu.url.notNull ? menu.url : urls[index];
+        NSString *url = [PCDUtil js_getPublicServerURL:subUrl];
+        JSRootWebViewController *vc = [PCDWServiceGet() createPCDViewController:@{@"url":url} viewControllerClass:[JSRootWebViewController class] contentViewClass:nil withExpando:(NSDictionary *)expando];
+        vc.requestUrl = url;// [PCDUtil getPublicServerURL:@"102/04/P10204.html"];
+        UINavigationController *navi = [[UINavigationController alloc] initWithRootViewController:vc];
+        
+        if (![items containsObject:item]) {
+            [items addObject:item];
+        }
+        if (![self.navis containsObject:navi]) {
+            [self.navis addObject:navi];
+        }
+        if (![self.vcs containsObject:vc]) {
+            [self.vcs addObject:vc];
+        }
+        [self configTabBarItems:items index:index];
+
+        UIImageView *imageView = [[UIImageView alloc] init];
+        UIImageView *selectedImageView = [[UIImageView alloc] init];
+        
+        [imageView sd_setImageWithURL:[NSURL URLWithString:menu.NOT_CHOICE] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+            if (imageView.image) {
+                item.image = imageView.image;
+            }
+            [selectedImageView sd_setImageWithURL:[NSURL URLWithString:menu.CHOICE] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+                if (selectedImageView.image) {
+                    item.imageHL = selectedImageView.image;
+                }
+                [weakSelf configTabBarItems:items index:index];
+            }];
+        }];
+    }
+}
+
+- (void)configTabBarItems:(NSMutableArray *)items index:(NSInteger)index {
+    if (index == self.itemCount - 1) {
+        self.tabBar.separatorWidth = 0.3;
+        self.tabBar.separatorColor = Color().Auxiliary;
+        self.tabBar.delegate = self;
+        self.tabBar.items = items;
+        self.tabBar.selectedItem = self.currentSelectedIndex ? self.tabBar.items[self.currentSelectedIndex] : self.tabBar.items[0];
+        self.viewControllers = self.navis;
+        [self.tabBar setNeedsLayout];
+        [JSSharedInstance sharedInstance].viewControllers = self.viewControllers;
+    }
+
+}
+
+- (void)tabBar:(nonnull PCDTabBar *)tabBar didSelectIndex:(NSUInteger)index {
+    self.currentSelectedIndex = index;
+    self.selectedIndex = index;
+    self.selectedViewController = (JSRootWebViewController *)self.vcs[index];
+}
+//资源测试内网：http://66.1.41.186:8090/page/client.html#
+//资源测试外网：https://ccytest.jsbchina.cn:9000/page/client.html#
+
+//接口测试内网：http://66.1.41.186:8090/ares-api-gateway
+//接口测试外网：https://ccytest.jsbchina.cn:9000/ares-api-gateway
+
+@end

@@ -1,0 +1,98 @@
+//
+//  PCDNetwork.h
+//  PCDNetworkService
+//
+//  Created by dk on 2018/1/22.
+//  Copyright © 2018年 dk. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+
+@interface PCDNetWork : NSObject
+
+
+@property(nullable,nonatomic,retain) PCDNetWorkItem *netWorkItem;
+
+
+/*
+ *  @brief  通过url 构造一个实例
+ *
+ *  @param urlString url
+ *
+ *  @return PNCHTTPRequest
+ */
++(nonnull PCDNetWork *)requestWithURL:(nullable PCDNetWorkItem *)netWorkItem;
+
+/*
+ *  @brief 追加 post data
+ *
+ *  @param data NSData
+ */
+- (void)appendPostData:(nullable NSData *)data;
+
+/*
+ *  @brief  获取 postData
+ *
+ *  @return 数据
+ */
+-(nullable NSData *)postData;
+
+/*
+ *  @brief  设置post data
+ *
+ *  @param data NSData
+ */
+- (void)setPostData:(nullable NSData *)data;
+
+/**
+ *  @brief 上传文件
+ *
+ *  @param data     文件数据
+ *  @param mimeType 文件类型
+ *  @param fileName 文件名称
+ */
+- (void)addFile:(nullable NSData*)data mimeType:(nullable NSString*)mimeType fileName:(nullable NSString*)fileName;
+
+- (void)addFiles:(nullable PCDUploadFileDO*)fileData;
+
+/*
+ *  @brief  开始加载。异步
+ */
+- (void)start;
+
+/*
+ *  @brief  取消加载，会将当前delegate、block置空
+ */
+-(void)cancel;
+
+/*
+ *  @brief  同步请求
+ *
+ *  @return responseString
+ */
+-(nullable NSString *)startSynchronous;
+
+/*
+ *  @brief  接收数据，NSString，utf-8编码
+ *
+ *  @return NSString
+ */
+- (nullable NSString *)responseString;
+
+/*
+ *  @brief  接收数据，NSData 类型
+ *
+ *  @return NSData
+ */
+- (nullable NSData *)responseData;
+
+/*
+ *  @brief  获取当前正在发送请求的数量
+ *
+ *  @return 请求数量
+ */
++(NSInteger)requestCount;
+
+@end

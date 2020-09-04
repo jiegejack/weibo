@@ -1,0 +1,233 @@
+//
+//  JSBaseWebViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/12.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSBaseWebViewController.h"
+
+@interface JSBaseWebViewController ()
+@property (nonatomic,retain) UILabel *errorLabel;
+@property (nonatomic,assign) BOOL isCallPlugin;
+
+@end
+
+@implementation JSBaseWebViewController
+
+- (void)setHiddenNaviBar:(BOOL)hiddenNaviBar {
+    _hiddenNaviBar = hiddenNaviBar;
+    
+    self.navigationBar.alpha = !hiddenNaviBar;
+    
+    [self layoutWebViewWithBarState:hiddenNaviBar flag:YES];
+}
+
+- (void)setStickNaviBar:(BOOL)stickNaviBar {
+    _stickNaviBar = stickNaviBar;
+    
+    [self.view insertSubview:self.bankWebView atIndex:0];
+    [self layoutWebViewWithBarState:stickNaviBar flag:NO];
+}
+
+- (void)layoutWebViewWithBarState:(BOOL)state flag:(BOOL)flag {
+    CGFloat topHeight = 0;
+    if (flag) {
+        if (BANG_SCREEN) {
+            topHeight = STATUSBAR_HEIGHT;
+        } else {
+            topHeight = -STATUSBAR_HEIGHT;
+        }
+    } else {
+        topHeight = -STATUSBAR_HEIGHT;
+    }
+    
+    [self.bankWebView mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(self.view.mas_left);
+        make.right.mas_equalTo(self.view.mas_right);
+        make.bottom.mas_equalTo(self.view.mas_bottom);
+        make.top.mas_equalTo(self.view.mas_top).offset(state ? topHeight : self.navigationBarHeight);
+    }];
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.view.backgroundColor = Color().White;
+    self.navigationBar.separatorColor = Color().Auxiliary;
+
+    [PCDWebCacheModel startWebCache:^(NSString *strUrl, BOOL error) {
+        NSLog(@"strUrl:%@ error:%d",strUrl,error);
+    }];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    
+    if (self.navigationTitle.notNull) {
+        self.title = self.navigationTitle;
+    }
+    if (self.isThirdPartPage) {
+        [self initThirdPartNavigationBar];
+    }
+}
+
+- (WebViewProgress *)webProgess {
+    if (!_webProgess) {
+        CGFloat progressHeight = 3;
+        _webProgess = [[WebViewProgress alloc] init];
+        _webProgess.frame = CGRectMake(0, self.navigationBarHeight - 1.6, Width, progressHeight);
+        _webProgess.strokColor = Color().MainBlue;
+        _webProgess.progressWidth = 2.5;
+        [self.navigationBar addSubview:_webProgess];
+    }
+    return _webProgess;
+}
+
+- (void)initThirdPartNavigationBar {
+    UIView *contentView = [[UIView alloc] init];
+    contentView.frame = CGRectMake(0, 0, 100, self.navigationBarHeight - 20);
+    
+    UIButton *backItem = [UIButton buttonWithType:UIButtonTypeSystem];
+    backItem.hitTestEdgeInsets = UIEdgeInsetsMake(0, -20, 0, -10);
+    backItem.frame = CGRectMake(0, 0, 30, self.navigationBarHeight - 20);
+    backItem.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    UIImage *image = [[UIImage imageNamed:@"back.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+    [backItem setImage:image forState:UIControlStateNormal];
+    [contentView addSubview:backItem];
+    [backItem addTarget:self action:@selector(backAction) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIButton *backItem1 = [UIButton buttonWithType:UIButtonTypeSystem];
+    backItem1.hitTestEdgeInsets = UIEdgeInsetsMake(0, -10, 0, -20);
+    backItem1.frame = CGRectMake(CGRectGetMaxX(backItem.frame) + 20, 0, 30, self.navigationBarHeight - 20);
+    backItem1.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    UIImage *image1 = [[UIImage imageNamed:@"close.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+    [backItem1 setImage:image1 forState:UIControlStateNormal];
+    [contentView addSubview:backItem1];
+    [backItem1 addTarget:self action:@selector(closeAction) forControlEvents:UIControlEventTouchUpInside];
+    
+    PCDBarButtonItem *barButtonItem = [[PCDBarButtonItem alloc]initWithCustomView:contentView];
+    self.navigationBar.leftBarButtonItem = barButtonItem;
+}
+
+- (void)backAction {
+    [self.bankWebView stopLoading];
+    if ([self.bankWebView canGoBack]) {
+        [self.bankWebView goBack];
+    } else {
+        [self.tabBarController.navigationController popViewControllerAnimated:YES];
+    }
+}
+
+- (void)closeAction {
+    [self.tabBarController.navigationController popViewControllerAnimated:YES];
+}
+
++ (void)goWebViewWithUrl:(NSString *)url {
+    if (!url.notNull) {
+        return;
+    }
+    if (![url hasPrefix:@"https://"] && ![url hasPrefix:@"http://"]) {
+        url = [PCDUtil js_getPublicServerURL:url];
+    }
+    NSDictionary *param = @{@"url" : url};
+    NSDictionary *expando = [PCDUtil IsIphoneX]?@{@"NSLayoutAttributeTop":@"88"}:@{@"NSLayoutAttributeTop":@"64"};
+    
+    JSBaseWebViewController *webVC = [PCDWServiceGet() createPCDViewController:param viewControllerClass:[JSBaseWebViewController class] contentViewClass:nil withExpando:expando];
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    [navi pushViewController:webVC animated:YES];
+}
+
+- (void)viewWillLayoutSubviews {
+    [super viewWillLayoutSubviews];
+    
+    self.bankWebView.backgroundColor = [UIColor whiteColor];
+}
+
+- (void)doWebRequest {
+    NSURL *url =[NSURL URLWithString:[self handleRequestUrl]];
+    NSURLRequest *request = [[NSURLRequest alloc] initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:30.0f];
+    [self.bankWebView loadRequest:request];
+}
+
+- (NSString *)handleRequestUrl {
+    NSString *requestUrl = ([self.requestUrl hasPrefix:@"http://"] || [self.requestUrl hasPrefix:@"https://"]) ? self.requestUrl : [PCDUtil js_getPublicServerURL:self.requestUrl];
+    NSLog(@"\nrequestUrl----------- : %@",requestUrl);
+
+    return requestUrl;
+}
+
+- (UIWebView *)bankWebView {
+    if (!_bankWebView) {
+        for (UIView *subView in [self.view subviews]) {
+            if ([subView isKindOfClass:[UIWebView class]]) {
+                _bankWebView = (UIWebView *)subView;
+            }
+        }
+    }
+    return _bankWebView;
+}
+
+- (void)fetchWebViewTitle {
+    if (!self.title.notNull) {
+        NSUInteger maxLenth = 12;
+        if (!self.title.notNull) {//江苏银行串串盈营销云平台
+
+            NSString *title = [self.bankWebView stringByEvaluatingJavaScriptFromString:@"document.title"];
+            if (title.length < maxLenth) {
+                self.title = title;
+            } else {
+                self.title = [NSString stringWithFormat:@"%@...",[title substringToIndex:maxLenth]];
+            }
+        }
+//        [self.bankWebView stringByEvaluatingJavaScriptFromString:@"document.documentElement.style.webkitUserSelect='none';"];
+    }
+}
+
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
+    
+    return YES;
+}
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    [self loadTypeWithURL:webView.request.URL.absoluteString];
+
+    [self fetchWebViewTitle];
+    [self.bankWebView.scrollView.mj_header endRefreshing];
+    if (!self.isCallPlugin) {
+        self.webProgess.progress = 1;
+    }
+//    [PCDWebCacheModel stopWebCache];
+}
+- (void)webViewDidStartLoad:(UIWebView *)webVie {
+    [self loadTypeWithURL:webVie.request.URL.absoluteString];
+
+    if (!self.isCallPlugin) {
+        self.webProgess.progress = 0.3;
+    }
+}
+
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+    NSLog(@"didFailLoadWithError");
+    [self.bankWebView.scrollView.mj_header endRefreshing];
+    self.webProgess.progress = 0.0;
+//    [PCDWebCacheModel stopWebCache];
+}
+
+- (void)loadTypeWithURL:(NSString *)url {
+    NSLog(@"loadTypeWithURL -=-=-= ： %@",url);
+
+    if (![url isEqualToString:@"about:blank"]) {
+        self.isCallPlugin = NO;
+        return;
+    }
+    self.isCallPlugin = YES;
+}
+
+- (void)dealloc {
+    [self.webProgess removeFromSuperview];
+    self.webProgess = nil;
+}
+
+@end

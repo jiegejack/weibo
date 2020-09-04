@@ -1,0 +1,54 @@
+//
+//  UIImage+Network.h
+//  PCKit
+//
+//  Created by wangyong on 16/5/10.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "PCNetworkImage.h"
+
+/**
+ *  @brief 设置UIImageView网络图片，下载的文件名为下载路径的小写md5
+ */
+@interface UIImageView (Network)
+
+/**
+ *  @brief 设置UIImageView网络图片，默认缓存在cache/PCDownloads
+ *
+ *  @param URLString   图片网络地址
+ *  @param placeholder 占位图片
+ */
+-(void)loadNetworkImage:(nullable NSString *)URLString placeholderImage:(nullable UIImage *)placeholder;
+
+/**
+ *  @brief 设置UIImageView网络图片，默认缓存在cache/PCDownloads
+ *
+ *  @param URLString   图片网络地址
+ *  @param placeholder 占位图片
+ *  @param callback 回调
+ */
+-(void)loadNetworkImage:(nullable NSString *)URLString placeholderImage:(nullable UIImage *)placeholder state:(void(^_Nullable)(PCNetworkImageState))callback;
+
+/**
+ *  @brief 设置UIImageView网络图片
+ *
+ *  @param URLString   图片网络地址
+ *  @param placeholder 占位图片
+ *  @param cachePath   指定缓存路径，nil表示不缓存
+ */
+-(void)loadNetworkImage:(nullable NSString *)URLString placeholderImage:(nullable UIImage *)placeholder cachePath:(nullable NSString *)cachePath;
+
+/**
+ 设置UIImageView网络图片
+
+ @param URLString 图片网络地址
+ @param placeholder 占位图片
+ @param cachePath 指定缓存路径，nil表示不缓存
+ @param options 配置
+ @param callback 回调
+ */
+-(void)loadNetworkImage:(nullable NSString *)URLString placeholderImage:(nullable UIImage *)placeholder cachePath:(nullable NSString *)cachePath options:(PCNetworkImageOptions)options state:(void(^_Nullable)(PCNetworkImageState))callback;
+
+@end

@@ -1,0 +1,26 @@
+//
+//  CommonFont.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/21.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface CommonFont : NSObject
+@property (nonatomic, strong) UIFont *placeholdFont;
+@property (nonatomic, strong) UIFont *textFieldFont;
+@property (nonatomic, strong) UIFont *naviTitleFont;
+@property (nonatomic, strong) UIFont *protocolFont;
+@property (nonatomic, strong) UIFont *checkBoxFont;
+
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    CommonFont *Font(void);
+#ifdef __cplusplus
+}
+#endif

@@ -1,0 +1,51 @@
+//
+//  BluetoothDeviceCell.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/4.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "BluetoothDeviceCell.h"
+
+@implementation BluetoothDeviceCell
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
+        self.deviceNameLab = [[UILabel alloc] init];
+        self.deviceNameLab.backgroundColor = [UIColor redColor];
+        self.deviceNameLab.textColor = Color().MainBlack;
+        self.deviceNameLab.textAlignment = NSTextAlignmentLeft;
+        self.deviceNameLab.font = [UIFont systemFontOfSize:16];
+        [self.contentView addSubview:self.deviceNameLab];
+        
+        self.deviceIdentifierLab = [[UILabel alloc] init];
+        self.deviceIdentifierLab.backgroundColor = [UIColor redColor];
+        self.deviceIdentifierLab.textColor = Color().MainLight;
+        self.deviceIdentifierLab.textAlignment = NSTextAlignmentLeft;
+        self.deviceIdentifierLab.font = [UIFont systemFontOfSize:15];
+        [self.contentView addSubview:self.deviceIdentifierLab];
+        
+        [self layoutSubControls];
+    }
+    return self;
+}
+
+- (void)layoutSubControls {
+    [self.deviceNameLab mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(self.contentView.mas_left).offset(20);
+        make.bottom.mas_equalTo(self.contentView.mas_centerY).offset(-3);
+    }];
+    [self.deviceIdentifierLab mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(self.contentView.mas_left).offset(20);
+        make.top.mas_equalTo(self.contentView.mas_centerY).offset(3);
+    }];
+}
+
+- (void)setDic:(NSDictionary *)dic{
+    _dic = dic;
+    self.deviceNameLab.text = dic[@"name"];
+    self.deviceIdentifierLab.text = dic[@"identify"];
+}
+
+@end

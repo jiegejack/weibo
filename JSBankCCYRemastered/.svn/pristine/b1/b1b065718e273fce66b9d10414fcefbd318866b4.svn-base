@@ -1,0 +1,49 @@
+//
+//  WebNavigationItem.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/13.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <PCDH5Container/PCDH5Container.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@class LeftButton;
+@class RightButton;
+@interface WebNavigationItem : NSObject
+
+@property (nonatomic, copy) NSString *background;
+//@property (nonatomic, copy) NSString *leftBtnType;
+//@property (nonatomic, copy) NSString *rightBtnType;
+@property (nonatomic, copy) NSString *tcolor;
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic, copy) NSString *hide;
+@property (nonatomic, copy) NSString *stick;
+@property (nonatomic, strong) NSArray <LeftButton *> *leftButton;
+@property (nonatomic, strong) NSArray <RightButton *> *rightButton;
+
+@end
+
+@interface LeftButton : NSObject
+
+@property (nonatomic, copy) NSString *exist;
+@property (nonatomic, copy) NSString *func;
+@property (nonatomic, copy) NSString *icon;
+@property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *sort;
+
+@end
+
+@interface RightButton : NSObject
+
+@property (nonatomic, copy) NSString *exist;
+@property (nonatomic, copy) NSString *func;
+@property (nonatomic, copy) NSString *icon;
+@property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *sort;
+
+@end
+
+NS_ASSUME_NONNULL_END

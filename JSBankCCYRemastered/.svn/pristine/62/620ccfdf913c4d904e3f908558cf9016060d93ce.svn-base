@@ -1,0 +1,35 @@
+//
+//  GetClientInfoH5Plugin.m
+//  PCDBank
+//
+//  Created by 王俣 on 2018/9/8.
+//  Copyright © 2018年 yt. All rights reserved.
+//
+
+#import "GetClientInfoH5Plugin.h"
+
+@implementation GetClientInfoH5Plugin
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback{
+    NSDictionary *dictData = (NSDictionary *)data;
+    
+    NSString *callBack = dictData[@"callback"];
+    callBack = callBack.notNull ? callBack : @"";
+    NSString *flag = [NSString stringWithFormat:@"%@",[dictData objectForKey:@"isNew"]];
+    BOOL isNew = flag.boolValue;
+    NSString *appVersion = [PCDUtil appVersion];
+    appVersion = appVersion.notNull ? appVersion : @"";
+    
+    NSString *uniqueIdentifier = [PCDevice uniqueIdentifier];
+    uniqueIdentifier = uniqueIdentifier.notNull ? uniqueIdentifier : @"";
+
+    NSDictionary *dict = @{@"CLIENT_VER_NO" : appVersion,
+                           @"CLIENT_OS"     : @"iOS",
+                           @"device_imei"   : uniqueIdentifier
+                           };
+    NSString *callbackString = [NSString stringWithFormat:@"version_code:%@|login_channel:iOS|device_imei:%@",appVersion,uniqueIdentifier];
+    NSString *dataString = isNew ? [dict JSONRepresentation] : callbackString;
+    evaluateJavaScriptOnMainThread_quotes(self, callBack, dataString);
+}
+
+@end

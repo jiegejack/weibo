@@ -1,0 +1,73 @@
+//
+//  PCDBaseDO.h
+//
+//  Created by dk on 2018/4/16.
+//  Copyright © 2018年 fy. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface PCDBaseDO : NSObject
+
+/**
+ *  @brief   网关提示信息
+ */
+@property (nonatomic,retain) NSString *hMsg;
+
+/**
+ *  @brief   网关错误码 1表示正常，否则为错误
+ */
+@property (nonatomic,retain) NSString *hStatus;
+
+/**
+ *  @brief   网关cookie
+ */
+@property (nonatomic,retain) NSString *hSetCookie;
+
+/**
+ *  @brief 
+ */
+@property (nonatomic,retain) NSString *HPath;
+
+/**
+ *  @brief
+ */
+@property (nonatomic,retain) NSString *HTransUrl;
+
+/**
+ *  @brief
+ */
+@property (nonatomic,retain) NSString *HBusiTraceNo;
+
+/**
+ *  @brief
+ */
+@property (nonatomic,retain) NSString *HChnlNo;
+
+/**
+ *  @brief   服务提示信息
+ */
+@property (nonatomic,retain) NSString *bMsg;
+
+/**
+ *  @brief   服务错误码 1表示正常，否则为错误
+ */
+@property (nonatomic,retain) NSString *bStatus;
+
+/**
+ *  @brief   提示信息【统一处理网关和服务数据】
+ */
+@property (nonatomic,retain) NSString *Msg;
+
+/**
+ *  @brief   错误码 1表示正常，否则为错误【统一处理网关和服务数据】
+ */
+@property (nonatomic,retain) NSString *Status;
+
+
+//数据
+@property (nonatomic,strong) id data;
+
+-(id)initWithDict:(NSDictionary *)dict;
+
+@end

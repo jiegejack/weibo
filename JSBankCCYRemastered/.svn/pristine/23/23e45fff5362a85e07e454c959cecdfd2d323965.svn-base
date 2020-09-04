@@ -1,0 +1,17 @@
+//
+//  CoverButton.h
+//  JSBankCCY
+//
+//  Created by Jack on 2019/2/28.
+//  Copyright © 2019 张瑞. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface CoverButton : UIButton
+
+@end
+
+NS_ASSUME_NONNULL_END

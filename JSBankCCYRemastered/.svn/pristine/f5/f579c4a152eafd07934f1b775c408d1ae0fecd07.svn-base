@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>DEBUG</key>
+	<true/>
+	<key>WebCacheData</key>
+	<false/>
+	<key>WebCacheMode</key>
+	<false/>
+	<key>TimeCount</key>
+	<integer>6000</integer>
+	<key>VersionURL</key>
+	<string>R.version</string>
+	<key>InfoURL</key>
+	<string>R.info</string>
+	<key>CacheEncryption</key>
+	<true/>
+	<key>CacheEncrypData</key>
+	<string>VWAjLDNDW210M0NXY3R4L01WcG8pNlNcbXsiQFpsanon</string>
+	<key>AES_KEY</key>
+	<string></string>
+	<key>AES_VECTOR</key>
+	<string></string>
+	<key>ResourecName</key>
+	<string>source</string>
+	<key>NoNetWork</key>
+	<true/>
+</dict>
+</plist>

@@ -1,0 +1,46 @@
+//
+//  BiometryObserver.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/30.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "BiometryObserver.h"
+
+@implementation BiometryObserver
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    NSString *callback = [dict objectForKey:@"callback"];
+    BOOL flag = [[dict objectForKey:@"flag"] boolValue];
+    NSString *biometryName = [TouchIDManager biometryType] == DJBiometryTypeTouchID ? @"指纹" : @"面容";
+
+    if (flag) {
+        if (([TouchIDManager biometryType] != DJBiometryTypeNotSupport) && ![TouchIDManager biometryIsAvailable] && ![TouchIDManager getBiometryState]) {//设备支持，但用户未开启
+            if (![TouchIDManager biometryIsAvailable]) {
+                NSString *mag = [NSString stringWithFormat:@"您的%@没有开启，请到设置开启",biometryName];
+                [JSDeftAlert showAlert:mag doneTitle:@"确定" cancelTitle:@"取消" doneHandle:nil cancelHandle:nil];
+            }
+        } else {
+            [TouchIDManager touchIDAuthenticateWithBackTitle:@"" cancelTitle:@"取消" reason:@"" complete:^{
+                [TouchIDManager resetBiometryState];
+                evaluateJavaScriptOnMainThread(self, callback, @"1");
+            } fiald:^(LAErrorState resultStatus) {
+                if (resultStatus == LAErrorStateLockout) {
+                    __block NSString *msg = [NSString stringWithFormat:@"%@验证次数超限，请验证登录密码开启解锁%@",biometryName, biometryName];
+                    [JSDeftAlert showAlert:msg doneTitle:@"确定" cancelTitle:nil doneHandle:nil cancelHandle:nil];
+                }
+                if (resultStatus == LAErrorStateInputWrong) {
+                    __block NSString *msg = [NSString stringWithFormat:@"%@验证失败次数过多，请稍后重试",biometryName];
+                    [JSDeftAlert showAlert:msg doneTitle:@"确定" cancelTitle:nil doneHandle:nil cancelHandle:nil];
+                }
+            }];
+        }
+    } else {
+        [TouchIDManager resetBiometryState];
+        evaluateJavaScriptOnMainThread(self, callback, @"1");
+    }
+}
+
+@end

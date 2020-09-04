@@ -1,0 +1,85 @@
+//
+//  PCRadioControl.h
+//  PCKit
+//
+//  Created by wangyong on 16/4/22.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+/**
+ 单选图片的对齐方式
+
+ - PCImageAlignmentLeft: 图片在左侧
+ - PCImageAlignmentRight: 图片在右侧
+ */
+typedef NS_ENUM(NSUInteger, PCImageAlignment) {
+    PCImageAlignmentLeft,
+    PCImageAlignmentRight,
+};
+
+/**
+ *  @brief 单选按钮
+ */
+@interface PCDRadioButton : UIView
+
+/**
+ *  @brief 是否选择
+ */
+@property(nonatomic,assign) BOOL radioSelected;
+
+/**
+ *  @brief 标题
+ */
+@property(nullable,nonatomic,copy) NSString *title;
+
+/**
+ *  @brief 标题默认颜色，默认[UIColor blackColor]
+ */
+@property(nullable,nonatomic,strong) UIColor *titleColor;
+
+/**
+ *  @brief 标题选中颜色，默认[UIColor blackColor]
+ */
+@property(nullable,nonatomic,strong) UIColor *titleColorHL;
+
+/**
+ *  @brief 标题字体，默认[UIFont systemFontOfSize:15.0f]
+ */
+@property(nullable,nonatomic,strong) UIFont *titleFont;
+
+/**
+ *  @brief 默认图片
+ */
+@property(nullable,nonatomic,strong) UIImage *image;
+
+/**
+ *  @brief 选中图片
+ */
+@property(nullable,nonatomic,strong) UIImage *imageHL;
+
+/**
+ *  @brief 图片对齐方式
+ */
+@property(nonatomic,assign) PCImageAlignment imageAligment;
+
+/**
+ *  @brief单选按钮状态更新回调
+ */
+@property(nullable,nonatomic,copy) void (^radioDidUpdate)(BOOL radioSelected);
+
+/**
+ *  @brief 快速初始化
+ *
+ *  @param title      标题
+ *  @param image      图片
+ *  @param imageHL    选中图片
+ *  @param alignment  图片对齐方式
+ *  @param isSelected 是否默认选择
+ *
+ *  @return 实例化
+ */
+-(nonnull id)initWithTitle:(nullable NSString *)title normalImage:(nullable UIImage *)image selectedImage:(nullable UIImage *)imageHL imageAlignment:(PCImageAlignment)alignment defaultSelected:(BOOL)isSelected;
+
+@end

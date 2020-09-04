@@ -1,0 +1,55 @@
+//
+//  PCDWebViewController.h
+//  PCKit
+//
+//  Created by wangyong on 16/4/18.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+#import "PCDViewController.h"
+
+/**
+ *  @brief 基础web控制器
+ */
+@interface PCDWebViewController : PCDViewController
+
+/**
+ *  @brief 请求短链接，会自动拼接服务地址
+ */
+@property(nullable,nonatomic, copy) NSString *requestURL;
+
+/**
+ *  @brief 请求全链接，优先级高于requestURL
+ */
+@property(nullable,nonatomic, copy) NSString *requestFullURL;
+
+/**
+ *  @brief 自定制交互webView
+ */
+@property(nullable,nonatomic,strong) UIWebView *webView;
+
+/**
+ *  @brief viewWillAppear时是否刷新webView，默认NO
+ */
+@property(nonatomic,assign) BOOL reloadWhenAppear;
+
+/**
+ *  @brief 滑动时是否隐藏导航条，默认NO
+ */
+@property(nonatomic,assign) BOOL navScorllAnimated;
+
+/**
+ *  @brief 滑动时是否隐藏tabbar，默认YES
+ */
+@property(nonatomic,assign) BOOL tabScorllAnimated;
+
+/**
+ 加载web，允许子类复写
+ */
+-(void)loadWebRequest;
+
+/**
+ 取消加载webView
+ */
+-(void)cancelWebRequest;
+
+@end

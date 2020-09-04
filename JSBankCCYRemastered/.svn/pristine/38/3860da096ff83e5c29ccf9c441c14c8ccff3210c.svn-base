@@ -1,0 +1,74 @@
+//
+//  PCDUIUtil.h
+//  PCDUIBaseClass
+//
+//  Created by 王俣 on 2018/7/20.
+//  Copyright © 2018年 P&C. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+/**
+ *  @brief 主题皮肤更新字段
+ */
+UIKIT_EXTERN NSString *_Nonnull const PCDThemeSettingUpdateString;
+
+@class PCDThemeModle;
+
+@interface PCDUIUtil : NSObject
+
+#pragma mark -主题皮肤设置和读取
+
++ (void)setThemeWithModel:(PCDThemeModle *)model;
+
+/**
+ *  @brief 设置皮肤路径
+ *
+ *  @param pathString 路径
+ */
++(void)setThemePath:(nullable NSString *)pathString;
+/**
+ *  @brief 获取皮肤路径
+ *
+ *  @return 皮肤路径
+ */
++(nullable NSString *)currentThemePath;
+/**
+ *  @brief 设置对应皮肤图片
+ *
+ *  @param name 图片名
+ *
+ *  @return 图片
+ */
++(nullable UIImage *)themeImageNamed:(nonnull NSString *)name;
+
+
+/**
+ rgb颜色(0~255取值范围)
+
+ @param red 红色
+ @param green 绿色
+ @param blue 蓝色
+ @param alpha 透明度
+ @return color
+ */
++ (UIColor *)colorWithR:(float)red G:(float)green B:(float)blue andAlpha:(float)alpha;
+
+
+/**
+ 字符串rgba转UIColor
+
+ @param colorStr 字符串rgba
+ @return UIClolr
+ */
++ (UIColor *)colorStringToUIColor:(NSString *)colorStr;
+
+/**
+ 判断字符串是否为空
+ 
+ @param string 待验证字符串
+ @return 判断结果
+ */
++(BOOL)nilOrEmptyString:(nullable NSString *)string;
+
+@end

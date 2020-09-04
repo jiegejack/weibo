@@ -1,0 +1,135 @@
+//
+//  YTKeyboardUtil.h
+//  YTKeyboardDemo3.0
+//
+//  Created by 李培辉 on 2017/7/19.
+//  Copyright © 2017年 李培辉. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+#import "YTKeyboardViewConstant.h"
+
+@interface YTKeyboardUtil : NSObject
+
+
+/**
+ 单利
+
+ @return 单利对象
+ */
++(nonnull YTKeyboardUtil *)shareInstance;
+
+
+/**
+ 将16进制色值转成RGB值
+
+ @param hexColor 16进制色值
+ @return UIColor
+ */
++  (UIColor *)getColor:(NSString *)hexColor;
+
+
+/**
+ 键盘风格，默认值0，白色；1 黑色
+ */
+@property (nonatomic, assign) NSInteger keyboardStyle;
+
+/**
+ 验证权限，默认YES
+
+ @return YES键盘可用，NO键盘不可用
+ */
++ (BOOL)verifyPermission;
+
+/**
+ 根据键盘类型转变成键盘名字，对应Plist中
+
+ @param type 类型
+ @return 名字
+ */
++ (NSString *)keyBoardNameForKeyboardType:(YTKeyboardType)type;
+
+/**
+ 根据键盘名字转成类型，对应Plist中
+ 
+ @param keyboardName 名字
+ @return 类型
+ */
++ (YTKeyboardType)keyBoardNameForKeyboardName:(NSString *)keyboardName;
+
+
+/**
+ 根据原始数据，对字母，数字，字符，乱序处理
+
+ @param keyboardDict 原始数据
+ @return 乱序后的数据
+ */
++ (NSDictionary *)randomKeyboardWithDict:(NSDictionary *)keyboardDict;
+
+/**
+ 生成随机字符串
+
+ @param length 随机字符串长度
+ @return 生成的随机字符串
+ */
++(NSString *)randomStringWithLength:(NSInteger)length;
+
+/**
+ 格式化金额字符串
+
+ @param originStr 源字符串
+ @param len 整数部分多少位一组
+ @param decimalLen 小数部分长度
+ @return 格式化后的字符串
+ */
++ (NSString *)formatWithString:(NSString *)originStr groupLen:(int)len decimalLen:(int)decimalLen;
+
+/**
+ 判断金额字符串是否可以继续输入
+
+ @param str 原金额字符串
+ @param value 输入的字符
+ @param iLength 整数部分长度限制
+ @param dLength 小数部分长度限制
+ @return 是否可以输入
+ */
++ (BOOL)canInputWithString:(NSString *)str inputValue:(NSString *)value integerLength:(int)iLength decimalLength:(int)dLength;
+
+/**
+ 金额字符串还原
+
+ @param value 格式化后的金额字符串
+ @return 原金额字符串
+ */
++ (NSString *)restore:(NSString *)value;
+
+
+/**
+ 屏幕宽度比，以4.7寸为1.0
+
+ @return 宽度比值
+ */
++ (double)widthRate;
+
+/**
+ 屏幕高度比，以4.7寸为1.0
+ 
+ @return 高度比值
+ */
++ (double)heightRate;
+
+
+/**
+ 标准屏幕宽度值
+
+ @return  标准屏幕宽度值
+ */
++ (double)standScreenWidth;
+/**
+ 标准屏幕高度值
+ 
+ @return  标准屏幕高度值
+ */
++ (double)standScreenHeight;
+@end

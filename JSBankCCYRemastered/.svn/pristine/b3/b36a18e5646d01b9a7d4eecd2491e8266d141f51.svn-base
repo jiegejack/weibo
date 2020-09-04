@@ -1,0 +1,22 @@
+//
+//  JSSplashScreenViewController.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/12.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSSplashScreenViewController.h"
+
+typedef void(^DissmisBlock)(void);
+@interface JSSplashScreenViewController : UIViewController
+@property (nonatomic, copy) DissmisBlock dissmisBlock;
+@property (nonatomic, assign) BOOL splashScreenEnd;
+
+- (void)fetchSplashInfo;
++ (BOOL)canShowImage;
+- (void)stopTimer;
+- (void)addTimer;
+
+@end
+

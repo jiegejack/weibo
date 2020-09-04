@@ -1,0 +1,29 @@
+//
+//  LoadIndicator.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface LoadIndicator : NSObject
+
+/** 显示指示器
+ * text      : 指示器文本
+ * shouldTap : 支持点击屏幕隐藏指示器并且取消当前网络请求
+ */
++ (void)showLoadingIndicatorWithText:(NSString *)text
+                           shouldTap:(BOOL)shouldTap;
+
+/*
+ * 隐藏指示器
+ */
++ (void)hiddenLoadingIndicator;
+
+@end
+
+NS_ASSUME_NONNULL_END

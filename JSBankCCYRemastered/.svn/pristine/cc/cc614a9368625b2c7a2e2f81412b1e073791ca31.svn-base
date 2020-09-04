@@ -1,0 +1,40 @@
+//
+//  AmountView.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/15.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface AmountView : UIView
+@property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, copy) void(^inputPasswordBlock)(NSString *password);
+@property (nonatomic, copy) void(^buttonAction)(void);
+
+/** 初始化弹框
+ * nick        : 昵称
+ * amount      : 金额
+ * showExplain : 说明
+ * tipText     : 指示标识
+ * showButton  : 是否显示忘记密码
+ */
+- (id)initWithNickName:(NSString *)nick
+                amount:(NSString *)amount
+               tipText:(NSString *)tipText
+                 title:(NSString *)title
+          keyboardType:(UIKeyboardType)keyboardType
+            showButton:(BOOL)showButton;
+
+- (void)show;
+- (void)dismiss;
+
+/**本类废弃的方法*/
+- (id)init NS_AUTOMATED_REFCOUNT_UNAVAILABLE __attribute__((unavailable));
+- (id)initWithFrame:(CGRect)frame NS_AUTOMATED_REFCOUNT_UNAVAILABLE __attribute__((unavailable));
+@end
+
+NS_ASSUME_NONNULL_END

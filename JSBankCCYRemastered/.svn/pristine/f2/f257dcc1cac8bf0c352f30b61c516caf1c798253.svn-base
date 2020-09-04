@@ -1,0 +1,20 @@
+//
+//  YTKeyboardLayout.h
+//  YTKeyboardDemo3.0
+//
+//  Created by 李培辉 on 2017/7/18.
+//  Copyright © 2017年 李培辉. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "YTKeyboardViewCell.h"
+#import "YTKeyboardViewConstant.h"
+#import "YTKeyboardUtil.h"
+@interface YTKeyboardLayout : NSObject< YTKeyboardViewCellDelegate>
+//- (instancetype)initWithKeyboardType:(NSInteger)type;
+//- (instancetype)initWithKeyboardName:(NSString *)name;
++ (instancetype)layoutWithName:(NSString *)name;
+//@property (nonatomic, copy) NSString *layoutName;
+//
+//@property (nonatomic, strong) NSDictionary *keyboardDict;
+@end

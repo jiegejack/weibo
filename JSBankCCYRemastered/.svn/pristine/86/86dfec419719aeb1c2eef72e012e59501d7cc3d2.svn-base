@@ -1,0 +1,123 @@
+//
+//  FaceRecordErrorView.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/30.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "FaceRecordErrorView.h"
+
+@interface FaceRecordErrorView()
+@property (nonatomic, strong)UIImageView *logoView;
+@property (nonatomic, strong)UILabel *tipLabel;
+@property (nonatomic, strong)UILabel *messageLabel;
+@property (nonatomic, strong)UIButton *retryButton;
+@property (nonatomic, strong)UIButton *backButton;
+@property (nonatomic, strong)UIView *sepratorView;
+
+@end
+@implementation FaceRecordErrorView
+
+- (id)initWithFrame:(CGRect)frame {
+    if (self = [super initWithFrame:frame]) {
+        self.logoView = [[UIImageView alloc] init];
+        self.logoView.image = [UIImage imageNamed:@"errorLogo"];
+//        self.logoView.backgroundColor = [UIColor redColor];
+        self.logoView.contentMode = UIViewContentModeScaleAspectFit;
+        [self addSubview:self.logoView];
+        
+        self.tipLabel = [[UILabel alloc] init];
+        self.tipLabel.text = @"检测失败";
+//        self.tipLabel.backgroundColor = [UIColor redColor];
+        self.tipLabel.font = [UIFont systemFontOfSize:20];
+        self.tipLabel.textAlignment = NSTextAlignmentCenter;
+        self.tipLabel.textColor = Color().MainBlue;
+        [self addSubview:self.tipLabel];
+        
+        self.sepratorView = [[UIView alloc] init];
+        self.sepratorView.backgroundColor = Color().Auxiliary;
+        [self addSubview:self.sepratorView];
+        
+        self.messageLabel = [[UILabel alloc] init];
+//        self.messageLabel.backgroundColor = [UIColor redColor];
+        self.messageLabel.font = [UIFont systemFontOfSize:14];
+        self.messageLabel.text = @"您可以尝试通过以下方式提高通过率:\n   1、严格按照提示做出相应动作。\n   2、确保人脸出现在视频框里。\n   3、请保持光线充足。\n   4、请摘掉眼镜并露出耳朵。";
+//        self.messageLabel.textAlignment = NSTextAlignmentCenter;
+        self.messageLabel.numberOfLines = 0;
+        self.messageLabel.textColor = Color().MainBlack;
+        [self addSubview:self.messageLabel];
+        
+        self.retryButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        self.retryButton.titleLabel.font = [UIFont systemFontOfSize:16];
+        [self.retryButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [self.retryButton setTitle:@"重新检测" forState:UIControlStateNormal];
+        self.retryButton.backgroundColor = Color().MainBlue;
+        [self addSubview:self.retryButton];
+        [self.retryButton addTarget:self action:@selector(retryClick) forControlEvents:UIControlEventTouchUpInside];
+        
+        self.backButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        self.backButton.titleLabel.font = [UIFont systemFontOfSize:16];
+        [self.backButton setTitleColor:Color().MainBlue forState:UIControlStateNormal];
+        [self.backButton setTitle:@"返回" forState:UIControlStateNormal];
+//        self.backButton.backgroundColor = Color().MainBlue;
+        [self addSubview:self.backButton];
+        [self.backButton addTarget:self action:@selector(backClick) forControlEvents:UIControlEventTouchUpInside];
+        
+        [self.logoView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.centerX.mas_equalTo(self.mas_centerX);
+            make.top.mas_equalTo(self.mas_top).offset(30);
+            make.width.height.mas_equalTo(80);
+        }];
+        
+        [self.tipLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.centerX.mas_equalTo(self.mas_centerX);
+            make.top.mas_equalTo(self.logoView.mas_bottom).offset(20);
+            make.height.mas_equalTo(20);
+        }];
+
+        [self.sepratorView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.left.mas_equalTo(self.mas_left).offset(10);
+            make.right.mas_equalTo(self.mas_right).offset(-10);
+            make.top.mas_equalTo(self.tipLabel.mas_bottom).offset(20);
+            make.height.mas_equalTo(1.0);
+        }];
+        [self.messageLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.left.mas_equalTo(self.mas_left).offset(10);
+            make.top.mas_equalTo(self.tipLabel.mas_bottom).offset(40);
+            make.right.mas_equalTo(self.mas_right);
+        }];
+        [self.retryButton mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.mas_equalTo(self.messageLabel.mas_bottom).offset(20);
+            make.left.mas_equalTo(self.mas_left).offset(16);
+            make.right.mas_equalTo(self.mas_right).offset(-16);
+            make.height.mas_equalTo(44);
+        }];
+        [self.backButton mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.centerX.mas_equalTo(self.mas_centerX);
+            make.top.mas_equalTo(self.retryButton.mas_bottom).offset(20);
+            make.height.mas_equalTo(20);
+            make.width.mas_equalTo(200);
+        }];
+    }
+    return self;
+}
+
+- (void)retryClick {
+    if (self.retryAction) {
+        self.retryAction();
+    }
+}
+
+- (void)backClick {
+    if (self.backAction) {
+        self.backAction();
+    }
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    self.retryButton.layer.cornerRadius = self.retryButton.frame.size.height / 2;
+}
+
+@end

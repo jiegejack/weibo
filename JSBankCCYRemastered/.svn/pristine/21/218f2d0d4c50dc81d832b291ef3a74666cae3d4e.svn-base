@@ -1,0 +1,69 @@
+//
+//  TouchIDManager.h
+//  TouchIDManager
+//
+//  Created by Jack on 2019/05/06.
+//  Copyright © 2019年 TouchIDManager. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface TouchIDManager : NSObject
+
+typedef NS_ENUM(NSInteger, DJBiometryType) { //指纹支持类型
+    DJBiometryTypeNotSupport = 0,   //不支持
+    DJBiometryTypeTouchID    = 1,   //指纹
+    DJBiometryTypeFaceID     = 2,   //面容
+};
+
+typedef NS_ENUM(NSInteger, LAErrorState) {  //错误验证
+    LAErrorStateAuthenticateSuccess   = 0,  //验证成功
+    LAErrorStateInputWrong            = -1, //指纹输入错误           (在指纹下，已经连续三次指纹识别错误了，请输入密码验证)
+    LAErrorStateUserCancel            = -2, //用户取消指纹
+    LAErrorStateUsePassWord           = -3, //用户使用密码
+    LAErrorStateSystemCancel          = -4, //系统取消指纹           (按home)
+    LAErrorStateNotSetPassWord        = -5, //没有设置密码           (用户关闭密码)
+    LAErrorStateNotAvailable          = -6, //不可用(可能用户没有允许) (面容设备,用户没有在app列表中开启)   可能如果是指纹时候，设备未设置Touch ID
+    LAErrorStateNotInputFinger        = -7, //未录入指纹             (用户没有录)
+    LAErrorStateLockout               = -8, //指纹验证超限            (TouchID已经被锁定,请前往设置界面重新启用)
+    LAErrorStateAppCancel             = -9, //App取消指纹            (App挂起)
+    LAErrorStateCannotVerify          = -10,//请求验证出错            (LAContext传递给这个调用之前已经失效)
+    LAErrorStateTouchIDNotSet         = -11,//没有设置指纹
+    LAErrorStateSimulatorNotSupported = -12,//模拟器不支持
+    LAErrorStateDeviceNotSupported    = -13,//设备不支持
+    LAErrorStateSystemNotSupported    = -14 //系统不支持
+};
+
+/**
+ *初始化生物验证
+ */
++ (void)touchIDAuthenticateWithBackTitle:(NSString *)backTitle
+                             cancelTitle:(NSString *)cancelTitle
+                                  reason:(NSString *)reason
+                                complete:(void(^)(void))complete
+                                   fiald:(void(^)(LAErrorState resultStatus))fiald;
+/**
+ *返回生物支持类型
+ */
++ (DJBiometryType)biometryType;
+
+/**
+ *生物验证是否可用
+ */
++ (BOOL)biometryIsAvailable;
+
+/**
+ *客户端是否开启生物验证
+ */
++ (BOOL)getBiometryState;
+
+/**
+ *保存设定生物验证开启状态
+ */
++ (void)resetBiometryState;
+
++ (BOOL)isWithinPeriod;
+
++ (void)saveBiometryStateDate;
+
+@end

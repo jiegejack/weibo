@@ -1,0 +1,25 @@
+//
+//  OpenScan.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/17.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "OpenScan.h"
+#import "JSScanViewController.h"
+
+@implementation OpenScan
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    JSBaseWebViewController *webVC = (JSBaseWebViewController *)context.viewController;
+
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+    
+    JSScanViewController *scanVC = [[JSScanViewController alloc] init];
+    scanVC.hidesBottomBarWhenPushed = YES;
+    [webVC.tabBarController.navigationController pushViewController:scanVC animated:YES];
+}
+
+@end

@@ -1,0 +1,90 @@
+//
+//  ClientNetManager.h
+//  JSBankQNXY
+//
+//  Created by Jack on 2019/04/15.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "LoginSession.h"
+#import "Reachability.h"
+
+@interface ClientNetManager : NSObject
+
+/**密码设置
+ * success    : 请求成功, resultResponse(返回报文)
+ * failure    : 请求失败, errorMessage(错误信息)
+ */
++ (void)fetchSettingPasswordDataWithPwd:(NSString *)pwd
+                              verifyPwd:(NSString *)vPwd
+                                success:(void (^)(id resultResponse, id resultModel))success
+                                failure:(void (^)(NSError *error, LoginSession *session))failure;
+
+/**注册
+ * PhoneNO        : 手机号
+ * recommentPhone : 推荐人手机号
+ * code           : 验证码
+ * success        : 请求成功, resultResponse(返回报文)
+ * failure        : 请求失败, errorMessage(错误信息)
+ */
++ (void)fetchRegistDataWithPhoneNO:(NSString *)phoneNO1
+                    recommentPhone:(NSString *)phoneNO2
+                              code:(NSString *)code
+                           success:(void (^)(id resultResponse, id resultModel))success
+                           failure:(void (^)(NSError *error, LoginSession *session))failure;
+
+/**搜索框站位
+ * success    : 请求成功, resultResponse(返回报文)
+ * failure    : 请求失败, errorMessage(错误信息)
+ */
++ (void)fetchPlaceholderContentWithSuccess:(void (^)(id resultResponse, id resultModel))success
+                                failure:(void (^)(NSError *error, LoginSession *session))failure;
+
+/**自动登录
+ * loginUrl   : 登录路径
+ * success    : 请求成功, resultResponse(返回报文)
+ * failure    : 请求失败, errorMessage(错误信息)
+ */
++ (void)fetchLoginDataWithParam:(NSDictionary *)param
+                       loginUrl:(NSString *)url
+                        success:(void (^)(id resultResponse, id resultModel))success
+                        failure:(void (^)(NSError *error, LoginSession *session))failure;
+
+/**版本更新
+ * success    : 请求成功, resultResponse(返回报文)
+ * failure    : 请求失败, errorMessage(错误信息)
+ */
++ (void)fetchVersionUpdateWithSuccess:(void (^)(id resultResponse, id resultModel))success
+                              failure:(void (^)(NSError *error, LoginSession *session))failure;
+
+/**闪屏图片
+ * url        : 图片地址
+ * success    : 请求成功, resultResponse(返回报文)
+ * failure    : 请求失败, errorMessage(错误信息)
+ */
++ (void)fetchSplashScreenImageWithUrl:(NSString *)url success:(void (^)(id resultResponse))success
+                              failure:(void (^)(NSError *error, LoginSession *session))failure;
+
+/**闪屏数据
+ * resultModel: 返回模型
+ * success    : 请求成功, resultResponse(返回报文)；resultModel(返回模型)
+ * failure    : 请求失败, errorMessage(错误信息)
+ */
++ (void)fetchSplashScreenDataWithSuccess:(void (^)(id resultResponse, id resultModel))success
+                                 failure:(void (^)(NSError *error, LoginSession *session))failure;
+
+/**获取验证码(用于重置密码)
+ * phoneNO    : 手机号
+ * resultModel:返回模型
+ * success    : 请求成功, resultResponse(返回报文)；resultModel(返回模型)
+ * failure    : 请求失败, errorMessage(错误信息)
+ */
++ (void)fetchSMSCodeDataWithPhoneNO:(NSString *)phoneNO
+                               code:(NSString *)code
+                            success:(void (^)(id resultResponse, id resultModel))success
+                            failure:(void (^)(NSError *error, LoginSession *session))failure;
+
++ (NetworkStatus)reachableStatus;
+
+@end

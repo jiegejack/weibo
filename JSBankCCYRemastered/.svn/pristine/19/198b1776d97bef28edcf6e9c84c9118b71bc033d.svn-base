@@ -1,0 +1,66 @@
+//
+//  ParamConfig.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/21.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "ParamConfig.h"
+
+@implementation ParamConfig
+
+- (id)init {
+    if (self = [super init]) {
+        self.pwdLogin       = @{@"loginType"    : @"200",
+                                @"isPassword" : @"1",
+                                @"OPER_TYPE"  : @"pwd",
+                                @"loginflag"  : @"2"}.mutableCopy;
+        
+        self.registerLogin  = @{@"loginType" : @"207",
+                                @"OPER_TYPE" : @"finger",
+                                @"loginflag" : @"3",
+                                @"regflag"   : @"1"}.mutableCopy;
+        
+        self.codeLogin      = @{@"loginType" : @"201",
+                                @"OPER_TYPE"  : @"msg",
+                                @"loginflag"  : @"2"}.mutableCopy;
+        
+        self.biometryLogin  = @{@"loginType"     : @"206",
+                                @"OPER_TYPE"     : @"finger",
+                                @"loginflag"     : @"3",
+                                @"custemployeNo" : [self custemployeNo]}.mutableCopy;
+    }
+    return self;
+}
+
+- (NSString *)custemployeNo {
+    NSString *custemployeNo = [DataCache getCacheStringForkey:@"ccy_custemployeNo"];
+    custemployeNo = custemployeNo.notNull ? custemployeNo : @"";
+    
+    return custemployeNo;
+}
+
++ (instancetype)sharedParamConfig {
+    static ParamConfig *paramConfig = nil;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        paramConfig = [[self alloc] init];
+    });
+    
+    return paramConfig;
+}
+
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    ParamConfig *Param() {
+        
+        return [ParamConfig sharedParamConfig];
+    }
+#ifdef __cplusplus
+}
+#endif

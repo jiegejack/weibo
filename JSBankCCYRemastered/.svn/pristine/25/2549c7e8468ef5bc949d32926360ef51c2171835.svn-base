@@ -1,0 +1,16 @@
+//
+//  FaceRecord.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface FaceRecord : NSObject
+@property (nonatomic, copy) NSString *STATUS;
+@property (nonatomic, copy) NSString *SEQ_NO;
+@property (nonatomic, copy) NSString *MSG;
+
+@end

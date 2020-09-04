@@ -1,0 +1,18 @@
+//
+//  JSFaceRecordViewController.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/29.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSBaseViewController.h"
+
+@interface JSFaceRecordViewController : JSBaseViewController
+
+@property(nonatomic,copy)void(^callBackHandle)(NSDictionary *);
+@property(nonatomic,copy)void(^callFailHandle)(void);
+
+@property(nonatomic,copy)NSString *type;
+
+@end

@@ -1,0 +1,41 @@
+//
+//  PCDEncryptTransData.m
+//  PCDH5Container
+//
+//  Created by dk on 2018/6/14.
+//  Copyright © 2018年 dk. All rights reserved.
+//
+
+#import "PCDEncryptTransData.h"
+#import <PCDSecurity/PCDSecurity.h>
+@implementation PCDEncryptTransData
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict =(NSDictionary*)data;
+    
+    if (dict) {
+        
+        if ([dict objectForKey:@"key"]) {
+            
+            NSString *callbackString = [dict objectForKey:@"callback"];
+            NSString *strKey = [dict objectForKey:@"key"];
+            NSString *ciphertextString = [dict objectForKey:@"text"];
+            NSString *strEncryString =  [[PCDEncrypt sharedEncrypt] decryptString:ciphertextString withAESKey:strKey];
+//            evalueateJavaScript(self,);
+            evaluateJavaScriptOnMainThread(self,callbackString,strEncryString);
+        }else{
+            NSString *callbackString  = [dict objectForKey:@"callback"];
+            NSString *plaintextString = [dict objectForKey:@"text"];
+            NSString *key = @"";
+            NSString *stringData = [[PCDEncrypt sharedEncrypt] getCryptString:plaintextString withKey:&key];
+            NSDictionary *callbackDict = @{@"text":stringData,@"key":key};
+            
+            NSString *callbackJsonString = [callbackDict JSONRepresentation];
+            
+//            evalueateJavaScript(self, callbackJsonString);
+            evaluateJavaScriptOnMainThread(self,callbackString,callbackJsonString);
+        }
+    }
+
+}
+@end

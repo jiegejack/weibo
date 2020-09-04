@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "JSBankCCYRemastered/Expand(&#x6269;&#x5c55;)/H5Plugin(&#x63d2;&#x4ef6;&#x65b9;&#x6cd5;)/PCDEncryptData(&#x52a0;&#x5bc6;&#x8bf7;&#x6c42;)/PCDEncryptTransData.m"
+            timestampString = "580720441.414919"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "16"
+            endingLineNumber = "16"
+            landmarkName = "-handler:andContext:ResponseCallback:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "JSBankCCYRemastered/Expand(&#x6269;&#x5c55;)/H5Plugin(&#x63d2;&#x4ef6;&#x65b9;&#x6cd5;)/BiometrySwitch/CheckBiometrySupport.m"
+            timestampString = "580904169.636476"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "15"
+            endingLineNumber = "15"
+            landmarkName = "-handler:andContext:ResponseCallback:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "JSBankCCYRemastered/Expand(&#x6269;&#x5c55;)/H5Plugin(&#x63d2;&#x4ef6;&#x65b9;&#x6cd5;)/BiometrySwitch/CheckBiometryStatus.m"
+            timestampString = "580901343.827539"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "15"
+            endingLineNumber = "15"
+            landmarkName = "-handler:andContext:ResponseCallback:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "JSBankCCYRemastered/Expand(&#x6269;&#x5c55;)/H5Plugin(&#x63d2;&#x4ef6;&#x65b9;&#x6cd5;)/BiometrySwitch/BiometryObserver.m"
+            timestampString = "580901346.202617"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "15"
+            endingLineNumber = "15"
+            landmarkName = "-handler:andContext:ResponseCallback:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>

@@ -1,0 +1,19 @@
+//
+//  JSRootWebViewController.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/9.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSBaseWebViewController.h"
+#import "MJRefresh.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface JSRootWebViewController : JSBaseWebViewController
+@property(nonatomic,strong)MJRefreshNormalHeader *header;
+
+@end
+
+NS_ASSUME_NONNULL_END

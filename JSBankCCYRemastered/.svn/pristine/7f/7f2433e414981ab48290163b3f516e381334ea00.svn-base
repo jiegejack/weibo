@@ -1,0 +1,44 @@
+//
+//  PCDWServiceDO.h
+//  PCDH5Container
+//
+//  Created by 王俣 on 2018/7/15.
+//  Copyright © 2018年 yt. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+@interface PCDWServiceDO : NSObject
+
+/**
+ 要加载的链接
+ */
+@property (nonatomic,copy)NSString *url;
+
+/**
+ 水印文本
+ */
+@property (nonatomic,copy)NSString *watermarkText;
+
+/**
+ 水印大小
+ */
+@property (nonatomic,assign) CGFloat fontSize;
+
+/**
+ 水印颜色
+ */
+@property (nonatomic,strong) UIColor *textColor;
+
+/**
+ 水印图片
+ */
+@property (nonatomic,strong) UIImage *watermarkImg;
+
+/**
+ 水印的透明度
+ */
+@property (nonatomic,assign)float watermarkAlpha;
+
+@end

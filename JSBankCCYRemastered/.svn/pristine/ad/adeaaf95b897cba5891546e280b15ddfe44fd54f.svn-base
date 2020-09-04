@@ -1,0 +1,123 @@
+//
+//  AlertObject.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/24.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "AlertObject.h"
+#import "JSSplashScreenViewController.h"
+
+@interface AlertObject ()
+@property(nonatomic,strong)NSTimer *timer;
+@property (nonatomic, copy) NSString *tipText;
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic, copy) NSString *ok_text;
+@property (nonatomic, copy) NSString *cancel_text;
+@property (nonatomic, copy) NSString *ok_func;
+@property (nonatomic, copy) NSString *cancel_func;
+@property (nonatomic, copy) NSString *custServiceName;
+@property (nonatomic, copy) NSString *custServiceAct;
+@property (nonatomic, copy) NSString *type;
+
+@end
+@implementation AlertObject
+
+- (id)initWithDictionary:(NSDictionary *)dict {
+    if (self = [super init]) {
+        if (dict.notNull) {
+            self.tipText = [dict objectForKey:@"msg"];
+            self.title = [dict objectForKey:@"title"];
+            self.ok_text = [dict objectForKey:@"ok_text"];
+            self.cancel_text = [dict objectForKey:@"cancel_text"];
+            self.ok_func = [dict objectForKey:@"ok_func"];
+            self.cancel_func = [dict objectForKey:@"cancel_func"];
+            self.custServiceName = [dict objectForKey:@"custServiceName"];
+            self.custServiceAct = [dict objectForKey:@"custServiceAct"];
+            self.type = [dict objectForKey:@"type"];
+        }
+    }
+    return self;
+}
+
+- (void)showAlertView {
+    if (self.tipText.notNull) {
+        if (([JSSplashScreenViewController canShowImage] || [PCDGuidenceViewController appFirstLaunch]) && [JSSharedInstance sharedInstance].time) {
+            [self addTimer];
+        } else {
+            [self showAlertAction];
+        }
+    }
+}
+
+- (void)showAlertAction {
+    __weak typeof(self) weakSelf = self;
+    AlertType alertType = AlertTypeRegular;
+    if ([self.type isEqualToString:@"ALERT"]) {
+        alertType = AlertTypeCustom;
+    } else if ([self.type isEqualToString:@"ALERT2"]) {
+        alertType = AlertTypeService;
+    } else {
+        alertType = AlertTypeRegular;
+    }
+    AlertExtension *alert = [[[AlertExtension alloc] init] alertWithTitle:self.title
+                                                                  message:self.tipText
+                                                                     type:alertType];
+    
+    if (alertType != AlertTypeCustom) {
+        alert.cancelButtonTitle = self.cancel_text;
+        if ([self.cancel_text isEqualToString:@"取消"]) {
+            alert.cancelButtonColor = Color().MainBlack;
+        }
+        alert.cancelBlock = ^{
+            if (self.cancelAction) {
+                self.cancelAction(self.cancel_func);
+            }
+//            if (self.cancel_func.notNull) {
+//                evaluateJavaScriptOnMainThread(weakSelf, self.cancel_func, @"");
+//            }
+        };
+    } else {
+        alert.titleFont = [UIFont boldSystemFontOfSize:17];
+        alert.messageFont = [UIFont systemFontOfSize:15];
+    }
+    NSString *ok_Title = @"";
+    NSString *ok_funcName = @"";
+    if (alertType == AlertTypeService) {
+        alert.okButtonImage = [UIImage imageNamed:@"service.png"];
+        ok_Title = self.custServiceName;
+        ok_funcName = self.custServiceAct;
+    } else {
+        ok_Title = self.ok_text;
+        ok_funcName = self.ok_func;
+    }
+    alert.otherButtonTitle = ok_Title;
+    alert.otherBlock = ^{
+        if (self.okAction) {
+            self.okAction(ok_funcName);
+        }
+//        if (ok_funcName.notNull) {
+//            evaluateJavaScriptOnMainThread(weakSelf, ok_funcName, @"");
+//        }
+    };
+    [alert showAlert];
+
+    [self stopTimer];
+}
+
+- (void)stopTimer {
+    if (self.timer && [self.timer isValid]) {
+        [self.timer invalidate];
+        self.timer = nil;
+    }
+}
+
+- (void)addTimer {
+    if(!self.timer) {
+        self.timer = [NSTimer timerWithTimeInterval:[JSSharedInstance sharedInstance].time target:self selector:@selector(showAlertAction) userInfo:nil repeats:YES];
+        [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+    }
+}
+
+@end

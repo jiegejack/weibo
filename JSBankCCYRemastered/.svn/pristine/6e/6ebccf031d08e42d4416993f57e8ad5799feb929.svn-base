@@ -1,0 +1,157 @@
+//
+//  YTKeyboardViewCell.h
+//  YTKeyboardDemo3.0
+//
+//  Created by 李培辉 on 2017/7/19.
+//  Copyright © 2017年 李培辉. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "YTIndexPath.h"
+#import "YTKeyView.h"
+
+@class YTKeyboardViewCell;
+
+@protocol YTKeyboardViewCellDelegate <NSObject>
+@optional
+/**
+ contentView距离cell顶部的距离
+
+ @param cell 显示区域cell
+ @return 距离cell顶部距离
+ */
+- (CGFloat)topMarginWithKeyBoardViewCell:(YTKeyboardViewCell *)cell;
+/**
+ contentView距离cell底部的距离
+ 
+ @param cell 显示区域cell
+ @return 距离cell底部距离
+ */
+- (CGFloat)bottomMarginWithKeyBoardViewCell:(YTKeyboardViewCell *)cell;
+/**
+ contentView距离cell左边的距离
+ 
+ @param cell 显示区域cell
+ @return 距离cell左边距离
+ */
+- (CGFloat)leftMarginWithKeyBoardViewCell:(YTKeyboardViewCell *)cell;
+
+/**
+ contentView距离cell右边的距离
+ 
+ @param cell 显示区域cell
+ @return 距离cell右边距离
+ */
+- (CGFloat)rightMarginWithKeyBoardViewCell:(YTKeyboardViewCell *)cell;
+
+
+/**
+ 按键距离左边按键的间距，左边第一个是距离左边的间距
+ 
+ @param indexPath 按键的indexPath
+ @return 按键距离左边按键的间距
+ */
+- (CGFloat)colHorizontalMarginWithIndexPath:(YTIndexPath *)indexPath;
+
+/**
+ 每行的最后一列距离左边的距离
+
+ @param row 行号
+ @return 按键距离右边的值
+ */
+- (CGFloat)colMarginRight:(NSInteger)row;
+
+/**
+ 当前行的按键宽度是否相等
+
+ @param cell 显示区域cell
+ @param row cell中行
+ @return 当前行的宽度是否相等
+ */
+- (BOOL)keyBoardViewCell:(YTKeyboardViewCell *)cell colsWidthIsEqualInRow:(NSInteger)row;
+
+/**
+ 每个按键的宽度，不提供此方法或colsWidthIsEqualInRow返回值为YES，将会根据每行按键个数自动计算宽度（取平均值）。如果colsWidthIsEqualInRow返回为NO，每个按键宽度都应该提供，宽度为0的将会根据指定宽度剩余的宽度计算平均值。
+ 
+ @param cell 显示区域cell
+ @param indexPath cell中indexPath
+ @return 按键的宽度
+ */
+- (CGFloat)keyBoardViewCell:(YTKeyboardViewCell *)cell widthForIndexPath:(YTIndexPath *)indexPath;
+
+/**
+ 行与行之间的间距，顶部第一行距离顶部0
+ 
+ @param cell 显示区域cell
+ @return 行间距，默认0
+ */
+- (CGFloat)rowVerticalMarginWithKeyBoardViewCell:(YTKeyboardViewCell *)cell forRow:(NSInteger)row;
+
+
+/**
+ 每行按键的高度，每行按键的高度应该保证相等.不提供此方法或值为0，将会根据行数自动计高度，如果有一个设置值为0，应该统一为0，所有行高相等。
+
+ @param row 行号
+ @return 每行的高度
+ */
+- (CGFloat)heightForRow:(NSInteger)row;
+@end
+
+@protocol YTKeyboardViewCellDataSource <NSObject>
+/**
+ row，键盘第几行
+ @return 这行有多少个按键,默认值0
+ */
+- (NSInteger)keyBoardViewCell:(YTKeyboardViewCell *)cell  numberOfColsInRow:(NSInteger)row;
+
+/**
+ indexPath，提供第几行，第几列
+ @return 按键视图
+ */
+- (YTKeyView *)keyBoardViewCell:(YTKeyboardViewCell *)cell  viewForIndexPath:(YTIndexPath *)indexPath;
+@optional
+/**
+ 输入区域有多少行，可以不实现，默认值4（kDefalutRows）行
+
+ @return 输入区域有多少行
+ */
+- (NSInteger)numberOfRowsInKeyBoardViewCell:(YTKeyboardViewCell *)cell;
+@end
+
+@protocol YTKeyboardViewCellInteraction <NSObject>
+@optional
+- (BOOL)isUpperWithKeyboardViewCell:(YTKeyboardViewCell *)cell;
+@required
+/**
+ 按键点击调用
+ 
+ @param cell 显示区域cell
+ @param indexPath cell中indexPath
+ */
+- (void)keyBoardViewCell:(YTKeyboardViewCell *)cell clickKeyWithIndexPath:(YTIndexPath *)indexPath;
+@end
+
+@interface YTKeyboardViewCell : UIView
+- (instancetype)initWithLayout:(id<YTKeyboardViewCellDelegate>)layout;
+@property (nonatomic, strong) UIView *contentView;
+@property (nonatomic, strong) id<YTKeyboardViewCellDelegate> layout;
+@property (nonatomic, strong) id<YTKeyboardViewCellDataSource> dataSource;
+@property (nonatomic, strong) id<YTKeyboardViewCellInteraction> cellInteraction;
+
+/**
+ 显示区域编号
+ */
+@property (nonatomic, assign) NSInteger section;
+
+/**
+ 刷新
+ */
+- (void)reload;
+
+/**
+ 按键大小写切换
+
+ @param upper YES大写 NO小写
+ */
+//- (void)showUpper:(BOOL)upper;
+@end

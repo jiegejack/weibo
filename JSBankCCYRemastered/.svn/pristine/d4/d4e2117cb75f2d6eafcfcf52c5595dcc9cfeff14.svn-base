@@ -1,0 +1,408 @@
+//
+//  PCNetWorkEncrypt.m
+//  PCDNetWorkServiceGet
+//
+//  Created by dk on 2018/3/7.
+//  Copyright © 2018年 dk. All rights reserved.
+//
+
+#import "PCDNetWorkEncrypt.h"
+#import <PCDSecurity/PCDSecurity.h>
+#import <PCDBaseClass/PCDBaseClass.h>
+
+/**
+ 字符混淆类型
+ 
+ - PCDEncryptMixNone: 不混淆
+ - PCDEncryptMixLeadTailExchange: 头尾混淆
+ - PCDEncryptMixOddEvenExchange: 奇偶混淆
+ */
+typedef NS_ENUM(NSInteger, PCDEncryptMixType) {
+    PCDEncryptMixNone = 0,
+    PCDEncryptMixLeadTailExchange,
+    PCDEncryptMixOddEvenExchange,
+};
+
+
+@interface PCDNetWorkEncrypt(){
+
+    @private
+    NSString *_keyString;
+}
+
+//填充长度
+@property (nonatomic,assign) NSInteger appedingNum;
+
+//混淆 的范围
+@property (nonatomic,assign) NSRange mixRange;
+
+//密文长度
+@property (nonatomic,assign) NSInteger cryptNum;
+
+//混淆类型
+@property (nonatomic,assign) PCDEncryptMixType mixType;
+
+@property(nonatomic,strong) NSString * vectorString;
+
+@end
+
+@implementation PCDNetWorkEncrypt
+
+
++ (instancetype)sharedWorkEncrypt{
+    static PCDNetWorkEncrypt *netService = nil;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        
+        netService = [[self alloc] init];
+        
+    });
+    
+    return netService;
+}
+
+-(id)init{
+    if (self =[super init]) {
+        _keyString =@"";
+        self.encrypt = PCDRequestEncryptDefault;
+        self.decrypt = PCDRequestDecryptDefault;
+        self.mixType = PCDEncryptMixOddEvenExchange;
+    }
+    return self;
+}
+
+-(NSString *)getCryptString:(NSString *)aString withKey:(NSString **)aKey {
+    NSString *strCryString=aString;
+    if (self.encrypt==PCDRequestEncryptDefault) {
+
+        NSString *key =nil;
+        strCryString = [[PCDEncrypt sharedEncrypt] getCryptString:aString withKey:&key];
+        _keyString =key;
+        *aKey = key;
+    }else if (self.encrypt==PCDRequestEncryptSM){
+
+        NSString *key =nil;
+        strCryString = [[PCDEncrypt sharedEncrypt] getSMCryptString:aString withKey:&key];
+        _keyString =key;
+        *aKey = key;
+        
+    }else if (self.encrypt == PCDRequestEncryptSMVer2){
+        NSString *key = nil;
+        strCryString = [[PCDEncrypt sharedEncrypt] getCryptStringVer2:aString withKey:&key];
+        _keyString = key;
+        *aKey = key;
+    }
+    
+    return strCryString;
+}
+
+
+- (NSString *)responseString:(NSData *)responseData withRandomKey:(NSString *)randomKey{
+    
+    if (!responseData || responseData.length==0) {
+        return nil;
+    }
+    //返回数据
+    NSString *tmpResult = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+    NSMutableDictionary *dict = [[tmpResult JSONValue] mutableCopy];
+    
+    
+    if (![dict[@"body"] isKindOfClass:[NSString class]]) {
+        return tmpResult;
+    }
+    NSString *resultString = dict[@"body"];
+    if (self.decrypt ==PCDRequestDecryptNone) {
+        //不解密
+        return resultString;
+    }
+    //AES解密的偏移量
+    NSString *vectorString =[PCDEncrypt sharedEncrypt].CryptDo.AesVector;
+    
+    if (self.decrypt ==PCDRequestDecryptDefault) {
+        //AES解密
+        NSString *plaintext =[[PCDEncrypt sharedEncrypt] decryptString:resultString  withAESKey:randomKey vector:vectorString];
+        if (plaintext && plaintext.length>0)
+            resultString =plaintext;
+    }else if (self.decrypt ==PCDRequestDecryptMix){
+        //去填充解混淆
+        NSString *cryptString =[self reverseProcessString:resultString];
+        uint8_t *hexArray =(uint8_t *)malloc(sizeof(uint8_t) *cryptString.length/2);
+//        [cryptString convertToHexArray:hexArray];
+        cryptString = [self WEconvertToHexArray:hexArray string:cryptString];
+        NSData *cryptData =[NSData dataWithBytes:hexArray length:cryptString.length/2];
+        free(hexArray);
+        NSString *tCryptString;
+        //base64编码
+        if ([[UIDevice currentDevice] systemVersion].floatValue>=7.0) {
+            tCryptString = [cryptData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
+        }else{
+            tCryptString = [cryptData base64Encoding];
+        }
+        //tCryptString =[[NSString alloc]initWithData:cryptData encoding:NSUTF8StringEncoding];
+        //AES解密
+        NSString *plaintext = [[PCDEncrypt sharedEncrypt] decryptString:tCryptString  withAESKey:_keyString vector:vectorString];
+        if (plaintext && plaintext.length>0)
+            resultString =plaintext;
+    }else if (self.decrypt == PCDRequestDecryptSM4){
+        //SM4解密
+        NSString *cryptString = [self reverseProcessString:resultString];
+        uint8_t *hexArray =(uint8_t *)malloc(sizeof(uint8_t) * cryptString.length/2);
+//        [cryptString convertToHexArray:hexArray];
+        cryptString = [self WEconvertToHexArray:hexArray string:cryptString];
+        NSString *plaintext = [[PCDEncrypt sharedEncrypt] getSMDecryptString:hexArray withKey:randomKey length:(int)cryptString.length/2];
+        if (plaintext.length>0)
+            resultString = plaintext;
+        free(hexArray);
+    }else if (self.decrypt == PCDRequestDecryptSM4Ver2){//实时获取token的解密
+        //SM4解密
+        NSString *cryptString = [self reverseProcessString:resultString];
+        uint8_t *hexArray =(uint8_t *)malloc(sizeof(uint8_t) * cryptString.length/2);
+        //        [cryptString convertToHexArray:hexArray];
+        cryptString = [self WEconvertToHexArray:hexArray string:cryptString];
+        NSString *plaintext = [[PCDEncrypt sharedEncrypt] getSMDecryptString:hexArray withKey:[PCDEncrypt sharedEncrypt].randomKey length:(int)cryptString.length/2];
+        if (plaintext.length>0)
+            resultString = plaintext;
+        free(hexArray);
+        
+    }
+    if (![PCDUtil nilOrEmptyString:resultString]) {
+        
+        [dict setObject:[resultString JSONValue] forKey:@"body"];
+        resultString = [dict JSONRepresentation];
+    }
+    return resultString;
+}
+
+
+
+-(NSData *)encryptDefault:(NSData *)strData withKey:(NSString **)key {
+    NSString *string =[[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
+    
+
+    NSString *stringData = [[PCDEncrypt sharedEncrypt] getCryptString:string withKey:key];
+
+    
+    NSData *cryptData =[stringData dataUsingEncoding:NSUTF8StringEncoding];
+    
+    return cryptData;
+}
+
+-(NSData *)encryptSM:(NSData *)strData withKey:(NSString **)key{
+    NSString *string =[[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
+
+    NSString *stringData = [[PCDEncrypt sharedEncrypt] getSMCryptString:string withKey:key];
+    
+    NSData *cryptData =[stringData dataUsingEncoding:NSUTF8StringEncoding];
+    
+    return cryptData;
+}
+
+
+//默认RSA解密模式
+-(NSString *)decryptDefault:(NSString *)string withKey:(NSString *)key {
+    NSString *resultString = nil;
+    
+    NSString *plaintext = [[PCDEncrypt sharedEncrypt] decryptString:resultString  withAESKey:key vector:_vectorString];
+    if (plaintext && plaintext.length>0)
+        resultString =plaintext;
+    
+    return resultString;
+}
+
+//Mix解密模式
+-(NSString *)decryptMix:(NSString *)string withKey:(NSString *)key{
+    NSString *resultString = nil;
+    
+    //去填充解混淆
+    NSString *cryptString =[self reverseProcessString:resultString];
+    uint8_t *hexArray =(uint8_t *)malloc(sizeof(uint8_t) *cryptString.length/2);
+//    [cryptString convertToHexArray:hexArray];
+    cryptString = [self WEconvertToHexArray:hexArray string:cryptString];
+    NSData *cryptData =[NSData dataWithBytes:hexArray length:cryptString.length/2];
+    free(hexArray);
+    NSString *tCryptString;
+    
+    //base64编码
+    if ([[UIDevice currentDevice] systemVersion].floatValue>=7.0) {
+        
+        tCryptString =[cryptData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
+    }else{
+        
+        tCryptString =[cryptData base64Encoding];
+    }
+    
+    //AES解密
+    NSString *plaintext =[[PCDEncrypt sharedEncrypt] decryptString:tCryptString  withAESKey:key vector:_vectorString];
+    if (plaintext && plaintext.length>0)
+        resultString =plaintext;
+    
+    return resultString;
+}
+
+//SM4解密模式
+- (NSString *)decryptSM4:(NSString *)string withKey:(NSString *)key {
+    NSString *resultString = nil;
+    
+    //SM4解密
+    NSString *cryptString =[self reverseProcessString:resultString];
+    uint8_t *hexArray =(uint8_t *)malloc(sizeof(uint8_t) * cryptString.length/2);
+//    [cryptString convertToHexArray:hexArray];
+    cryptString = [self WEconvertToHexArray:hexArray string:cryptString];
+    NSString *plaintext =[[PCDEncrypt sharedEncrypt] getSMDecryptString:hexArray withKey:key length:(int)cryptString.length/2];
+    if (plaintext.length>0)
+        resultString =plaintext;
+    free(hexArray);
+    
+    return resultString;
+}
+
+#pragma mark -去填充解混淆
+
+//解处理string
+- (NSString *)reverseProcessString:(NSString *)string{
+    
+    if (string.length <14) {
+        return @"";
+    }
+    NSString *controlString =[string substringToIndex:14];
+    //解析控制码
+    [self parserControlString:controlString];
+    
+    NSString *appendString =[string substringFromIndex:14];
+    
+    if (appendString.length <(self.mixRange.length+self.mixRange.location)) {
+        return @"";
+    }
+    NSString *mixString =[appendString substringWithRange:self.mixRange];
+    NSInteger mixLen =[mixString length];
+    //反混淆
+    if (self.mixType ==PCDEncryptMixLeadTailExchange){
+        char *c_string =(char *)[mixString UTF8String];
+        char temp =*c_string;
+        *c_string =*(c_string +mixLen -1);
+        *(c_string +mixLen -1) =temp;
+        mixString =[[NSString alloc] initWithBytes:c_string length:mixLen encoding:NSUTF8StringEncoding];
+    }else if (self.mixType ==PCDEncryptMixOddEvenExchange){
+        char *c_string =(char *)[mixString UTF8String];
+        for (NSInteger i=0; i<mixLen && i +1 <mixLen; i +=2) {
+            char temp =*(c_string +i);
+            *(c_string +i) =*(c_string +i +1);
+            *(c_string +i +1) =temp;
+        }
+        mixString =[[NSString alloc] initWithBytes:c_string length:mixLen encoding:NSUTF8StringEncoding];
+    }
+    appendString =[appendString stringByReplacingCharactersInRange:self.mixRange withString:mixString];
+    //去除填充
+    NSString *cryptString =appendString.length >=self.cryptNum? [appendString substringToIndex:self.cryptNum] : @"";
+    
+    return cryptString;
+}
+
+//解析控制码
+-(void)parserControlString:(NSString *)string{
+    
+//    self.appedingNum =[[string substringWithRange:NSMakeRange(1, 2)] hexValue];
+//
+//    NSInteger loc =[[string substringWithRange:NSMakeRange(3, 2)] hexValue];
+//
+//    NSInteger len =[[string substringWithRange:NSMakeRange(5, 2)] hexValue];
+//
+//    self.mixRange =NSMakeRange(loc, len);
+//
+//    self.mixType =[[string substringWithRange:NSMakeRange(7, 1)] hexValue];
+//
+//    self.cryptNum =[[string substringWithRange:NSMakeRange(8, 6)] hexValue];
+    
+    self.appedingNum =[self WEhexValue:[string substringWithRange:NSMakeRange(1, 2)]];
+    
+        NSInteger loc =[self WEhexValue: [string substringWithRange:NSMakeRange(3, 2)]];
+    
+        NSInteger len =[self WEhexValue:[string substringWithRange:NSMakeRange(5, 2)] ];
+    
+        self.mixRange =NSMakeRange(loc, len);
+    
+        self.mixType =[self WEhexValue:[string substringWithRange:NSMakeRange(7, 1)] ];
+    
+        self.cryptNum =[self WEhexValue:[string substringWithRange:NSMakeRange(8, 6)] ];
+}
+
+
+-(void) setVectorString:(NSString *)strVector
+{
+    _vectorString = strVector;
+}
+
+
+#pragma mark -
+
+-(NSString *)WEconvertToHexArray:(uint8_t *)array string:(NSString *)string{
+    NSString *strHex =string;
+    NSInteger len = [strHex length];
+    const char* tmp = [strHex UTF8String];
+    
+    for (int i = 0; i < len; i+= 2)
+    {
+        uint8_t h = 0;
+        uint8_t l = 0;
+        if ('A' <= tmp[i] && tmp[i] <= 'F')
+        {
+            h = tmp[i]-'A' + 10;
+        }
+        else if ('a' <= tmp[i] && tmp[i] <= 'f')
+        {
+            h = tmp[i]-'a' + 10;
+        }
+        else if('0' <= tmp[i] && tmp[i] <= '9')
+        {
+            h = tmp[i] - '0';
+        }
+        
+        if ('A' <= tmp[i+1] && tmp[i+1] <= 'F')
+        {
+            l = tmp[i+1]-'A' + 10;
+        }
+        else if ('a' <= tmp[i+1] && tmp[i+1] <= 'f')
+        {
+            l = tmp[i+1]-'a' + 10;
+        }
+        else if('0' <= tmp[i+1] && tmp[i+1] <= '9')
+        {
+            l = tmp[i+1] - '0';
+        }
+        uint8_t e = h*16+l;
+        array[i/2] = e;
+    }
+    
+    return strHex;
+}
+
+-(NSInteger)WEhexValue:(NSString *)string{
+    
+    NSInteger len =[string length];
+    
+    const char *byte =[string UTF8String];
+    
+    NSInteger num =0;
+    
+    for (NSInteger i =len-1; i >-1; i--) {
+        
+        char c_num =*(byte +i);
+        
+        NSInteger n =0;
+        
+        if (c_num >='0' && c_num <='9') {
+            n =c_num -'0';
+        }
+        else if (c_num >='a' && c_num <='f'){
+            n =c_num -'a' +10;
+        }
+        else if (c_num >='A' && c_num <='F'){
+            n =c_num -'A' +10;
+        }
+        num +=n *pow(16, len -1 -i);
+    }
+    return num;
+}
+
+@end

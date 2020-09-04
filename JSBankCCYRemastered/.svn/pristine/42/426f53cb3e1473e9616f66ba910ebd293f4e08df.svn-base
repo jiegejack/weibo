@@ -1,0 +1,65 @@
+//
+//  PCDWebCacheModel.h
+//  PNCMobileBank
+//
+//  Created by wangyong on 15/12/25.
+//  Copyright © 2015年 P&C Information. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+typedef NS_ENUM(NSInteger, PCDWebCashMode) {
+    PCDWebCashModeDefout,
+    PCDWebCashModeAdd
+};
+
+
+typedef void (^StartWebProtocol)(NSString *strUrl,BOOL error);
+
+@interface PCDWebCacheModel : NSObject
+
+
++(PCDWebCacheModel *)shareInstance;
+
+/**
+ *  @brief  预加载缓存资源 设置根地址
+ *
+ *  @param baseUrl 根地址
+ *
+ *  @return  YES：初始化成功  NO:初始化失败
+ *
+ */
++(BOOL)preloadWebResourceWithBaseUrl:(NSString *)baseUrl;
+
+
+/**
+ * @brief 开始web缓存
+ *
+ */
++(void)startWebCache;
+
+/**
+ *  @brief 开始web缓存
+ *
+ *  @param callback 拦截结果block
+ *
+ */
++(void)startWebCache:(StartWebProtocol) callback;
+
+
+/**
+ * @brief 关闭web缓存
+ */
++(void)stopWebCache;
+
+/**
+ * @brief 清除web缓存资源文件
+ */
++(void)clearWebCache;
+
+/**
+ *  @brief 清除对比记录，清理内存缓存
+ */
++(void)clearMemoryCache;
+
+@end

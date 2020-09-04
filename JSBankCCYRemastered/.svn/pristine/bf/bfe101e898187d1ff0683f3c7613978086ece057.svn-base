@@ -1,0 +1,21 @@
+//
+//  SplashModel.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/15.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+
+@interface SplashModel : NSObject
+@property (nonatomic, copy) NSString *IMGURL;
+@property (nonatomic, copy) NSString *STATUS;
+@property (nonatomic, copy) NSString *jumpUrl;
+@property (nonatomic, copy) NSString *ENDTIME;
+@property (nonatomic, copy) NSString *type;
+@property (nonatomic, copy) NSString *time;
+
+@end
+

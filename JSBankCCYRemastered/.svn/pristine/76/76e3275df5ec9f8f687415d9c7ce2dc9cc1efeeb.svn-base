@@ -1,0 +1,118 @@
+//
+//  PCDEncryptTokenManager.m
+//  PCDNetworkService
+//
+//  Created by 王俣 on 2018/10/29.
+//  Copyright © 2018 P&C. All rights reserved.
+//
+
+#import "PCDEncryptTokenManager.h"
+#import <PCDSecurity/PCDSecurity.h>
+#import <PCDBaseClass/PCDBaseClass.h>
+#import "PCDNetWorkService+Encrypt.h"
+#import "PCDSessionIDManager.h"
+
+@interface PCDEncryptTokenManager()
+@property(nonatomic)dispatch_semaphore_t semaphore ;
+
+@end
+
+@implementation PCDEncryptTokenManager
+
++ (instancetype)shareManager{
+    static PCDEncryptTokenManager *manager = nil;
+    static dispatch_once_t token;
+    dispatch_once(&token,^{
+        manager = [[PCDEncryptTokenManager alloc] init];
+        manager.requesting = NO;
+        manager.semaphore = dispatch_semaphore_create(0);
+    });
+    
+    return manager;
+}
+
+- (BOOL)requestTokenUseSynchronization:(BOOL)synchronize {
+    
+    @autoreleasepool {
+        
+        if (!self.requesting) {
+            self.requesting = YES;
+            //握手获取token
+            NSString *randomString = [NSString random16String];
+            [PCDEncrypt sharedEncrypt].randomKey = randomString;
+            NSString *encrypRandomString = [[PCDEncrypt sharedEncrypt] sm2EncryptString:randomString];
+            NSString *path = [NSString stringWithFormat:@"%@?secret=%@&chnlId=%@",[PCDUtil getServerURL:@"common/handshake.do"],encrypRandomString,[PCDUtil channelId]];
+            
+            //动态防护
+//            NSString *urlString = [MSecClient getUrlWithToken:urlString];
+//            urlString = urlString.notNull ? urlString : @"";
+            
+            PCDNetWorkItem *item = [[PCDNetWorkItem alloc] init];
+            //        item.certificateStatus = PCDNetWorkServiceGet().cerValidateScheme;
+            item.requestMethod = @"GET";
+            item.contentType = @"application/json";
+            item.urlString = path;
+            
+            PCDNetWorkItem *networkItem = [PCDNetWorkServiceGet() addSynchronizeNetWork:item];
+            //动态防护
+            //MSecClient *client = [MSecClient getClient:urlString];
+            //[client onResponseHeader:[item.params.head objectForKey:[client getHeaderKey]]];
+            
+            BOOL bCheck = NO;
+            NSDictionary *dict = [networkItem.responseString JSONValue];
+            
+            if (dict) {
+                
+                PCDBaseDO *baseDo = [[PCDBaseDO alloc] initWithDict:dict];
+                if ([baseDo.hStatus isEqual:@"1"]) {
+                    
+                    NSString *token = baseDo.data[@"token"];
+                    NSString *expiry = baseDo.data[@"expiry"];
+                    self.tokenBornTime = [PCDNetWorkItem getNowTimestamp];
+                    self.expiry = expiry;
+                    if (![PCDUtil nilOrEmptyString:token]) {
+                        [PCDEncrypt sharedEncrypt].token = token;
+                        bCheck = YES;
+                    }
+                    
+                }else{
+                    
+                    PCLog(@"token:%@",baseDo.Msg);
+                }
+            }
+            
+            dispatch_semaphore_signal(self.semaphore);
+            
+            self.requesting = NO;
+            
+            return bCheck;
+        }else{
+            return  NO;
+        }
+        
+    }
+       
+}
+
+- (BOOL)checkTokenAvailable{
+
+    if (self.requesting) {
+         dispatch_semaphore_wait(self.semaphore,DISPATCH_TIME_FOREVER);
+    }
+    
+    NSInteger now = [PCDNetWorkItem getNowTimestamp];
+    
+    if (self.tokenBornTime) {
+        
+        NSInteger pastTime = now - self.tokenBornTime;
+        
+        //MARK: - 过期前一分钟去请求新的token
+        if (pastTime<=[self.expiry longLongValue]*1000-30*1000) {
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
+@end

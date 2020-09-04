@@ -1,0 +1,18 @@
+//
+//  JSImageKernel.h
+//
+//  Created by Jack on 2019/04/16.
+//  Copyright © 2019年 Jack. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface JSImageKernel : UIImage
+
+@property (nonatomic,readonly) NSTimeInterval *frameDurations;
+@property (nonatomic,readonly) NSUInteger loopCount;
+@property (nonatomic,readonly) NSTimeInterval totalDuratoin;
+
+- (UIImage *)getFrameWithIndex:(NSUInteger)idx;
+
+@end

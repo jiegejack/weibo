@@ -1,0 +1,54 @@
+//
+//  PCDWaitPanel.m
+//  PCDH5Container
+//
+//  Created by dk on 2018/6/7.
+//  Copyright © 2018年 dk. All rights reserved.
+//
+
+#import "PCDWaitPanel.h"
+#import <PCDUIBaseClass/PCDUIBaseClass.h>
+
+@implementation PCDWaitPanel
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    
+    NSDictionary *dictRes;
+    if ([data isKindOfClass:[NSDictionary class]]) {
+        dictRes = (NSDictionary*)data;
+    }else{
+        dictRes =(NSDictionary*)[data JSONValue];
+    }
+    
+    self.bsContext = context;
+    if (dictRes) {
+        [self performSelectorOnMainThread:@selector(showWaitPanel:) withObject:dictRes waitUntilDone:YES];
+    }
+
+}
+
+-(void)showWaitPanel:(NSDictionary *)dict {
+    UIWebView *tempWeb =  self.bsContext.webView;
+    NSString *strType = [dict objectForKey:@"type"];
+    
+    if ([strType isEqual:@"CLOSE"]) {
+        
+         [tempWeb showWait:NO isFullScreen:NO];
+        
+    }else{
+        
+        NSString *strMsg =[dict objectForKey:@"msg"];
+        
+        if (strMsg) {
+            
+            [tempWeb showWaitWithTitle:@"加载中..." isFullScreen:YES];
+            
+        }else{
+            
+            [tempWeb showWaitWithTitle:@" " isFullScreen:YES];
+        }
+    }
+
+}
+
+@end

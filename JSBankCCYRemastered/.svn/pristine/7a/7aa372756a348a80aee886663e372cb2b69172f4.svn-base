@@ -1,0 +1,76 @@
+//
+//  AlertViewInfo.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/13.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "AlertViewInfo.h"
+
+@implementation AlertViewInfo
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+    NSString *tipText = [dict objectForKey:@"msg"];
+    NSString *title = [dict objectForKey:@"title"];
+    NSString *ok_text = [dict objectForKey:@"ok_text"];
+    NSString *cancel_text = [dict objectForKey:@"cancel_text"];
+    NSString *ok_func = [dict objectForKey:@"ok_func"];
+    NSString *cancel_func = [dict objectForKey:@"cancel_func"];
+    NSString *custServiceName = [dict objectForKey:@"custServiceName"];
+    NSString *custServiceAct = [dict objectForKey:@"custServiceAct"];
+    NSString *type = [dict objectForKey:@"type"];
+
+    if (!tipText.notNull) {
+        return;
+    }
+
+    __weak typeof(self) weakSelf = self;
+    AlertType alertType = AlertTypeRegular;
+    if ([type isEqualToString:@"ALERT"]) {
+        alertType = AlertTypeCustom;
+    } else if ([type isEqualToString:@"ALERT2"]) {
+        alertType = AlertTypeService;
+    } else {
+        alertType = AlertTypeRegular;
+    }
+    AlertExtension *alert = [[[AlertExtension alloc] init] alertWithTitle:title
+                                                                  message:tipText
+                                                                     type:alertType];
+    
+    if (alertType != AlertTypeCustom) {
+        alert.cancelButtonTitle = cancel_text;
+        if ([cancel_text isEqualToString:@"取消"]) {
+            alert.cancelButtonColor = Color().MainBlack;
+        }
+        alert.cancelBlock = ^{
+            if (cancel_func.notNull) {
+                evaluateJavaScriptOnMainThread(weakSelf, cancel_func, @"");
+            }
+        };
+    } else {
+        alert.titleFont = [UIFont boldSystemFontOfSize:17];
+        alert.messageFont = [UIFont systemFontOfSize:15];
+    }
+    NSString *ok_Title = @"";
+    NSString *ok_funcName = @"";
+    if (alertType == AlertTypeService) {
+        alert.okButtonImage = [UIImage imageNamed:@"service.png"];
+        ok_Title = custServiceName;
+        ok_funcName = custServiceAct;
+    } else {
+        ok_Title = ok_text;
+        ok_funcName = ok_func;
+    }
+    alert.otherButtonTitle = ok_Title;
+    alert.otherBlock = ^{
+        if (ok_funcName.notNull) {
+            evaluateJavaScriptOnMainThread(weakSelf, ok_funcName, @"");
+        }
+    };
+    [alert showAlert];
+}
+
+@end

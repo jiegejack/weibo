@@ -1,0 +1,25 @@
+//
+//  CheckBiometrySupport.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/30.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "CheckBiometrySupport.h"
+
+@implementation CheckBiometrySupport
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    NSString *callback = [dict objectForKey:@"callback"];
+    callback = callback.notNull ? callback : @"";
+    DJBiometryType type = [TouchIDManager biometryType];
+    BOOL isSupprot = type == DJBiometryTypeNotSupport ? NO : YES;
+    
+    BOOL isAvailable = [TouchIDManager biometryType];
+
+    evaluateJavaScriptOnMainThread(self, callback, isSupprot ? (isAvailable ? @"1" : @"0") : @"-1");
+}
+
+@end

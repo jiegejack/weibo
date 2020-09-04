@@ -1,0 +1,186 @@
+//
+//  UserPrivateView.m
+//  自定义滚动条
+//
+//  Created by Jack on 2019/7/19.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "UserPrivateView.h"
+#import "Masonry.h"
+
+@interface UserPrivateView ()<UITextViewDelegate>
+@property (nonatomic, strong) UIView *indicatorBackground;
+@property (nonatomic, strong) UIButton *indicator;
+@property (nonatomic, strong) UITextView *tv;
+@property (nonatomic, strong) UILabel *title;
+@property (nonatomic, strong) UIButton *agreeButt;
+@property (nonatomic, strong) UIView *bottomView;
+
+@property (nonatomic, assign) float h;
+@property (nonatomic, assign) BOOL isDrag;
+@property (nonatomic, copy) NSString *source_text;
+@property (nonatomic, strong) NSArray *heightlight_text;
+
+@end
+
+@implementation UserPrivateView
+
+- (id)initWithFrame:(CGRect)frame {
+    if (self = [super initWithFrame:frame]) {
+        self.title = [[UILabel alloc] init];
+        self.title.font = [UIFont boldSystemFontOfSize:17];
+        self.title.textAlignment = NSTextAlignmentCenter;
+        self.title.text = @"隐私政策";
+        self.title.textColor = [UIColor blackColor];
+        [self addSubview:self.title];
+        
+        self.bottomView = [[UIView alloc] init];
+        self.bottomView.layer.borderColor = [[UIColor colorFormString:@"#009BFF"]colorWithAlphaComponent:0.91].CGColor;
+        self.bottomView.layer.borderWidth = 1.31;
+        self.bottomView.layer.masksToBounds = YES;
+        [self addSubview:self.bottomView];
+        
+        self.tv = [[UITextView alloc] init];
+        self.tv.editable = NO;
+        self.tv.bounces = NO;
+        self.tv.delegate = self;
+        [self configText];
+        [self.bottomView addSubview:self.tv];
+        self.tv.showsVerticalScrollIndicator = NO;
+        self.tv.showsHorizontalScrollIndicator = NO;
+        
+        self.indicator = [[UIButton alloc] init];
+        self.indicator.layer.cornerRadius = 7.6 / 2;
+        self.indicator.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+        self.indicator.backgroundColor = [[UIColor colorFormString:@"#009BFF"] colorWithAlphaComponent:0.6];
+        [self.bottomView addSubview:self.indicator];
+        UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
+        pan.maximumNumberOfTouches = 1;
+        [self.indicator addGestureRecognizer:pan];
+        
+        self.agreeButt = [UIButton buttonWithType:UIButtonTypeSystem];
+        self.agreeButt.layer.cornerRadius = 4;
+        [self.agreeButt setTitle:@"同意" forState:UIControlStateNormal];
+        [self.agreeButt setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        self.agreeButt.backgroundColor = Color().MainBlue;
+        self.agreeButt.titleLabel.font = [UIFont systemFontOfSize:16];
+        [self addSubview:self.agreeButt];
+        [self.agreeButt addTarget:self action:@selector(agreeAction) forControlEvents:UIControlEventTouchUpInside];
+        
+        [self layoutSubControls];
+    }
+    return self;
+}
+
+- (void)agreeAction {
+    if (self.block) {
+        self.block();
+    }
+}
+
+#pragma mark - 移动手势
+-(void)pan:(UIPanGestureRecognizer *)pan {
+    if (pan.state == UIGestureRecognizerStateBegan) {
+        self.isDrag = YES;
+    }
+    if (pan.state == UIGestureRecognizerStateEnded || pan.state == UIGestureRecognizerStateCancelled) {
+        self.isDrag = NO;
+    }
+    CGPoint translation = [pan translationInView:self.indicator];
+    
+    CGPoint newCenter = CGPointMake(pan.view.center.x+translation.x,pan.view.center.y + translation.y);
+    
+    newCenter.y = MAX(self.h/2, newCenter.y);
+    newCenter.y = MIN(self.bottomView.frame.size.height - self.h/2,  newCenter.y);
+    newCenter.x = CGRectGetMaxX(self.tv.frame) + pan.view.frame.size.width/2;//MAX(pan.view.frame.size.width/2, newCenter.x);
+    newCenter.x = CGRectGetMaxX(self.tv.frame) + pan.view.frame.size.width/2;//MIN(self.bottomView.frame.size.width - pan.view.frame.size.width/2,newCenter.x);
+    
+    pan.view.center=newCenter;
+    [pan setTranslation:CGPointZero inView:self.indicator];
+    
+    CGFloat y = self.indicator.frame.origin.y - CGRectGetMinY(self.tv.frame);
+    CGFloat p = y / (self.tv.frame.size.height - self.h / 2);
+    [self.tv setContentOffset:CGPointMake(0, ceil(self.tv.contentSize.height * p))];
+}
+
+- (void)layoutSubControls {
+    [self.title mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.mas_top).offset(20);
+        make.centerX.mas_equalTo(self.mas_centerX);
+    }];
+    [self.bottomView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.title.mas_bottom).offset(20);
+        make.left.mas_equalTo(self.mas_left).offset(6);
+        make.right.mas_equalTo(self.mas_right).offset(-6);
+    }];
+    [self.tv mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.bottomView.mas_top);//.offset(2.5);
+        make.left.mas_equalTo(self.bottomView.mas_left).offset(7);
+        make.right.mas_equalTo(self.bottomView.mas_right).offset(-9.0);
+        make.bottom.mas_equalTo(self.bottomView.mas_bottom);
+    }];
+    [self.agreeButt mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.bottomView.mas_bottom).offset(20);
+        make.left.mas_equalTo(self.mas_left).offset(20);
+        make.right.mas_equalTo(self.mas_right).offset(-20);
+        make.height.mas_equalTo(44);
+        make.bottom.mas_equalTo(self.mas_bottom).offset(-20);
+    }];
+    [self.indicator mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.bottomView.mas_top);//.offset(1.5);
+        make.left.mas_equalTo(self.tv.mas_right);
+        make.height.mas_equalTo(60);
+        make.width.mas_equalTo(7.6);
+    }];
+}
+
+- (void)configText {
+    NSMutableAttributedString *string = [[NSMutableAttributedString alloc] initWithString:self.source_text];
+    [string addAttribute:NSForegroundColorAttributeName value:[UIColor colorFormString:@"#151515"] range:NSMakeRange(0, self.source_text.length)];
+    [string addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:14] range:NSMakeRange(0, self.source_text.length)];
+    
+    [self.heightlight_text enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSString *heightLightText = (NSString *)obj;
+        NSRange range = [self.source_text rangeOfString:heightLightText];
+        [string addAttribute:NSForegroundColorAttributeName value:[UIColor blackColor] range:range];
+        [string addAttribute:NSFontAttributeName value:[UIFont boldSystemFontOfSize:!idx ? 16 : 14.9] range:range];
+    }];
+    self.tv.attributedText = string;
+}
+
+- (NSString *)source_text {
+    if (!_source_text) {
+        NSString *path = [[NSBundle mainBundle] pathForResource:@"private_text" ofType:@"plist"];
+        NSDictionary *dic = [NSDictionary dictionaryWithContentsOfFile:path];
+        _source_text = [dic objectForKey:@"private"];
+        NSLog(@" - %@", ScreenResolution);
+        NSString *byReplacing = [ScreenResolution isEqualToString:@"1242x2208"] ? @"     " : @"";
+        _source_text = [_source_text stringByReplacingOccurrencesOfString:@"p_ccy" withString:byReplacing];
+    }
+    return _source_text;
+}
+
+- (NSArray *)heightlight_text {
+    if (!_heightlight_text) {
+        NSString *path = [[NSBundle mainBundle] pathForResource:@"heightlight_text" ofType:@"plist"];
+        _heightlight_text = [NSArray arrayWithContentsOfFile:path];
+    }
+    return _heightlight_text;
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    self.h = (scrollView.frame.size.height * scrollView.frame.size.height)/scrollView.contentSize.height + 20;
+
+    if (self.isDrag) {
+        self.indicator.mj_h = self.h;
+    } else {
+        float p = 0;
+        p = (self.tv.frame.size.height - self.indicator.frame.size.height)/(scrollView.contentSize.height - scrollView.frame.size.height);
+        self.indicator.frame = CGRectMake(CGRectGetMaxX(self.tv.frame), scrollView.contentOffset.y*p + CGRectGetMinY(self.tv.frame), 7.6, self.h);
+//        NSLog(@"p : %f",p);
+    }
+}
+
+
+@end

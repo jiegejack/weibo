@@ -1,0 +1,6 @@
+framework module PCDBaseClass {
+  umbrella header "PCDBaseClass.h"
+
+  export *
+  module * { export * }
+}

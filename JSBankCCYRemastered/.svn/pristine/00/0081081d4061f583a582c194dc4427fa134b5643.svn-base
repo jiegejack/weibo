@@ -1,0 +1,47 @@
+//
+//  PCKeychain_DS.h
+//  PCKit
+//
+//  Created by wangyong on 16/3/28.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+/**
+ *  钥匙串相关操作
+ */
+@interface PCKeychain_DS : NSObject
+/**
+ *  保存到钥匙串
+ *
+ *  @param secret 保存内容
+ *  @param key    key值
+ *
+ *  @return 是否保存成功
+ */
++(BOOL)saveSecret:(NSString *)secret forKey:(NSString *)key;
+/**
+ *  获取钥匙串中存的内容
+ *
+ *  @param key   key值
+ *
+ *  @return 钥匙串中存的内容
+ */
++(NSString *)secretForKey:(NSString *)key;
+/**
+ *  删除钥匙串指定内容
+ *
+ *  @param key key值
+ *
+ *  @return 是否删除成功
+ */
++(BOOL)removeSecretForKey:(NSString *)key;
+/**
+ *  删除钥匙串所有内容
+ *
+ *  @return 是否删除成功
+ */
++(BOOL)removeAllSecrets;
+
+@end

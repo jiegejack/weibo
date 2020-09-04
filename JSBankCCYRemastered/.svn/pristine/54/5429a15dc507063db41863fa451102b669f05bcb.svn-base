@@ -1,0 +1,188 @@
+//
+//  JSTabBarController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSTabBarController.h"
+#import "JSHomeViewController.h"
+#import "JSFinancialViewController.h"
+#import "JSCardLifeViewController.h"
+#import "JSMineViewController.h"
+#import "CTMediator.h"
+#import "CTMediator+CTMediatorModuleActions.h"
+#import "JSBaseWebViewController.h"
+#import "TabBarModel.h"
+#import "UIImageView+WebCache.h"
+#import "MJExtension.h"
+
+
+@interface JSTabBarController ()
+@property(nonatomic,strong) UINavigationController *nav0,*nav1,*nav3,*nav4;
+//@property(nonatomic,strong) NSMutableArray *tabBarItems;
+
+@end
+
+@implementation JSTabBarController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    
+    [self addObserver:self forKeyPath:@"viewControllers" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+//    [self.tbModel addObserver:self forKeyPath:@"menu" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+
+    
+    [self initViewControllers];
+//    [ClientNetManager fetchTabBarIconWithSuccess:^(id resultResponse, id resultModel) {
+//        [self updateTabBarIconWithModel:resultModel];
+//        NSString *jsonString = [resultResponse JSONRepresentation];
+//        [DataCache setCacheString:jsonString forkey:@"ccy_tabBar_icon"];
+//    } failure:^(NSError *error, LoginSession *session) {
+//
+//    }];
+    
+////
+//    NSString *choise1 = @"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559710169817&di=9d42f9def99f42c9ea7218e6c2c63f08&imgtype=0&src=http%3A%2F%2Fimg9.3lian.com%2Fc1%2Fvector%2F10%2F02%2F072.jpg";
+//    NSString *choise2 = @"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559713329433&di=defea00a25daa1ffc5d3f225acf8640d&imgtype=0&src=http%3A%2F%2Fst3.cdn.yestone.com%2Fthumbs%2F3538469%2Fvector%2F16454%2F164541512%2Fapi_thumb_450.jpg";
+//    NSString *choise3 = @"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559713395916&di=9bfd920486d11e90e9fdcde9c4488df5&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201410%2F15%2F20141015080214_ccKeM.png";
+//    NSString *choise4 = @"https://timgsa.baidu.com/timg?image&quality=80&size=b10000_10000&sec=1559715841&di=68fc4c10d7d1b67fe0dea3a5c5901822&src=http://img.sj33.cn/uploads/allimg/201007/20100712170143367.png";
+//
+//    NSString *not_choise1 = @"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559710318715&di=6f1d0c913352c06616cf966968497b4f&imgtype=0&src=http%3A%2F%2Fimg.tukexw.com%2Fimg%2F0a8b613e5f63ffb7.jpg";
+//    NSString *not_choise2 = @"https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=986029669,3085893801&fm=27&gp=0.jpg";
+//    NSString *not_choise3 = @"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559713537823&di=f08a4aa66bfe2b4de2ec018b9b0fc6a1&imgtype=0&src=http%3A%2F%2Fimg539.ph.126.net%2FwKbDTWZdXai_fKnc3JPr4w%3D%3D%2F2628413332525087756.png";
+//    NSString *not_choise4 = @"http://img.sj33.cn/uploads/allimg/201007/20100712170139708.png";
+//
+//    //    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    NSString *jsonString = [DataCache getCacheStringForkey:@"ccy_tabBar_icon"];
+    jsonString = [jsonString JSONValue];
+    TabBarModel *model = [[TabBarModel alloc] init];//[TabBarModel mj_objectWithKeyValues:jsonString];
+//    model.MSG = @"交易成功";
+//    model.STATUS = @"1";
+//
+//    Menu *menu1 = [[Menu alloc] init];//model.menu[0];
+//    Menu *menu2 = [[Menu alloc] init];//model.menu[1];
+//    Menu *menu3 = [[Menu alloc] init];//model.menu[2];
+//
+//    menu1.CHOICE = choise1;
+//    menu1.NAME_CN = @"Home";
+//    menu1.NOT_CHOICE = not_choise1;
+//    menu1.index = @"0";
+//
+//    menu2.CHOICE = choise2;
+//    menu2.NAME_CN = @"商城";
+//    menu2.NOT_CHOICE = not_choise2;
+//    menu2.index = @"1";
+//
+//    menu3.CHOICE = choise3;
+//    menu3.NAME_CN = @"Mine";
+//    menu3.NOT_CHOICE = not_choise3;
+//    menu3.index = @"2";
+//
+//    model.menu = @[menu1,menu2,menu3];
+
+
+    [self updateTabBarIconWithModel:model];
+    
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        menu3.CHOICE = choise4;
+//        menu3.NAME_CN = @"其他";
+//        menu3.NOT_CHOICE = not_choise4;
+//        menu3.index = @"2";
+//        [self updateTabBarIconWithModel:model];
+//
+//    });
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    if (![JSSharedInstance sharedInstance].viewControllers.count) {
+        [JSSharedInstance sharedInstance].viewControllers = self.viewControllers;
+        [self removeObserver:self forKeyPath:@"viewControllers"];
+    }
+}
+
+- (void)updateTabBarIconWithModel:(TabBarModel *)model {
+    self.tabBarHeight = 53;
+    self.bottomHeight = 53;
+    
+    self.tabBar.separatorWidth = 0.5;
+    self.tabBar.separatorColor = [UIColor groupTableViewBackgroundColor];
+
+    
+    NSArray *images = @[@"jingxuan", @"jinrong", @"mine"];
+    NSArray *selected_images = @[@"jingxuan_selected", @"jinrong_selected", @"mine_selected"];
+    NSArray *titles = @[@"精选", @"金融", @"我的"];
+
+//    NSInteger count = 3;
+    
+    CGSize imageSize = CGSizeMake(25, 25);
+    
+    UIColor *titleColorHL = [UIColor blackColor];
+    NSMutableArray *items = [NSMutableArray array];
+    
+    __weak typeof(self) weakSelf = self;
+    for (NSInteger index = 0; index < titles.count; index++) {
+        Menu *menu = model.menu[index];
+        PCDTabBarItem *item = [[PCDTabBarItem alloc] initWithTitle:menu.NAME_CN image:[UIImage imageNamed:images[index]] selectedImage:[UIImage imageNamed:selected_images[index]]];
+        item.titleInsets =UIEdgeInsetsMake(6, 0, 5, 0);
+        item.titleColorHL =titleColorHL;
+        item.imageSize = imageSize;
+        item.font = [UIFont systemFontOfSize:12];
+
+        item.title = menu.NAME_CN ? menu.NAME_CN : titles[index];
+        
+        if (![items containsObject:item]) {
+            [items addObject:item];
+        }
+        [self configTabBarItems:items];
+
+        UIImageView *imageView = [[UIImageView alloc] init];
+        UIImageView *selectedImageView = [[UIImageView alloc] init];
+        
+        [imageView sd_setImageWithURL:[NSURL URLWithString:menu.NOT_CHOICE] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+            if (imageView.image) {
+                item.image = imageView.image;
+            }
+            [selectedImageView sd_setImageWithURL:[NSURL URLWithString:menu.CHOICE] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+                if (selectedImageView.image) {
+                    item.imageHL = selectedImageView.image;
+                }
+                [weakSelf configTabBarItems:items];
+            }];
+        }];
+    }
+//    }
+}
+
+- (void)configTabBarItems:(NSMutableArray *)items {
+    self.tabBar.items = items;
+    self.tabBar.selectedItem = (PCDTabBarItem *)items.firstObject;
+    [self.tabBar setNeedsLayout];
+}
+
+//@"http://66.0.245.74:8081/ares-web-h5/page/client.html#page/102/01/P10201.html";//[PCDUtil getServerURL:@"102/01/P10201.html"];
+//@"http://66.0.245.212:8081/ares-web-h5/page/client.html#page/PP01/PP0104/PP0104.html"
+- (void)initViewControllers {
+    NSDictionary *expando = [PCDUtil IsIphoneX]?@{@"NSLayoutAttributeTop":@"88"}:@{@"NSLayoutAttributeTop":@"64"};
+
+    NSString *url = @"";
+    JSHomeViewController *homeVC = [PCDWServiceGet() createPCDViewController:@{@"url":url} viewControllerClass:[JSHomeViewController class] contentViewClass:nil withExpando:(NSDictionary *)expando];
+    homeVC.requestUrl = url;
+    self.nav0 = [[UINavigationController alloc] initWithRootViewController:homeVC];
+    
+    JSFinancialViewController *financialVC = [PCDWServiceGet() createPCDViewController:@{@"url":@"http://66.0.245.79:8081/ares-web-h5/page/client.html#page/102/04/P10204.html"} viewControllerClass:[JSFinancialViewController class] contentViewClass:nil withExpando:(NSDictionary *)expando];
+    financialVC.requestUrl = @"http://66.0.245.79:8081/ares-web-h5/page/client.html#page/102/04/P10204.html";
+    self.nav1 = [[UINavigationController alloc] initWithRootViewController:financialVC];
+    
+    
+    JSMineViewController *mineVC = [PCDWServiceGet() createPCDViewController:@{@"url":[PCDUtil getServerURL:Server_MinePage_URL]} viewControllerClass:[JSMineViewController class] contentViewClass:nil withExpando:(NSDictionary *)expando];
+    mineVC.requestUrl = [PCDUtil getServerURL:Server_MinePage_URL];
+    self.nav3 = [[UINavigationController alloc] initWithRootViewController:mineVC];
+    
+    self.viewControllers = @[_nav0,_nav1,_nav3];
+    self.selectedIndex = 0;
+}
+
+@end

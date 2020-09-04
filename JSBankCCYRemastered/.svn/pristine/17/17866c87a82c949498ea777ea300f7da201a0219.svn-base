@@ -1,0 +1,107 @@
+//
+//  PCDWService.h
+//  H5Container
+//
+//  Created by dk on 2018/3/13.
+//  Copyright © 2018年 dk. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+#import "PCDWServiceDO.h"
+@interface PCDWService : NSObject
+
+
+/**
+ 配置实例
+ */
+@property (nonatomic,strong) PCDWServiceDO *config;
+
+
+/**
+ *  @brief 获取service
+ *
+ *  @date 2015-08-21
+ *
+ *  @return 返回service
+ */
++ (instancetype)sharedService;
+
+/**
+ *  @brief 启动service
+ *
+ */
+- (void)start;
+
+
+
+/**
+ 初始化jsbridge
+
+ @param controller h5容器的控制器
+ @param container h5容器webview
+ */
+- (void)initBridgeWithController:(UIViewController *)controller andContainerWebView:(UIWebView *)container;
+
+/**
+ *  @brief 创建一个VC
+ *
+ *  @param params 启动参数
+ *
+ *  @return 返回一个vc实例
+ */
+- (id)createPCDViewController:(NSDictionary *)params;
+
+
+/**
+ 打开文档的接口
+
+ @param config 水印对象实例
+ @return 带h5容器webView的VC实例
+ */
+- (id)createPCDFileViewControllerWithConfigDO:(PCDWServiceDO *)config;
+
+/**
+ *  @brief 创建一个VC
+ *
+ *  @param params              启动参数
+ *  @param viewControllerClass vc类名，若是是nil，则根据配置获取默认
+ *  @param contentViewClass    一般是UIWebView子类，若是是nil，则根据配置获取默认
+ *
+ *  @return 返回一个vc实例
+ */
+- (id)createPCDViewController:(NSDictionary *)params viewControllerClass:(Class)viewControllerClass contentViewClass:(Class)contentViewClass;
+
+/**
+ *  @brief 创建一个VC
+ *
+ *  @param params 启动参数
+ *  @param expando 主要是用来传递给VC一初始化就需要使用到的一些扩展属性
+ *
+ *  @return 返回一个vc实例
+ */
+- (id)createPCDViewController:(NSDictionary *)params withExpando:(NSDictionary *)expando;
+/**
+ *  @brief 创建一个VC
+ *
+ *  @param params              启动参数
+ *  @param viewControllerClass vc类名，若是是nil，则根据配置获取默认
+ *  @param contentViewClass    一般是UIWebView子类，若是是nil，则根据配置获取默认
+ *  @param expando 主要是用来传递给VC一初始化就需要使用到的一些扩展属性
+ *  @return 返回一个vc实例
+ */
+- (id)createPCDViewController:(NSDictionary *)params viewControllerClass:(Class)viewControllerClass contentViewClass:(Class)contentViewClass withExpando:(NSDictionary *)expando;
+
+
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+    
+    PCDWService * PCDWServiceGet(void);
+    
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+

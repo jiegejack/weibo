@@ -1,0 +1,83 @@
+//
+//  MessageView.m
+//  LivenessDetection
+//
+//  Created by 张英堂 on 15/1/13.
+//  Copyright (c) 2015年 megvii. All rights reserved.
+//
+
+#import "MessageView.h"
+#import "YTAlertView.h"
+#import "YTMacro.h"
+@interface MessageView ()
+@property (nonatomic, strong) YTAlertView *alertView;
+@property (nonatomic, strong) UIView *mainView;
+@property (nonatomic, strong) UILabel *label;
+@property (nonatomic, strong) UIButton *button;
+/**
+ *  点击按钮 的tag
+ */
+@property (nonatomic, assign) NSInteger tag;
+
+@end
+
+static MessageView *messageView;
+@implementation MessageView
+
++ (instancetype)shareManager{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        messageView = [[MessageView alloc] init];
+    });
+    return messageView;
+}
+
+- (instancetype)init{
+    self = [super init];
+    if (self) {
+        self.mainView = [[UIView alloc] initWithFrame:CGRectMake(40, (WIN_HEIGHT - 180)/2, WIN_WIDTH - 80, 180)];
+        [self.mainView setBackgroundColor:[UIColor whiteColor]];
+        
+        self.label = [[UILabel alloc] initWithFrame:CGRectMake(15, 0, WIN_WIDTH - 80 - 30, 180 - 60)];
+        [self.label setText:@"抱歉，您已经超时，请在2秒内按照提示做出正确的动作。"];
+        [self.label setTextColor:[UIColor blackColor]];
+        [self.label setFont:[UIFont systemFontOfSize:22]];
+        [self.label setNumberOfLines:0];
+        
+        self.button = [UIButton buttonWithType:UIButtonTypeCustom];
+        [self.button setTitle:@"再试一次" forState:UIControlStateNormal];
+        [self.button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [self.button setBackgroundColor:[UIColor ytColorWithRed:57 green:199 blue:221 alpha:1]];
+        [self.button addTarget:self action:@selector(OKAction:) forControlEvents:UIControlEventTouchUpInside];
+        [self.button setFrame:CGRectMake(10, 180 - 60, WIN_WIDTH - 80 - 20, 45)];
+        
+        [self.mainView addSubview:self.label];
+        [self.mainView addSubview:self.button];
+        
+        self.alertView = [[YTAlertView alloc] initWithSourceView:self.mainView frameOfsView:self.mainView.frame];
+        [self.alertView setBackgroundColorAlpha:0.7];
+        [self.alertView closeGestHide];
+    }
+    return self;
+}
+
+- (void)setTitle:(NSString *)title{
+    _title = title;
+    self.label.text = _title;
+}
+
+- (void)setCancelTitle:(NSString *)cancelTitle{
+    _cancelTitle = cancelTitle;
+    [self.button setTitle:cancelTitle forState:UIControlStateNormal];
+}
+
+- (void)show{
+    
+    [self.alertView showWithAnimation:YES];
+}
+
+- (void)OKAction:(id)sender{
+    [self.alertView hideWithAnimation:YES];
+    [self.delegate messageView:self tag:self.tag];
+}
+@end

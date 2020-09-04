@@ -1,0 +1,538 @@
+//
+//  JSFaceRecordViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/29.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSFaceRecordViewController.h"
+#import "LivenessDetector.h"
+#import "BottomAnimationView.h"
+#import "MessageView.h"
+#import "CountZeroManager.h"
+#import "JSImageEngineView.h"
+#import "FaceRecordErrorView.h"
+#import "GetLoginInfo.h"
+
+@interface JSFaceRecordViewController () <AVCaptureVideoDataOutputSampleBufferDelegate,MGLivenessProtocolDelegate,MessageViewDelegate>
+@property(nonatomic,strong)AVCaptureSession *session;
+@property(nonatomic,strong)AVCaptureDeviceInput *videoInput;
+@property (nonatomic, strong) NSMutableArray *imageArray;
+@property (nonatomic, strong) MessageView *messageView;
+@property(nonatomic,strong)UIImageView *photoBackImageView;
+@property(nonatomic,strong)UIImageView *boardImageView;
+@property(nonatomic,strong)UIImageView *headLogImageView;
+@property(nonatomic,strong)JSImageEngineView *bottomView;
+@property (nonatomic, strong) NSMutableArray *actionArray;
+@property(nonatomic,strong)AVCaptureVideoPreviewLayer *previewLayer;
+@property(nonatomic,assign)BOOL starLiveness;
+@property(nonatomic,assign)NSInteger step;
+@property(nonatomic,strong)MGLivenessDetector *livenessDetector;
+@property(nonatomic,strong)UILabel *tipLabel;
+@property(nonatomic,strong)FaceRecordErrorView *errorView;
+@property(nonatomic,strong)CAShapeLayer *circleLayer;
+
+@end
+
+@implementation JSFaceRecordViewController
+
+- (AVCaptureSession *)session {
+    if (!_session) {
+        _session = [[AVCaptureSession alloc] init];
+        _session.sessionPreset = AVCaptureSessionPreset640x480;
+        if ([_session canAddInput:self.videoInput]) {
+            [_session addInput:self.videoInput];
+        }
+        AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
+        [_session addOutput:output];
+        output.alwaysDiscardsLateVideoFrames = YES;
+        dispatch_queue_t queue = dispatch_queue_create("myQueue", NULL);
+        [output setSampleBufferDelegate:self queue:queue];
+        output.videoSettings =[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
+                                                          forKey:(id)kCVPixelBufferPixelFormatTypeKey];
+    }
+    return _session;
+}
+
+- (MGLivenessDetector *)livenessDetector {
+    if (!_livenessDetector) {
+        NSDictionary *options=[NSDictionary dictionaryWithObjectsAndKeys:[[NSBundle mainBundle] pathForResource:@"model" ofType:@""],MGLivenessDetectorModelPath, nil];
+        _livenessDetector=[MGLivenessDetector detectorOfOptions:options];
+        [_livenessDetector setDelegate:self];
+        [_livenessDetector reset];
+    }
+    return _livenessDetector;
+}
+
+- (UIImageView *)photoBackImageView {
+    if (!_photoBackImageView) {
+        _photoBackImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"photo_bg.png"]];
+        _photoBackImageView.frame = CGRectMake(0, Height-Height/3.0, Width, Height/3.0);
+        
+    }
+    return _photoBackImageView;
+    
+}
+
+- (FaceRecordErrorView *)errorView {
+    if (!_errorView) {
+        __weak typeof(self) weakSelf = self;
+        _errorView = [[FaceRecordErrorView alloc] init];
+        _errorView.hidden = YES;
+        [self.view addSubview:_errorView];
+        _errorView.retryAction = ^{
+            [weakSelf initView];
+            weakSelf.errorView.hidden = YES;
+        };
+        _errorView.backAction = ^{
+            [weakSelf.tabBarController.navigationController popViewControllerAnimated:YES];
+        };
+    }
+    return _errorView;
+    
+}
+
+- (JSImageEngineView *)bottomView {
+    if (!_bottomView) {
+        _bottomView = [[JSImageEngineView alloc] init];
+//        _bottomView.backgroundColor = [UIColor blackColor];
+        _bottomView.contentMode = UIViewContentModeScaleAspectFit;
+        [self.view addSubview:_bottomView];
+    }
+    return _bottomView;
+}
+
+- (AVCaptureDeviceInput *)videoInput {
+    if (!_videoInput) {
+        _videoInput = [[AVCaptureDeviceInput alloc] initWithDevice:[self cameraWithPosition:AVCaptureDevicePositionFront] error:nil];
+    }
+    return _videoInput;
+}
+
+//前后摄像头 AVCaptureDevicePositionFront前置 AVCaptureDevicePositionBack后置
+- (AVCaptureDevice *)cameraWithPosition:(AVCaptureDevicePosition)position {
+    NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    for (AVCaptureDevice *device in devices) {
+        if ([device position] == position) {
+            return device;
+        }
+    }
+    return nil;
+}
+
+- (NSMutableArray *)imageArray {
+    if (!_imageArray) {
+        _imageArray=@[].mutableCopy;
+    }
+    return _imageArray;
+}
+
+- (void)initView {
+    self.messageView = [MessageView shareManager];
+    [self.messageView setDelegate:self];
+//    [self.view addSubview:self.photoBackImageView];
+    [self restArray];
+    [self startSession];
+}
+
+#pragma mark -重置随机动作数组
+-(void)restArray
+{
+    self.actionArray=nil;
+    self.actionArray=[NSMutableArray arrayWithObjects:@1,@3,@4,nil];
+}
+
+
+-(void)startSession
+{
+    if ([self checkVAuthorization])
+    {
+        [self setUpCameraLayer];
+        
+        [self willStatLiveness];
+        
+        [self initHardCode:NO];
+
+        if (self.session)
+        {
+            [self.session startRunning];
+        }
+    }
+}
+-(BOOL)checkVAuthorization
+{
+    
+    BOOL isAllow =YES;
+    __block JSFaceRecordViewController *tmpSelf =self;
+    if ([PCDevice systemVersion].doubleValue > 7.0)
+    {
+        AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+        if(authStatus == AVAuthorizationStatusDenied || authStatus == AVAuthorizationStatusRestricted){
+            //未允许使用相机
+//            [PNCShareUtil showAlert:@"您的相机隐私授权尚未打开，若要打开请前往 设置-隐私-相机 中打开。" doneTitle:@"确定" cancelTitle:nil doneHandle:^{
+//                [tmpSelf.navigationController popViewControllerAnimated:YES];
+//            } cancelHandle:nil];
+            isAllow =NO;
+        }
+    }
+    return isAllow;
+}
+//加载图层预览
+- (void) setUpCameraLayer {
+    CGFloat X = 60;
+    CGFloat topPadding  = 60; //顶部距离
+    CGFloat gap = 10; //圆环与相机画面间隔
+    CGFloat W = Width - 2 * X; //相机成像宽度
+    CGFloat H = W;
+    CGFloat Y = self.navigationBarHeight+topPadding;
+    self.previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.session];
+    self.previewLayer.frame = CGRectMake(X, Y, W, H);
+    self.previewLayer.cornerRadius = W / 2;
+    self.previewLayer.masksToBounds = YES;
+    [self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
+    [self.view.layer insertSublayer:self.previewLayer above:0];
+    
+    UIBezierPath *circlePath = [UIBezierPath bezierPathWithArcCenter:CGPointMake(Width / 2, Y + W / 2) radius:W / 2 + gap startAngle:M_PI endAngle:-M_PI clockwise:NO];
+    
+    self.circleLayer = [[CAShapeLayer alloc] init];
+    self.circleLayer.path = circlePath.CGPath;
+    self.circleLayer.frame = self.view.bounds;
+    self.circleLayer.fillColor    = nil;
+    self.circleLayer.strokeColor  = Color().MainBlue.CGColor;
+    self.circleLayer.lineWidth = 3;
+    [self.view.layer insertSublayer:self.circleLayer atIndex:0];
+
+    self.tipLabel = [[UILabel alloc] init];
+//    self.tipLabel.backgroundColor = [UIColor redColor];
+    self.tipLabel.font = [UIFont systemFontOfSize:17];
+    self.tipLabel.textAlignment = NSTextAlignmentCenter;
+    self.tipLabel.textColor = [UIColor blackColor];
+    [self.view addSubview:self.tipLabel];
+
+    [self layouSubControls];
+}
+
+- (void)layouSubControls {
+    [self.tipLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.view.mas_top).offset(CGRectGetMaxY(self.previewLayer.frame) + 30);
+        make.centerX.mas_equalTo(self.view.mas_centerX);
+        make.height.mas_equalTo(20);
+    }];
+    [self.bottomView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.tipLabel.mas_bottom).offset(60);
+        make.centerX.mas_equalTo(self.view.mas_centerX);
+        make.width.height.mas_equalTo((Width / 3) - 20);
+    }];
+    [self.errorView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.view.mas_top).offset(self.navigationBarHeight);
+        make.left.mas_equalTo(self.view.mas_left);
+        make.right.mas_equalTo(self.view.mas_right);
+        make.bottom.mas_equalTo(self.view.mas_bottom);
+    }];
+}
+
+/**
+ *  即将开始检测，显示倒计时
+ */
+- (void)willStatLiveness
+{
+    [[[CountZeroManager alloc] init] starOpen];
+    [self performSelector:@selector(starLivenessWithBuff) withObject:nil afterDelay:3.0f];
+}
+
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    [self stopSession];
+}
+
+//开启检查
+-(void)starLivenessWithBuff
+{
+    [self.livenessDetector reset];
+    self.starLiveness = YES;
+    MGLivenessDetectionType type = [self randActionType];
+    [self.livenessDetector changeDetectionType:type];
+    [self starAnimation:type];
+}
+//播放动作提示动画
+- (void)starAnimation:(MGLivenessDetectionType )type
+{
+    NSString *imageName = @"";
+    NSString *tip = @"";
+
+    switch (type) {
+        case DETECTION_TYPE_BLINK:
+            imageName = @"blink";
+            tip = @"拿起手机，眨眨眼!";
+            break;
+        case DETECTION_TYPE_POS_YAW:
+            imageName = @"shakeHead";
+            tip = @"拿起手机，摇摇头!";
+            break;
+            
+        case DETECTION_TYPE_POS_PITCH:
+            imageName = @"nod";
+            tip = @"拿起手机，点点头!";
+            break;
+            
+        case DETECTION_TYPE_DONE:
+            imageName = @"blink";
+            tip = @"完成";
+            break;
+            
+        default:
+            break;
+    }
+    NSString *filePath = [[NSBundle mainBundle] pathForResource:imageName ofType:@"gif"];
+    self.bottomView.image = [JSImageKernel imageWithData:[NSData dataWithContentsOfFile:filePath]];
+    if (type == DETECTION_TYPE_DONE) {
+        [self.bottomView stopAnimating];
+    }
+    self.tipLabel.text = tip;
+//    [self.bottomView willChangeAnimation:type outTime:10];
+//    if ([UIScreen mainScreen].bounds.size.height >= 568) {
+//        [self.bottomView startRollAnimation];
+//    }
+}
+
+//随机一个动作
+- (MGLivenessDetectionType)randActionType
+{
+    NSInteger type = arc4random()%(self.actionArray.count);
+    MGLivenessDetectionType detectionType = (MGLivenessDetectionType)[self.actionArray[type] integerValue];
+    [self.actionArray removeObjectAtIndex:type];
+    return detectionType;
+}
+
+- (void)initHardCode:(BOOL)check
+{
+    _starLiveness = check;
+    self.step = 0;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.title = @"视频认证";
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.navigationBar.backgroundColor = Color().MainBlue;
+    self.navigationBar.titleItem.titleColor = [UIColor whiteColor];
+    
+    PCDBarButtonItem *leftItem = [[PCDBarButtonItem alloc]initWithImage:[UIImage imageNamed:@"close_white.png"] style:PCDBarButtonItemPlain target:self action:@selector(closeAction)];
+    leftItem.imageSize = CGSizeMake(25, 25);
+    self.navigationBar.leftBarButtonItem = leftItem;
+
+    PCDBarButtonItem *rightItem = [[PCDBarButtonItem alloc]initWithImage:[UIImage imageNamed:@"menu.png"] style:PCDBarButtonItemPlain target:self action:@selector(menuAction)];
+    rightItem.imageSize = CGSizeMake(25, 25);
+    rightItem.imageInsets = UIEdgeInsetsMake(0, -10, 0, 0);
+    self.navigationBar.rightBarButtonItem = rightItem;
+    
+    [self initView];
+}
+
+- (void)closeAction {
+    [self.tabBarController.navigationController popViewControllerAnimated:YES];
+}
+
+- (void)menuAction {
+
+}
+
+#pragma mark - delegate
+- (void)captureOutput:(AVCaptureOutput *)captureOutput
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+       fromConnection:(AVCaptureConnection *)connection
+{
+    if (_starLiveness)
+    {
+        [self.livenessDetector detectWithBuffer:sampleBuffer orientation:UIImageOrientationRight];
+    }
+}
+
+-(void)onFrameDetected:(MGLivenessDetectionFrame *)frame andTimeout:(float) timeout{}
+
+-(void)onDetectionFailed:(MGLivenessDetectionFailedType)failedType
+{
+    if(self.session)
+    {
+        __weak typeof(self) weakSelf = self;
+
+        dispatch_async_safe(^{
+
+            NSString *message;
+            if (failedType==DETECTION_FAILED_TYPE_ACTIONBLEND || failedType==DETECTION_FAILED_TYPE_FACELOSTNOTCONTINUOUS || failedType==DETECTION_FAILED_TYPE_TOOMANYFACELOST || failedType==DETECTION_FAILED_TYPE_FACENOTCONTINUOUS || failedType==DETECTION_FAILED_TYPE_MASK )
+            {
+                message=@"检测失败，请按照提示做出相应的动作";
+            }
+            else if (failedType==DETECTION_FAILED_TYPE_NOTVIDEO)
+            {
+                message=@"您的动作不符合规范，请重新按照提示做出相应的动作";
+            }
+            else if(failedType==DETECTION_FAILED_TYPE_TIMEOUT)
+            {
+                message=@"检测超时，请在规定时间内按照提示完成相应动作";
+            }
+            if (self.session)
+            {
+                [self.session stopRunning];
+            }
+//            [self starAnimation:DETECTION_TYPE_NONE];
+            [weakSelf stopSession];
+            weakSelf.errorView.hidden = NO;
+        });
+    }
+
+}
+
+- (MGLivenessDetectionType)onDetectionSuccess:(MGLivenessDetectionFrame *)faceInfo
+{
+    [self.imageArray addObject:faceInfo];
+
+    _starLiveness = NO;
+
+    MGLivenessDetectionType detectionType = [self randActionType];
+
+    self.step++;
+
+    if (self.step == 1)
+    {
+        detectionType = DETECTION_TYPE_DONE;
+    }
+    else
+    {
+        _starLiveness = YES;
+    }
+
+    dispatch_async_safe(^{
+        //识别成功
+        if (self.step != 1)
+        {
+            [self starAnimation:detectionType];
+        }
+        else
+        {
+            _starLiveness = YES;
+            [self uploadImage:[self getBestQuilityImage]];
+            [self stopSession];
+        }
+    });
+    return detectionType;
+}
+
+#pragma mark -Stop
+-(void)stopSession
+{
+    self.starLiveness = NO;
+    [self.bottomView removeFromSuperview];
+    [self.tipLabel removeFromSuperview];
+    [self.headLogImageView removeFromSuperview];
+    self.headLogImageView = nil;
+
+    self.bottomView = nil;
+    self.tipLabel = nil;
+    self.livenessDetector = nil;
+    [self.previewLayer removeFromSuperlayer];
+    self.previewLayer=nil;
+    [self.circleLayer removeFromSuperlayer];
+    self.circleLayer = nil;
+    if (self.session)
+    {
+        [self.session stopRunning];
+    }
+    if (self.session.inputs.count>0)
+    {
+        AVCaptureInput* input = [self.session.inputs objectAtIndex:0];
+        [self.session removeInput:input];
+        AVCaptureVideoDataOutput* output = (AVCaptureVideoDataOutput*)[self.session.outputs objectAtIndex:0];
+        [self.session removeOutput:output];
+    }
+    self.session = nil;
+}
+
+#pragma mark-
+- (void)messageView:(MessageView *)view tag:(NSInteger)tag
+{
+    self.step = 0;
+    [self.livenessDetector reset];
+    #pragma GCC diagnostic ignored "-Wundeclared-selector"
+    [self performSelector:@selector(initHardCodeWithCheckYES) withObject:nil afterDelay:0.5f];
+}
+
+#pragma mark -上传照片
+-(void)uploadImage:(UIImage *)image {
+    __weak typeof(self) weakSelf = self;
+    
+    NSString *mobileNo = [DataCache getCacheStringForkey:@"ccy_mobileNo"];
+    mobileNo = mobileNo.notNull ? mobileNo : @"";
+    NSString *loginType = (self.loginType == LoginTypeBiometry) ? @"loginFinger" : @"login";
+
+    [LoadIndicator showLoadingIndicatorWithText:@"请稍后..." shouldTap:NO];
+    [ClientNetManager fetchFaceRecordDataWithImage:image
+                                          mobileNo:mobileNo
+                                         loginType:loginType
+                                           success:^(id resultResponse, FaceRecord *faceRecord) {
+                                               
+        [JSDeftAlert showAlert:@"恭喜您，人脸识别成功"
+                     doneTitle:@"确定"
+                   cancelTitle:nil doneHandle:^{
+                       
+//           [weakSelf toLoginWithModel:faceRecord];
+                       PCDContext *context = [[PCDContext alloc] init];
+                       context.viewController = self;
+                       [[[GetLoginInfo alloc] init] handler:resultResponse andContext:context ResponseCallback:nil];
+                       [JSLoginManager popVCsWithTarget:self];
+                       if (weakSelf.callBackHandle) {
+                           weakSelf.callBackHandle((NSDictionary *)resultResponse);
+                       }
+        } cancelHandle:nil];
+    } failure:^(NSString *MSG, FaceRecord *faceRecord) {
+        if (weakSelf.callBackHandle) {
+            weakSelf.callBackHandle(@{});
+        }
+        [LoadIndicator hiddenLoadingIndicator];
+        [JSDeftAlert showAlert:MSG
+                     doneTitle:@"重新识别"
+                   cancelTitle:@"取消" doneHandle:^{
+                       [weakSelf initView];
+        } cancelHandle:^{
+            [weakSelf.navigationController popViewControllerAnimated:YES];
+        }];
+    }];
+}
+
+//- (void)toLoginWithModel:(FaceRecord *)faceRecord {
+//    __weak typeof(self) weakSelf = self;
+//    NSDictionary *param = [weakSelf configParamWithFaceRecord:faceRecord]; if (!param.notNull) {return;}
+//    [JSLoginManager loginWithLoginType:weakSelf.loginType
+//                            loginParam:param
+//                               success:^(id  _Nonnull resultResponse, LoginSession * _Nonnull session) {
+//
+//        [JSLoginManager popVCsWithTarget:self];
+//    } faild:nil];
+//}
+
+- (NSMutableDictionary *)configParamWithFaceRecord:(FaceRecord *)faceRecord {
+    NSMutableDictionary *param = [JSSharedInstance sharedInstance].loginParam;
+    if (param.notNull) {
+        NSString *seq = faceRecord.SEQ_NO.notNull ? faceRecord.SEQ_NO : @"";
+        [param setObject:seq forKey:@"seq"];
+        [param setObject:@"1"forKey:@"isVaild"];
+        
+        return param;
+    }
+    return nil;
+}
+
+#pragma mark -获取最优图片
+- (UIImage *)getBestQuilityImage {
+    FaceIDData *faceData=[self.livenessDetector getFaceIDData];
+    
+    NSData *imageData=[faceData.images objectForKey:@"image_env"];
+    
+    UIImage *image=[UIImage imageWithData:imageData];
+    
+    return  image;
+}
+
+@end

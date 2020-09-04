@@ -1,0 +1,75 @@
+//
+//  ThirdPartViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/27.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "ThirdPartViewController.h"
+
+@interface ThirdPartViewController ()
+
+@end
+
+@implementation ThirdPartViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    UIView *contentView = [[UIView alloc] init];
+    //    contentView.backgroundColor = [UIColor redColor];
+    contentView.frame = CGRectMake(0, 0, 100, self.navigationBarHeight - 20);
+//    contentView.backgroundColor = [UIColor redColor];
+    
+    UIButton *backItem = [UIButton buttonWithType:UIButtonTypeSystem];
+    backItem.hitTestEdgeInsets = UIEdgeInsetsMake(0, -20, 0, -10);
+    backItem.frame = CGRectMake(0, 0, 30, self.navigationBarHeight - 20);
+//    backItem.backgroundColor = [UIColor blueColor];
+        backItem.imageView.contentMode = UIViewContentModeScaleAspectFit;
+        UIImage *image = [[UIImage imageNamed:@"back.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        [backItem setImage:image forState:UIControlStateNormal];
+    [contentView addSubview:backItem];
+    [backItem addTarget:self action:@selector(backAction) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIButton *backItem1 = [UIButton buttonWithType:UIButtonTypeSystem];
+    backItem1.hitTestEdgeInsets = UIEdgeInsetsMake(0, -10, 0, -20);
+    backItem1.frame = CGRectMake(CGRectGetMaxX(backItem.frame) + 20, 0, 30, self.navigationBarHeight - 20);
+//    backItem1.backgroundColor = [UIColor blueColor];
+    backItem1.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    UIImage *image1 = [[UIImage imageNamed:@"close.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+    [backItem1 setImage:image1 forState:UIControlStateNormal];
+    [contentView addSubview:backItem1];
+    [backItem1 addTarget:self action:@selector(closeAction) forControlEvents:UIControlEventTouchUpInside];
+
+    
+    PCDBarButtonItem *barButtonItem = [[PCDBarButtonItem alloc]initWithCustomView:contentView];
+    self.navigationBar.leftBarButtonItem = barButtonItem;
+}
+
+- (void)backAction {
+    if ([self.bankWebView canGoBack]) {
+        [self.bankWebView goBack];
+    } else {
+        [self.tabBarController.navigationController popViewControllerAnimated:YES];
+    }
+}
+
+- (void)closeAction {
+    [self.tabBarController.navigationController popViewControllerAnimated:YES];
+}
+
+//- (void)addButtonItemWithIconName:(NSString *)iconName
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

@@ -1,0 +1,42 @@
+//
+//  CommonColor.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/21.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "CommonColor.h"
+
+@implementation CommonColor
+
+- (id)init {
+    if (self = [super init]) {
+        self.mainColor = [UIColor colorFormString:@"#4285FE"];
+    }
+    return self;
+}
+
++ (instancetype)sharedColor {
+    static CommonColor *commonColor = nil;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        commonColor = [[self alloc] init];
+    });
+    
+    return commonColor;
+}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    CommonColor *Color() {
+        
+        return [CommonColor sharedColor];
+    }
+#ifdef __cplusplus
+}
+#endif
+
+@end

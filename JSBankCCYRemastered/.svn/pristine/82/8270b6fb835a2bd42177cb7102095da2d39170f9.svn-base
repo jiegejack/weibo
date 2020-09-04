@@ -1,0 +1,137 @@
+//
+//  JSBiometryLoginViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/7.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSBiometryLoginViewController.h"
+#import "TouchIDManager.h"
+#import "JSLoginViewController.h"
+
+@interface JSBiometryLoginViewController ()
+@property (nonatomic, strong) UIImageView *userIcon;
+@property (nonatomic, strong) UIButton *otherLoginWay;
+@property (nonatomic, strong) UIImageView *backgroundImageView;
+@property (nonatomic, strong) UIButton *biometryTap;
+@property (nonatomic, strong) UIView *iconBottomView;
+
+@property(nonatomic,copy)void(^loginSuccess)(id resultResponse, LoginSession *session);
+@property(nonatomic,copy)void(^loginFaild)(NSError * _Nonnull error, LoginSession * _Nonnull session);
+
+@end
+
+@implementation JSBiometryLoginViewController
+
+
+- (id)initWithSuccessBlock:(void(^)(id resultResponse, LoginSession *session))successBlock
+                faildBlock:(void(^)(NSError * _Nonnull error, LoginSession * _Nonnull session))faildBlock {
+    
+    if (self = [super init]) {
+        self.loginSuccess = successBlock;
+        self.loginFaild   = faildBlock;
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.view.backgroundColor = [UIColor colorFormString:@"#4D9AF5"];
+    self.navigationBar.backgroundColor = [UIColor clearColor];
+    self.navigationBar.separatorColor  = self.navigationBar.backgroundColor;
+    
+    self.backgroundImageView = [[UIImageView alloc] init];
+    self.backgroundImageView.clipsToBounds = YES;
+    self.backgroundImageView.userInteractionEnabled = YES;
+    self.backgroundImageView.image = [UIImage imageNamed:@"gestureBg"];
+    [self.view addSubview:self.backgroundImageView];
+    
+    self.iconBottomView = [[UIView alloc] init];
+    self.iconBottomView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.3];
+    self.iconBottomView.clipsToBounds = YES;
+    [self.view addSubview:self.iconBottomView];
+    
+    self.userIcon = [[UIImageView alloc] init];
+    self.userIcon.contentMode = UIViewContentModeScaleAspectFit;
+    self.userIcon.image = [UIImage imageNamed:@"biometryLogin_head"];
+    [self.iconBottomView addSubview:self.userIcon];
+    
+    self.biometryTap = [[UIButton alloc] init];
+    self.biometryTap.hitTestEdgeInsets = UIEdgeInsetsMake(-25, -25, -25, -25);
+    self.biometryTap.contentMode = UIViewContentModeScaleAspectFit;
+    [self.biometryTap setBackgroundImage:[UIImage imageNamed:@"finger"] forState:UIControlStateNormal];
+    self.biometryTap.clipsToBounds = YES;
+    [self.view addSubview:self.biometryTap];
+    [self.biometryTap addTarget:self action:@selector(biometryTapAction) forControlEvents:UIControlEventTouchUpInside];
+    
+    self.otherLoginWay = [[UIButton alloc] init];
+    self.otherLoginWay.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+    [self.otherLoginWay setTitle:@"其他方式登录" forState:UIControlStateNormal];
+    [self.otherLoginWay setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    self.otherLoginWay.titleLabel.font = [UIFont systemFontOfSize:16];
+    [self.otherLoginWay addTarget:self action:@selector(changeLoginWay) forControlEvents:UIControlEventTouchUpInside];
+    [self.backgroundImageView addSubview:self.otherLoginWay];
+    
+    [self layoutSubControls];
+    
+    //生物验证
+    [self biometryTapAction];
+}
+
+- (void)layoutSubControls {
+    [self.backgroundImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(self.view);
+    }];
+    [self.iconBottomView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.view.mas_top).offset(self.navigationBarHeight);
+        make.centerX.mas_equalTo(self.view.mas_centerX);
+        make.width.height.mas_equalTo(80);
+    }];
+    [self.userIcon mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.iconBottomView.mas_centerX);
+        make.centerY.mas_equalTo(self.iconBottomView.mas_centerY);
+        make.width.height.mas_equalTo(41);
+    }];
+    [self.biometryTap mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.backgroundImageView.mas_centerX);
+        make.centerY.mas_equalTo(self.backgroundImageView.mas_centerY);
+        make.width.height.mas_equalTo(60);
+    }];
+    [self.otherLoginWay mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.backgroundImageView.mas_centerX);
+        make.bottom.mas_equalTo(self.backgroundImageView.mas_bottom).offset(-30);
+        make.width.mas_equalTo(100);
+        make.height.mas_equalTo(20);
+    }];
+}
+
+- (void)biometryTapAction {
+    [TouchIDManager touchIDAuthenticateWithBackTitle:@"" cancelTitle:@"" reason:@"" complete:^{
+        [JSLoginManager loginWithLoginType:LoginTypeBiometry loginParam:@{} target:self success:^(id  _Nonnull resultResponse, LoginSession * _Nonnull session) {
+            if (self.loginSuccess) {
+                self.loginSuccess(resultResponse, session);
+            }
+        } faild:^(NSError * _Nonnull error, LoginSession * _Nonnull session) {
+            if (self.loginFaild) {
+                self.loginFaild(error, session);
+            }
+        }];
+    } fiald:^(LAErrorState resultStatus) {}];
+}
+
+- (void)changeLoginWay {
+    JSLoginViewController *loginViewController = [[JSLoginViewController alloc] init];
+    loginViewController.isBiometryLoginPush = YES;
+    loginViewController.obj = self;
+    [self.tabBarController.navigationController pushViewController:loginViewController animated:YES];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    
+    self.iconBottomView.layer.cornerRadius = self.iconBottomView.frame.size.height / 2;
+}
+
+@end

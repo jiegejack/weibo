@@ -1,0 +1,42 @@
+//
+//  PCNetworkImage.h
+//  PCKit
+//
+//  Created by wangyong on 2017/8/10.
+//  Copyright © 2017年 P&C Information. All rights reserved.
+//
+
+#ifndef PCNetworkImage_h
+#define PCNetworkImage_h
+
+
+/**
+ 文件操作状态
+
+ - PCNetworkImageUseCache: 使用缓存
+ - PCNetworkImageDownloadStart: 开始下载
+ - PCNetworkImageDownloadSuccess: 下载成功
+ - PCNetworkImageDownloadFailure: 下载失败
+ */
+typedef NS_ENUM(NSInteger, PCNetworkImageState) {
+    PCNetworkImageUseCache = 0,
+    PCNetworkImageDownloadStart=1,
+    PCNetworkImageDownloadSuccess=2,
+    PCNetworkImageDownloadFailure=3,
+};
+
+/**
+ 下载选项
+
+ - PCNetworkImageDefault: 默认
+ - PCNetworkImageAllways: 始终信任
+ */
+typedef NS_ENUM(NSInteger, PCNetworkImageOptions) {
+    PCNetworkImageDefault = 0,
+    PCNetworkImageAllways=1,
+};
+
+//默认缓存文件夹路径
+#define kNetworkImageFolderPath (NSString *)[[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"PCDownloads"]
+
+#endif /* PCNetworkImage_h */

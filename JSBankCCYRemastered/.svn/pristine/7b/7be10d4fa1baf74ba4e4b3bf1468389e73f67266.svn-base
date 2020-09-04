@@ -1,0 +1,36 @@
+//
+//  OBUDevice.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/23.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+#if TARGET_IPHONE_SIMULATOR
+#else
+
+#import "OBUDevice.h"
+#import "OBUManager.h"
+
+@implementation OBUDevice
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    NSString *callback = [dict objectForKey:@"callback"];
+    callback = callback.notNull ? callback : @"";
+    
+    __block OBUManager *device = [OBUManager shareInstance];
+    [device getBluetoothStatus:^(Boolean status, NSDictionary *dict, NSString *msg) {
+        if (status) {
+            [device getObuSN:^(Boolean status, NSDictionary *dict, NSString *msg) {
+                if (dict.notNull) {
+                    evaluateJavaScriptOnMainThread_quotes(self, callback, [dict JSONRepresentation]);
+                }
+            }];
+        } else {
+            NSDictionary *dict = @{@"STATUS" : @"1", @"MSG" : @"蓝牙未连接"};
+            evaluateJavaScriptOnMainThread_quotes(self, callback, [dict JSONRepresentation]);
+        }
+    }];
+}
+@end
+#endif

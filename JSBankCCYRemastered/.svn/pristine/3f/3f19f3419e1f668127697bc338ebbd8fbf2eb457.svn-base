@@ -1,0 +1,20 @@
+//
+//  AnimationView.h
+//  LivenessDetection
+//
+//  Created by 张英堂 on 15/1/7.
+//  Copyright (c) 2015年 megvii. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "YTMacro.h"
+
+@interface TestFinshAnimation : UIView
+
+@property (nonatomic, copy) VoidBlock animationFinsh;
+
+- (void)startRollWith:(BOOL)ture;
+
+
+@end
+

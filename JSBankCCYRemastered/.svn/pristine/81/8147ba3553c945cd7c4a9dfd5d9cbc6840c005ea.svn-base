@@ -1,0 +1,393 @@
+//
+//  JSLoginViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/16.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSLoginViewController.h"
+#import "JSRegistViewController.h"
+#import "JSTextFieldView.h"
+#import "JSCheckBox.h"
+#import "PCDSettingViewController.h"
+#import "JSBiometryLoginViewController.h"
+/**
+ * 枚举输入框
+ */
+typedef NS_ENUM(NSInteger, TextFieldType) {
+    TextFieldTypePhoneNo = 0,//号码
+    TextFieldTypePassword,   //密码
+    TextFieldTypeCode        //验证码
+};
+
+@interface JSLoginViewController ()
+@property (nonatomic, strong) PassGuardTextField     *phoneNoTextField;
+@property (nonatomic, strong) PassGuardTextField     *commonTextField;
+
+@property (nonatomic, strong) JSCheckBox         *checkBox;
+@property (nonatomic, strong) UIButton           *loginButton;
+@property (nonatomic, strong) UIButton           *toggleButton;
+@property (nonatomic, assign) TextFieldType       textFieldType;
+@property (nonatomic, strong) UIButton        *forgetPwdButton;
+@property (nonatomic, strong) NSMutableArray  *items;
+@property (nonatomic, strong) NSArray         *placeholds;
+@property (nonatomic, strong) NSArray         *titles;
+@property (nonatomic, assign) CGFloat          textField_Height;
+
+@property(nonatomic,copy) void(^loginFaild)(NSError *error, LoginSession *session);
+@property(nonatomic,copy) void(^loginSuccess)(id resultResponse, LoginSession *session);
+
+@end
+@implementation JSLoginViewController
+
+- (id)initWithSuccessBlock:(void(^)(id resultResponse, LoginSession *session))successBlock
+                faildBlock:(void(^)(NSError *error, LoginSession *session))faildBlock {
+    
+    if (self = [super init]) {
+        self.loginSuccess = successBlock;
+        self.loginFaild   = faildBlock;
+    }
+    return self;
+}
+
+- (void)dealloc {
+    [JSCountDownView invalidTimer];
+}
+
+- (JSCheckBox *)checkBox {
+    if (!_checkBox) {
+        _checkBox = [[JSCheckBox alloc] initWithButton_key:@"savecheckBox_user"];
+        _checkBox.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+        _checkBox.selectedImageName = @"login_select";
+        _checkBox.imageName = @"login_normal";
+        [_checkBox setTitle:@"记住用户名" forState:UIControlStateNormal];
+        [_checkBox setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+        _checkBox.titleLabel.font = [UIFont systemFontOfSize:15];
+        [self.view addSubview:_checkBox];
+        [_checkBox addTarget:self action:@selector(checkBoxAction:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _checkBox;
+}
+
+- (UIButton *)forgetPwdButton {
+    if (!_forgetPwdButton) {
+        _forgetPwdButton = [[UIButton alloc] init];
+        _forgetPwdButton.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+        [_forgetPwdButton setTitleColor:[UIColor colorWithRed:0.30 green:0.60 blue:0.96 alpha:1.00] forState:UIControlStateNormal];
+        [_forgetPwdButton setTitle:@"忘记密码?" forState:UIControlStateNormal];
+        _forgetPwdButton.titleLabel.font = [UIFont systemFontOfSize:15];
+        [self.view addSubview:_forgetPwdButton];
+        [_forgetPwdButton addTarget:self action:@selector(forgetPWDAction) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _forgetPwdButton;
+}
+
+- (UIButton *)loginButton {
+    if (!_loginButton) {
+        _loginButton = [[UIButton alloc] init];
+        [_loginButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [_loginButton setTitle:@"登录" forState:UIControlStateNormal];
+        [_loginButton setBackgroundImage:[UIImage imageNamed:@"loginBtnBackImage"] forState:UIControlStateNormal];
+        _loginButton.titleLabel.font = [UIFont systemFontOfSize:20];
+        _loginButton.layer.cornerRadius = 4;
+        _loginButton.clipsToBounds = YES;
+        [self.view addSubview:_loginButton];
+        [_loginButton addTarget:self action:@selector(loginAction) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _loginButton;
+}
+
+- (void)forgetPWDAction {
+    NSDictionary *expando = [PCDUtil IsIphoneX]?@{@"NSLayoutAttributeTop":@"88"}:@{@"NSLayoutAttributeTop":@"64"};
+    NSDictionary *param = @{@"url" : @"http://66.0.245.212:8081/ares-web-h5/page/client.html#page/PP01/PP0104/PP0104.html?passwordType=reset"};
+    JSBaseWebViewController *webVC = [PCDWServiceGet() createPCDViewController:param viewControllerClass:[JSBaseWebViewController class] contentViewClass:nil withExpando:expando];
+    [self.tabBarController.navigationController pushViewController:webVC animated:YES];
+}
+
+#pragma mark - 登录动作
+- (void)loginAction {//13625503652
+    NSLog(@"点击了登录按钮");
+    [self.view endEditing:YES];
+    
+    if (![self checkParamValid]) {return;}
+    
+    LoginType type = LoginTypePassword;
+    if (self.textFieldType == TextFieldTypeCode) {
+        type = LoginTypeCode;
+    }
+    
+    NSString *key = type == LoginTypeCode ? @"code" : @"loginPassword";
+    
+    NSString *phoneNo = @"";
+    if ([self.phoneNoTextField.text isContainString:@"*"]) {
+        phoneNo = [DataCache getCacheStringForkey:@"username_jsyh_ccy"];
+    } else {
+        phoneNo = self.phoneNoTextField.text;
+    }
+    
+    if (self.checkBox.isSelectedBox) {
+        [DataCache setCacheString:phoneNo forkey:@"username_jsyh_ccy"];
+    }
+    
+    NSDictionary *param = @{@"mobileNo" : phoneNo,
+                            key         : [self.commonTextField getOutput1]};
+    
+    __weak typeof(self) weakSelf = self;
+    
+    [JSLoginManager loginWithLoginType:type
+                            loginParam:param
+                                target:self
+                               success:^(id  _Nonnull resultResponse, LoginSession * _Nonnull session) {
+                                   
+       [weakSelf finishedLogin];
+    } faild:^(NSError * _Nonnull error, LoginSession * _Nonnull session) {
+        [JSDeftAlert showMessage:session.MSG afterDelay:1.5 completeHandle:nil];
+    }];
+}
+
+- (BOOL)checkParamValid {
+    if (self.phoneNoTextField.text.length != 11) {
+        [JSDeftAlert showMessage:@"请输入正确的手机号码" afterDelay:1.5 completeHandle:nil];
+        return NO;
+    }
+    if (!self.phoneNoTextField.text.notNull) {
+        [JSDeftAlert showMessage:@"请输入手机号码" afterDelay:1.5 completeHandle:nil];
+        return NO;
+    }
+    if (self.textFieldType == TextFieldTypeCode) {
+        JSTextFieldView *item = (JSTextFieldView *)self.commonTextField.superview;
+        if (item.countDownView.codeState == CodeStateNotSend) {
+            [JSDeftAlert showMessage:@"请先获取验证码" afterDelay:1.5 completeHandle:nil];
+            return NO;
+        }
+        if (item.countDownView.codeState == CodeStateInvalid) {
+            [JSDeftAlert showMessage:@"验证码已失效,请重新获取" afterDelay:1.5 completeHandle:nil];
+            return NO;
+        }
+        if (self.textFieldType == TextFieldTypeCode) {
+            [JSDeftAlert showMessage:@"请输入验证码" afterDelay:1.5 completeHandle:nil];
+            return NO;
+        }
+    } else {
+        if (!self.commonTextField.text.notNull) {
+            [JSDeftAlert showMessage:@"请输入密码" afterDelay:1.5 completeHandle:nil];
+            return NO;
+        }
+    }
+    return YES;
+}
+
+- (void)finishedLogin {
+    if (self.isBiometryLoginPush) {
+        if (self.tabBarController.navigationController.viewControllers) {
+            if ([self.tabBarController.navigationController.viewControllers containsObject:self.obj]) {
+                JSBiometryLoginViewController *vc = self.obj;
+                [vc.tabBarController.navigationController popViewControllerAnimated:NO];
+            }
+        }
+    }
+    [self.tabBarController.navigationController popViewControllerAnimated:NO];
+}
+
+- (UIButton *)toggleButton {
+    if (!_toggleButton) {
+        _toggleButton = [[UIButton alloc] init];
+        _toggleButton.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+        [_toggleButton setTitleColor:[UIColor colorWithRed:0.30 green:0.60 blue:0.96 alpha:1.00] forState:UIControlStateNormal];
+        [_toggleButton setTitle:@"使用手机验证码登录" forState:UIControlStateNormal];
+        _toggleButton.titleLabel.font = [UIFont systemFontOfSize:15];
+        [self.view addSubview:_toggleButton];
+        [_toggleButton addTarget:self action:@selector(togleClick:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _toggleButton;
+}
+
+- (void)sendCodeAction { // 验证码不同状态展示
+    if (!self.phoneNoTextField.text.notNull || !self.commonTextField.text.notNull) {
+        return;
+    }
+    
+    __block JSTextFieldView *item = (JSTextFieldView *)self.commonTextField.superview;
+    [ClientNetManager fetchSMSCodeDataWithPhoneNO:self.commonTextField.text code:self.commonTextField.text success:^(id resultResponse, id resultModel) {
+        item.isValidCode = NO;
+    } failure:^(NSError *error, LoginSession *session) {
+        item.isValidCode = YES;
+    }];
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.title = @"登录";
+    self.navigationBar.titleItem.titleColor = [UIColor blackColor];
+    self.navigationBar.backgroundColor = [UIColor whiteColor];
+    self.navigationBar.separatorColor = [UIColor groupTableViewBackgroundColor];
+
+    [self addRightItem];
+    [self initBaseData];
+    [self addTextFieldControls];
+    [self layoutSubControls];
+    [self addSettingInterface];
+}
+
+- (void)initBaseData {
+    self.textField_Height = 56;
+    self.textFieldType    = TextFieldTypePassword;
+    self.items            = [NSMutableArray array];
+    
+    self.titles           = @[@"手机号",
+                              @"登录密码"];
+    
+    self.placeholds       = @[@"请输入手机号",
+                              @"必须为8-16位数字和字母组合"];
+}
+
+- (void)addTextFieldControls {
+    __weak typeof(self) weakSelf = self;
+    [self.placeholds enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        JSTextFieldView *textFieldItem = [[JSTextFieldView alloc] init];
+        [textFieldItem.textField setM_mode:idx ? NO : YES];
+        textFieldItem.textField.secureTextEntry = idx ? YES : NO;
+        textFieldItem.textField.inset = !idx ? 30 : 0;
+        [textFieldItem.textField setM_ikeyordertype:idx ? KEY_CHAOS_SWITCH_VIEW : KEY_NONE_CHAOS];
+        textFieldItem.textField.keyboardType = idx ? UIKeyboardTypeDefault : UIKeyboardTypeNumberPad;
+        textFieldItem.titleLabel.text = self.titles[idx];
+        textFieldItem.textField.placeholder = self.placeholds[idx];
+        textFieldItem.titleColor = [UIColor blackColor];
+        [weakSelf.view addSubview:textFieldItem];
+        [weakSelf.items addObject:textFieldItem];
+        [weakSelf initItemsWithIndex:idx];
+    }];
+}
+
+- (void)initItemsWithIndex:(NSInteger)index {
+    JSTextFieldView *item = (JSTextFieldView *)self.items[index];
+    switch (index) {
+        case TextFieldTypePhoneNo: {
+            self.phoneNoTextField = item.textField;
+            item.maxLength = 11;
+            if (self.checkBox.isSelectedBox) {
+                NSString *userno = [self getUserName];
+                self.phoneNoTextField.text = userno.notNull ? userno : @"";
+            }
+        }
+            break;
+        case TextFieldTypePassword:
+            self.commonTextField  = item.textField;
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)layoutSubControls {
+    __weak typeof(self) weakSelf = self;
+    //布局所有输入框
+    [self.items mas_distributeViewsAlongAxis:MASAxisTypeVertical withFixedItemLength:self.textField_Height leadSpacing:self.navigationBarHeight tailSpacing:Height - weakSelf.navigationBarHeight - self.placeholds.count * self.textField_Height];
+    [self.items mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left);
+        make.right.mas_equalTo(weakSelf.view.mas_right);
+    }];
+    //布局其他控件
+    [self.checkBox mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.view.mas_left).offset(16);
+        make.top.mas_equalTo(weakSelf.commonTextField.superview.mas_bottom).offset(20);
+        make.height.mas_equalTo(16);
+    }];
+    [self.forgetPwdButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.mas_equalTo(weakSelf.checkBox.mas_centerY);
+        make.right.mas_equalTo(weakSelf.view.mas_right).offset(-16);
+    }];
+    [self.loginButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(weakSelf.forgetPwdButton.mas_bottom).offset(20);
+        make.right.mas_equalTo(weakSelf.view.mas_right).offset(-16);
+        make.left.mas_equalTo(weakSelf.view.mas_left).offset(16);
+        make.height.mas_equalTo(50);
+    }];
+    [self.toggleButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(weakSelf.loginButton.mas_bottom).offset(27);
+        make.centerX.mas_equalTo(weakSelf.view.mas_centerX);
+        make.height.mas_equalTo(20);
+    }];
+}
+
+- (void)togleClick:(UIButton *)button {
+    [self.view endEditing:YES];
+
+    self.commonTextField.text = NULL;
+    
+    JSTextFieldView *item = (JSTextFieldView *)self.commonTextField.superview;
+    
+    self.textFieldType = self.textFieldType == TextFieldTypeCode ? TextFieldTypePassword : TextFieldTypeCode;
+    [self.commonTextField setM_mode:self.textFieldType == TextFieldTypePassword ? NO : YES];
+    self.commonTextField.secureTextEntry = self.textFieldType == TextFieldTypePassword ? YES : NO;
+    [self.commonTextField setM_ikeyordertype:self.textFieldType == TextFieldTypePassword ? KEY_CHAOS_SWITCH_VIEW : KEY_NONE_CHAOS];
+    self.commonTextField.keyboardType = self.textFieldType == TextFieldTypePassword ? UIKeyboardTypeDefault : UIKeyboardTypeNumberPad;
+    
+    if (self.textFieldType == TextFieldTypeCode) {
+        item.maxLength = 6;
+    }
+    if (self.textFieldType == TextFieldTypePassword) {
+        item.maxLength = 16;
+    }
+
+    [self.toggleButton setTitle:self.textFieldType == TextFieldTypePassword ? @"使用手机验证码登录" : @"使用登录密码登录" forState:UIControlStateNormal];
+    self.commonTextField.placeholder = self.textFieldType == TextFieldTypePassword ? @"必须为8-16位数字和字母组合" : @"请输入验证码";
+    item.titleLabel.text = self.textFieldType == TextFieldTypePassword ? @"登录密码" : @"验证码";
+    self.forgetPwdButton.hidden = self.textFieldType == TextFieldTypeCode     ? YES : NO;
+    item.countDownView.hidden = self.textFieldType == TextFieldTypePassword ? YES : NO;
+    item.markIcon.hidden = item.countDownView.hidden;
+    item.sendCodeAction = ^{
+        [self sendCodeAction];
+    };
+}
+
+- (void)checkBoxAction:(JSCheckBox *)button {
+    if (!self.checkBox.isSelectedBox) {
+        [DataCache setCacheString:@"" forkey:@"username_jsyh_ccy"];
+    }
+}
+
+- (NSString *)getUserName {
+    NSString *phoneNo = [DataCache getCacheStringForkey:@"username_jsyh_ccy"];
+    if (phoneNo.length == 11) {
+        NSString *headString = [phoneNo substringToIndex:3];
+        NSString *tailString = [phoneNo substringFromIndex:7];
+        NSString *phoneString = [NSString stringWithFormat:@"%@****%@",headString,tailString];
+        return phoneString;
+    }
+    return @"";
+}
+
+- (void)addRightItem {
+    PCDBarButtonItem *rightItem = [[PCDBarButtonItem alloc] initWithTitle:@"注册" target:self action:@selector(rightItem)];
+    rightItem.titleInsets = UIEdgeInsetsMake(0, -20, 0, 0);
+    self.navigationBar.rightBarButtonItem = rightItem;
+}
+
+- (void)rightItem {
+    JSRegistViewController *registVC = [[JSRegistViewController alloc] init];
+    registVC.hidesBottomBarWhenPushed = YES;
+    [self.tabBarController.navigationController pushViewController:registVC animated:YES];
+}
+
+
+/***********************************以下为调试用*******************************************************/
+- (void)addSettingInterface {
+    if (![PCDUtil isReleaseVersion]) {
+        UIButton *settingVC = [UIButton buttonWithType:UIButtonTypeInfoLight];
+        [self.view addSubview:settingVC];
+        [settingVC addTarget:self action:@selector(settingClick) forControlEvents:UIControlEventTouchUpInside];
+        [settingVC mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.mas_equalTo(self.toggleButton.mas_bottom).offset(50);
+            make.centerX.mas_equalTo(self.view.mas_centerX);
+        }];
+    }
+}
+- (void)settingClick {
+    PCDSettingViewController *settingVC = [[PCDSettingViewController alloc] init];
+    [self.tabBarController.navigationController pushViewController:settingVC animated:YES];
+}
+
+@end

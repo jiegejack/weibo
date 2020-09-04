@@ -1,0 +1,6 @@
+framework module PCDUIBaseClass {
+  umbrella header "PCDUIBaseClass.h"
+
+  export *
+  module * { export * }
+}

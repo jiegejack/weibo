@@ -1,0 +1,40 @@
+//
+//  ThirdPartBack.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/17.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "ThirdPartBack.h"
+
+@implementation ThirdPartBack
+    
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    JSBaseWebViewController *webV = (JSBaseWebViewController *)context.viewController;
+
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+    NSString *callback=[dict objectForKey:@"callback"];
+    BOOL shouldReload =[[dict objectForKey:@"reloadFlag"] boolValue];
+    NSString *transData =[dict objectForKey:@"transData"];
+    
+    [webV.tabBarController.navigationController popViewControllerAnimated:YES];
+    if (callback.notNull) {
+        evaluateJavaScriptOnMainThread(self, callback, transData);
+        if (shouldReload) {
+            [self reloadCurrentPage];
+        }
+    }
+}
+
+- (void)reloadCurrentPage {
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    JSBaseWebViewController *webV = (JSBaseWebViewController *)navi.viewControllers.lastObject;
+    if ([webV respondsToSelector:@selector(doWebRequest)]) {
+        [webV doWebRequest];
+    }
+}
+
+@end

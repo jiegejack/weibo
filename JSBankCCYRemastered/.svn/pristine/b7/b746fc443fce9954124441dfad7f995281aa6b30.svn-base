@@ -1,0 +1,6 @@
+framework module PCDNetworkService {
+  umbrella header "PCDNetworkService.h"
+
+  export *
+  module * { export * }
+}

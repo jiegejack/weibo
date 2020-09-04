@@ -1,0 +1,27 @@
+//
+//  PCShareModel.h
+//  PNCMobileBank
+//
+//  Created by Mac-陶(tzw) on 2018/3/6.
+//  Copyright © 2018年 MacBook-陶(tzw). All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <ShareSDK/ShareSDK.h>
+#import <ShareSDKUI/ShareSDK+SSUI.h>
+#import <ShareSDK/ShareSDK+Base.h>
+#import <ShareSDKExtension/ShareSDK+Extension.h>
+/**
+ 分享调用模型
+ */
+@interface PCShareModel : NSObject
+
++(void)shareContentWithTitle:(NSString *)title
+                     Message:(NSString *)msg
+                       Image:(UIImage *)img
+                         Url:(NSString *)url
+                   ShareType:(SSDKContentType)type
+                SuccessBlock:(void(^)(BOOL ret,NSString *msg))sucBlock
+                 FailedBlock:(void(^)(BOOL ret,NSString *msg))failBlock;
+
+@end

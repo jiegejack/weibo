@@ -1,0 +1,138 @@
+//
+//  JSTabBarController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSTabBarController.h"
+#import "JSHomeViewController.h"
+#import "JSFinancialViewController.h"
+#import "JSCardLifeViewController.h"
+#import "JSMineViewController.h"
+#import "CTMediator.h"
+#import "CTMediator+CTMediatorModuleActions.h"
+#import "JSBaseWebViewController.h"
+#import "TabBarModel.h"
+#import "UIImageView+WebCache.h"
+#import "MJExtension.h"
+
+
+@interface JSTabBarController ()
+@property(nonatomic,strong) UINavigationController *nav0,*nav1,*nav3,*nav4;
+//@property(nonatomic,strong) NSMutableArray *tabBarItems;
+
+@end
+
+@implementation JSTabBarController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    
+    [self addObserver:self forKeyPath:@"viewControllers" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+    [self initViewControllers];
+    
+    [ClientNetManager fetchTabBarIconWithSuccess:^(id resultResponse, id resultModel) {
+        [self updateTabBarIconWithModel:resultModel];
+        NSString *jsonString = [resultResponse JSONRepresentation];
+        [DataCache setCacheString:jsonString forkey:@"ccy_tabBar_icon"];
+    } failure:^(NSError *error, LoginSession *session, id resultResponse) {
+
+    }];
+    NSString *jsonString = [DataCache getCacheStringForkey:@"ccy_tabBar_icon"];
+    jsonString = [jsonString JSONValue];
+    TabBarModel *model = [TabBarModel mj_objectWithKeyValues:jsonString];
+
+    [self updateTabBarIconWithModel:model];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    if (![JSSharedInstance sharedInstance].viewControllers.count) {
+        [JSSharedInstance sharedInstance].viewControllers = self.viewControllers;
+        [self removeObserver:self forKeyPath:@"viewControllers"];
+    }
+}
+
+- (void)updateTabBarIconWithModel:(TabBarModel *)model {
+    self.tabBarHeight = 53;
+    self.bottomHeight = 53;
+    
+    self.tabBar.separatorWidth = 0.5;
+    self.tabBar.separatorColor = [UIColor groupTableViewBackgroundColor];
+
+    NSArray *images = @[@"jingxuan", @"jinrong", @"mine"];
+    NSArray *selected_images = @[@"jingxuan_selected", @"jinrong_selected", @"mine_selected"];
+    NSArray *titles = @[@"精选", @"金融", @"我的"];
+
+    CGSize imageSize = CGSizeMake(25, 25);
+    
+    UIColor *titleColorHL = [UIColor blackColor];
+    NSMutableArray *items = [NSMutableArray array];
+    
+    __weak typeof(self) weakSelf = self;
+    for (NSInteger index = 0; index < titles.count; index++) {
+        Menu *menu = model.menu[index];
+        PCDTabBarItem *item = [[PCDTabBarItem alloc] initWithTitle:menu.NAME_CN image:[UIImage imageNamed:images[index]] selectedImage:[UIImage imageNamed:selected_images[index]]];
+        item.titleInsets =UIEdgeInsetsMake(6, 0, 5, 0);
+        item.titleColorHL =titleColorHL;
+        item.imageSize = imageSize;
+        item.font = [UIFont systemFontOfSize:12];
+
+        item.title = menu.NAME_CN ? menu.NAME_CN : titles[index];
+        
+        if (![items containsObject:item]) {
+            [items addObject:item];
+        }
+        [self configTabBarItems:items];
+
+        UIImageView *imageView = [[UIImageView alloc] init];
+        UIImageView *selectedImageView = [[UIImageView alloc] init];
+        
+        [imageView sd_setImageWithURL:[NSURL URLWithString:menu.NOT_CHOICE] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+            if (imageView.image) {
+                item.image = imageView.image;
+            }
+            [selectedImageView sd_setImageWithURL:[NSURL URLWithString:menu.CHOICE] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+                if (selectedImageView.image) {
+                    item.imageHL = selectedImageView.image;
+                }
+                [weakSelf configTabBarItems:items];
+            }];
+        }];
+    }
+}
+
+- (void)configTabBarItems:(NSMutableArray *)items {
+    self.tabBar.items = items;
+    self.tabBar.selectedItem = (PCDTabBarItem *)items.firstObject;
+    [self.tabBar setNeedsLayout];
+}
+//资源测试内网：http://66.1.41.186:8090/page/client.html#
+//资源测试外网：https://ccytest.jsbchina.cn:9000/page/client.html#
+
+//接口测试内网：http://66.1.41.186:8090/ares-api-gateway
+//接口测试外网：https://ccytest.jsbchina.cn:9000/ares-api-gateway
+- (void)initViewControllers {
+    NSString *homeVCUrl = [PCDUtil js_getPublicServerURL:@"page/101/01/P10101.html"];
+    NSDictionary *expando = [PCDUtil IsIphoneX]?@{@"NSLayoutAttributeTop":@"88"}:@{@"NSLayoutAttributeTop":@"64"};
+    JSHomeViewController *homeVC = [PCDWServiceGet() createPCDViewController:@{@"url":homeVCUrl} viewControllerClass:[JSHomeViewController class] contentViewClass:nil withExpando:(NSDictionary *)expando];
+    homeVC.requestUrl = homeVCUrl;// [PCDUtil getPublicServerURL:@"102/04/P10204.html"];
+    self.nav0 = [[UINavigationController alloc] initWithRootViewController:homeVC];
+    
+    NSString *financialVCUrl = [PCDUtil js_getPublicServerURL:@"page/102/01/P10201.html"];
+    JSFinancialViewController *financialVC = [PCDWServiceGet() createPCDViewController:@{@"url":financialVCUrl} viewControllerClass:[JSFinancialViewController class] contentViewClass:nil withExpando:(NSDictionary *)expando];
+    financialVC.requestUrl = financialVCUrl;
+    self.nav1 = [[UINavigationController alloc] initWithRootViewController:financialVC];
+    
+    NSString *mineVCUrl = [PCDUtil js_getPublicServerURL:@"page/12/01/P01.html"];
+    JSMineViewController *mineVC = [PCDWServiceGet() createPCDViewController:@{@"url":mineVCUrl} viewControllerClass:[JSMineViewController class] contentViewClass:nil withExpando:(NSDictionary *)expando];
+    mineVC.requestUrl = mineVCUrl;
+    self.nav3 = [[UINavigationController alloc] initWithRootViewController:mineVC];
+    
+    self.viewControllers = @[_nav0,_nav1,_nav3];
+    self.selectedIndex = 0;
+}
+
+@end

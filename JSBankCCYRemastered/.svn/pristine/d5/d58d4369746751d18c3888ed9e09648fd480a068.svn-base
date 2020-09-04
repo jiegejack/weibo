@@ -1,0 +1,28 @@
+//
+//  CircularRing.h
+//  LivenessDetection
+//
+//  Created by 张英堂 on 15/1/13.
+//  Copyright (c) 2015年 megvii. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface CircularRing : UIView
+{
+    CGFloat _maxTime;
+    NSInteger _count;
+}
+
+@property (nonatomic) CAShapeLayer *circleLayer;
+@property (nonatomic, strong) UIImageView *bottomView;
+@property (nonatomic, strong) UILabel *numLabel;
+
+@property (nonatomic, strong) NSTimer *timer;
+
+
+- (void)setMaxTime:(CGFloat)time;
+- (void)startAnimation;
+- (void)stopAnimation;
+
+@end

@@ -1,0 +1,45 @@
+//
+//  SocialShare.h
+//  PNCMobileBank
+//
+//  Created by Apple on 15-4-14.
+//  Copyright (c) 2015年 张瑞. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+#import <UIKit/UIKit.h>
+
+
+typedef NS_ENUM(NSInteger,ShareType)
+{
+    ShareTypeForImage=0,//普通的图片截屏分享
+    ShareTypeForWebPage, //网页分享
+};
+
+typedef NS_ENUM(NSInteger,SharePlatformType)
+{
+    TypeForWechatTimeline=0,
+    TypeForWechatSession=1,
+    TypeForSinaWeb=2,
+    TypeForSMS=3
+
+};
+
+@protocol SocialShareDelegate <NSObject>
+@optional
+//分享成功
+-(void)shareSuccessful;
+//分享失败
+-(void)shareFailed;
+
+-(void)shareCancel;
+@end
+
+@interface SocialShare : NSObject
+
+@property(nonatomic,assign) id <SocialShareDelegate> delegate;
+
++(void)share:(NSArray *)dataArray shareController:(UIViewController *)shareVC shareNumber:(NSString *)phoneNumber completeHandle:(void(^)(NSString *callBack))completeHandle;
+
+@end

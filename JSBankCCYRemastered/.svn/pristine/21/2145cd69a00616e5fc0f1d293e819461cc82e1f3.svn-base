@@ -1,0 +1,37 @@
+//
+//  LogoutServerPlugin.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/9.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "LogoutServerPlugin.h"
+
+@interface LogoutServerPlugin ()
+
+@end
+
+@implementation LogoutServerPlugin
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    JSBaseWebViewController *viewController = (JSBaseWebViewController *)context.eventTargetList.firstObject;
+    NSString *jsonString = (NSString *)data;
+    if (!jsonString.notNull) {return;}
+    NSDictionary *dict = [jsonString JSONValue];
+    [viewController.bankWebView stopLoading];
+    
+    if ([JSLoginManager clientIsLogin]) {
+        [JSDeftAlert showAlert:@"您确定要退出当前账号吗？"
+                     doneTitle:@"确定"
+                   cancelTitle:@"取消" doneHandle:^{
+                       
+            NSString *callback    = [dict objectForKey:@"callback"];
+            NSString *strBack     = [[NSString alloc] initWithFormat:@"%@()",callback];
+            NSString *jsCallBack  = [[NSString alloc] initWithFormat:@"%@()",[NSString stringWithFormat:@"%@(%@)",strBack,@"0"]];
+            [viewController evalJs:jsCallBack];
+        } cancelHandle:nil];
+    }
+}
+
+@end

@@ -1,0 +1,6 @@
+framework module PCDWebCache {
+  umbrella header "PCDWebCache.h"
+
+  export *
+  module * { export * }
+}

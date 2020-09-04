@@ -1,0 +1,25 @@
+//
+//  JSSharedInstance.h
+//  MenuList
+//
+//  Created by Jack on 2019/04/24.
+//  Copyright © 2019年 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@class LoginSession;
+
+@interface JSSharedInstance : NSObject
+@property(nonatomic,strong) UIAlertController *alertVC;
+@property (nonatomic,assign)NSUInteger time;
+@property(nonatomic,strong) NSMutableDictionary *loginParam;
+
+@property(nonatomic,strong) LoginSession *loginSession;
+@property(nonatomic,assign) void(^HudHiddenBlock)(void);
+@property(nonatomic,strong) NSArray *viewControllers;
+@property(nonatomic,strong) NSDictionary *locationDict;
+
+JSSingletonH(Instance)
+
+@end

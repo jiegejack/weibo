@@ -1,0 +1,28 @@
+//
+//  BottomAnimationView.h
+//  LivenessDetection
+//
+//  Created by 张英堂 on 15/1/8.
+//  Copyright (c) 2015年 megvii. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "LivenessEnumType.h"
+#import "CircularRing.h"
+
+typedef NS_ENUM(NSInteger, animationState){
+    animationOne,
+    animationTwo,
+    animationThree,
+};
+
+@interface BottomAnimationView : UIView
+@property (nonatomic, strong) CircularRing *rightRing;
+
+- (void)willChangeAnimation:(MGLivenessDetectionType)state outTime:(CGFloat)time;
+- (void)outTime:(CGFloat)time;
+- (void)startRollAnimation;
+- (void)recovery;
+- (void)stopAnimation;
+
+@end

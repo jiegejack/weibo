@@ -1,0 +1,36 @@
+//
+//  JSDeftAlert.h
+//  JSBankQNXY
+//
+//  Created by Jack on 2018/12/3.
+//  Copyright © 2018 MacBook-陶(tzw). All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface JSDeftAlert : NSObject
+
+/**
+ * 底部黑框
+ */
++(void)showMessage:(NSString *)message
+        afterDelay:(CGFloat)delay
+    completeHandle:(void (^)(void))completeHandle;
+
++(void)showMessage:(NSString *)message
+    completeHandle:(void (^)(void))completeHandle;
+
++ (void)js_showMessage:(NSString *)message
+            isCentered:(BOOL)isCentered
+            afterDelay:(CGFloat)delay;
+
+/**
+ 对话框
+ */
++(void)showAlert:(NSString *)msg
+       doneTitle:(NSString *)doneTitle
+     cancelTitle:(NSString *)cancelTitle
+      doneHandle:(void (^)(void))doneHandle
+    cancelHandle:(void (^)(void))cancelHandle;
+
+@end

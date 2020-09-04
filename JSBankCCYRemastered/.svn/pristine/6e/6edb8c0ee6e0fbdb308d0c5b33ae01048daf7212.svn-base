@@ -1,0 +1,23 @@
+//
+//  CheckBiometryStatus.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/30.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "CheckBiometryStatus.h"
+
+@implementation CheckBiometryStatus
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    NSString *callback = [dict objectForKey:@"callback"];
+    callback = callback.notNull ? callback : @"";
+
+    BOOL biometryState = [TouchIDManager getBiometryState];
+    evaluateJavaScriptOnMainThread(self, callback, biometryState ? @"1" : @"0");
+
+}
+
+@end

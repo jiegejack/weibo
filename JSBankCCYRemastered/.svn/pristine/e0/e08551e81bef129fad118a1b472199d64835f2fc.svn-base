@@ -1,0 +1,51 @@
+//
+//  PCDScanAnimationView.h
+//  PCDKit
+//
+//  Created by wangyong on 16/4/21.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+/**
+ *  @brief 二维码、条形码扫描动画视图
+ */
+@interface PCDScanAnimationView : UIView
+
+/**
+*  @brief 扫描区域
+*/
+@property(nonatomic,assign) CGRect scanRect;
+
+/**
+ *  @brief 扫描框，一张图片则认为是扫描框的背景；四张图片则认为是扫描框的4角(左上/右上/左下/右下)
+ */
+@property(nullable,nonatomic,strong) NSArray <UIImage *> *scanBox;
+
+/**
+ *  @brief 扫描线
+ */
+@property(nullable,nonatomic,strong) UIImage *scanLine;
+
+/**
+ *  @brief 是否是连贯的扫描动画，默认YES
+ */
+@property(nonatomic,assign) BOOL isCoherent;
+
+/**
+ *  @brief 动画时间，默认2s
+ */
+@property(nonatomic,assign) NSTimeInterval duration;
+
+/**
+ *  @brief 开始扫描动画
+ */
+-(void)startAnimation;
+
+/**
+ *  @brief 结束扫描动画
+ */
+-(void)stopAnimation;
+
+@end

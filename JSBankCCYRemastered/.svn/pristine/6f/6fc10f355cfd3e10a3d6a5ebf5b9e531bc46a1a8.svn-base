@@ -1,0 +1,124 @@
+//
+//  JSDeftAlert.m
+//  JSBankQNXY
+//
+//  Created by Jack on 2018/12/3.
+//  Copyright © 2018 MacBook-陶(tzw). All rights reserved.
+//
+
+#import "JSDeftAlert.h"
+#import "CCYAlertView.h"
+#import "MBProgressHUD.h"
+
+@implementation JSDeftAlert
+
+#pragma mark -提示信息
++ (void)showMessage:(NSString *)message
+     completeHandle:(void (^)(void))completeHandle {
+    
+    MBProgressHUD *hud=[JSDeftAlert initProgressHudWithMessage:message];
+    [hud hideAnimated:YES afterDelay:1.f];
+    hud.completionBlock=completeHandle;
+}
+
++ (void)showMessage:(NSString *)message
+         afterDelay:(CGFloat)delay
+     completeHandle:(void (^)(void))completeHandle {
+    
+    message = message.notNull ? message : @"";
+    MBProgressHUD *hud=[JSDeftAlert initProgressHudWithMessage:message];
+    [hud hideAnimated:YES afterDelay:delay];
+    hud.completionBlock=completeHandle;
+}
+
++ (void)js_showMessage:(NSString *)message
+            isCentered:(BOOL)isCentered
+            afterDelay:(CGFloat)delay
+        completeHandle:(void (^)(void))completeHandle {
+    
+    MBProgressHUD *hud = [self settingProgressHudWithMessage:message isCentered:isCentered];
+    [hud hideAnimated:YES afterDelay:delay];
+    hud.completionBlock=completeHandle;
+}
+
++ (MBProgressHUD *)initProgressHudWithMessage:(NSString *)message {
+    return [self settingProgressHudWithMessage:message isCentered:NO];
+}
+
++ (MBProgressHUD *)settingProgressHudWithMessage:(NSString *)message
+                                      isCentered:(BOOL)isCentered {
+    
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:window animated:YES];
+    hud.minSize=CGSizeMake(100, 0);
+    hud.margin = 10;
+    hud.label.numberOfLines=0;
+    hud.mode = MBProgressHUDModeText;
+    hud.label.text = message;
+    hud.label.textColor=[UIColor whiteColor];
+    hud.bezelView.color=[[UIColor blackColor] colorWithAlphaComponent:0.7];
+    hud.bezelView.style=MBProgressHUDBackgroundStyleSolidColor;
+    hud.label.font = [UIFont systemFontOfSize:15];//UIFont(15.0f);
+    
+    if (!isCentered) {
+        hud.offset = CGPointMake(0, Height / 3.0);
+    }
+    return hud;
+}
+
++ (void)showAlert:(NSString *)title
+          message:(NSString *)msg {
+    
+    CCYAlertView *alertView = [[CCYAlertView alloc]initAlertViewWithTitle:title
+                                                                  message:msg
+                                                                doneTitle:@"确定"
+                                                              cancelTitle:nil
+                                                                 delegate:nil];
+    [alertView alertViewShow];
+}
+
++ (void)showAlert:(NSString *)msg
+        doneTitle:(NSString *)doneTitle
+      cancelTitle:(NSString *)cancelTitle
+       doneHandle:(void (^)(void))doneHandle
+     cancelHandle:(void (^)(void))cancelHandle {
+    
+    
+    AlertExtension *alert = [[[AlertExtension alloc] init] alertWithTitle:@"温馨提示"
+                                                                  message:msg type:AlertTypeRegular];
+    alert.titleFont = [UIFont boldSystemFontOfSize:17];
+    alert.messageFont = [UIFont systemFontOfSize:15];
+    
+    alert.cancelButtonTitle = cancelTitle;
+    alert.otherButtonTitle = doneTitle;
+    
+    alert.otherBlock = ^{
+        if (doneHandle) {
+            doneHandle();
+        }
+    };
+    alert.cancelBlock = ^{
+        if (cancelHandle) {
+            cancelHandle();
+        }
+    };
+    [alert showAlert];
+    
+//    CCYAlertView *alertView = [[CCYAlertView alloc]initAlertViewWithTitle:SYSTEMALERTTIP
+//                                                                  message:msg
+//                                                                doneTitle:doneTitle
+//                                                              cancelTitle:cancelTitle
+//                                                          doneClickHandle:^(CCYAlertView *alertView) {
+//      if (doneHandle) {
+//             doneHandle();
+//      }
+//      } cancelClickHandle:^(CCYAlertView *alertView) {
+//         if (cancelHandle)
+//         {
+//             cancelHandle();
+//         }
+//     }];
+//    [alertView alertViewShow];
+}
+
+@end

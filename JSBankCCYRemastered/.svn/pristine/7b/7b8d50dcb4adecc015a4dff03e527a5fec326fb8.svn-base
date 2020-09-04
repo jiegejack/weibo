@@ -1,0 +1,26 @@
+//
+//  FontConfig.h
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/4.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface FontConfig : NSObject
+//@property (nonatomic, copy) NSString *loginPassword;
+//@property (nonatomic, copy) NSString *registerLogin;
+//@property (nonatomic, copy) NSString *biometryLogin;
+//@property (nonatomic, copy) NSString *SMSCodeLogin;
+//@property (nonatomic, copy) NSString *SMSCode;
+//@property (nonatomic, copy) NSString *versionUpdate;
+//@property (nonatomic, copy) NSString *placeholder;
+//@property (nonatomic, copy) NSString *setPassword;
+//@property (nonatomic, copy) NSString *tabBarIcon;
+
+@end
+
+NS_ASSUME_NONNULL_END

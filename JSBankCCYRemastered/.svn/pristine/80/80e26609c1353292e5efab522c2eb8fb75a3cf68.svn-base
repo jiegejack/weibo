@@ -1,0 +1,21 @@
+//
+//  LogoutClientPlugin.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/5/9.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "LogoutClientPlugin.h"
+
+@interface LogoutClientPlugin ()
+
+@end
+
+@implementation LogoutClientPlugin
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    [JSLoginManager logoutClient];
+}
+
+@end

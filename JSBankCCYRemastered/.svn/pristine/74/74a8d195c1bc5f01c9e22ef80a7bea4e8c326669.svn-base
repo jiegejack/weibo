@@ -1,0 +1,13 @@
+//
+//  SessionTimeoutH5Plugin.h
+//  PCDBank
+//
+//  Created by 王俣 on 2018/9/14.
+//  Copyright © 2018年 yt. All rights reserved.
+//
+
+#import <PCDH5Container/PCDH5Container.h>
+
+@interface SessionTimeoutH5Plugin : PCAPIjsbBaseObiect
+
+@end

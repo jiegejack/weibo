@@ -1,0 +1,117 @@
+//
+//  LoadIndicator.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "LoadIndicator.h"
+#import "JSImageKernel.h"
+#import "JSImageEngineView.h"
+
+@interface LoadIndicator ()
+@end
+@implementation LoadIndicator
+static JSImageEngineView *_imageView;
+static UIView *_maskView;
+static UILabel *_titleLabel;
+static UIView *_targetView;
+static NSData *_imageData;
+static BOOL _shouldTap;
+
++ (void)initialize {
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    UINavigationController *navi = (UINavigationController *)window.rootViewController;
+    _targetView = navi.view;
+}
+
++ (JSImageEngineView *)getImageView {
+    if (!_imageView) {
+        _imageView = [[JSImageEngineView alloc] init];
+        _imageView.backgroundColor = [UIColor groupTableViewBackgroundColor];
+        _imageView.layer.masksToBounds = YES;
+        _imageView.layer.cornerRadius = 6;
+        _imageView.userInteractionEnabled = YES;
+        _imageView.contentMode = UIViewContentModeScaleAspectFit;
+        [_maskView addSubview:_imageView];
+    }
+    return _imageView;
+}
++ (UIView *)getMaskView {
+    if (!_maskView) {
+        _maskView = [[UIView alloc] init];
+        _maskView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
+        _maskView.userInteractionEnabled = YES;
+        [_targetView addSubview:_maskView];
+        [_maskView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction:)]];
+    }
+    return _maskView;
+}
++ (UILabel *)getTitleLabel {
+    if (!_titleLabel) {
+        _titleLabel = [[UILabel alloc] init];
+        _titleLabel.userInteractionEnabled = YES;
+        _titleLabel.textAlignment = NSTextAlignmentCenter;
+        _titleLabel.font = [UIFont systemFontOfSize:14.6];
+        _titleLabel.textColor = [UIColor grayColor];
+        [_imageView addSubview:_titleLabel];
+    }
+    return _titleLabel;
+}
+
++ (NSData *)getImageData {
+    if (!_imageData) {
+        NSString *filePath = [[NSBundle mainBundle] pathForResource:@"loadIndicator" ofType:@"gif"];
+        _imageData = [NSData dataWithContentsOfFile:filePath];
+    }
+    return _imageData;
+}
+
++ (void)tapAction:(UITapGestureRecognizer *)tap {
+    if (_shouldTap) {
+        [PCDNetWorkServiceGet() removeNetWork:PCDNetWorkServiceGet().currentWorkItem];
+        [self hiddenLoadingIndicator];
+    }
+}
+
++ (void)showLoadingIndicatorWithText:(NSString *)text shouldTap:(BOOL)shouldTap {
+    _shouldTap = shouldTap;
+
+    _maskView = [self getMaskView];
+    
+    _imageView = [self getImageView];
+    _imageView.image = [JSImageKernel imageWithData:[self getImageData]];
+
+    _titleLabel = [self getTitleLabel];
+    _titleLabel.text = text;
+    
+    [self layoutSubControls];
+}
+
++ (void)layoutSubControls {
+    [_maskView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(_targetView);
+    }];
+    [_imageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(_maskView.mas_centerX);
+        make.centerY.mas_equalTo(_maskView.mas_centerY).offset(-STATUSBAR_HEIGHT);
+        make.width.height.mas_equalTo(106);
+    }];
+    [_titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(_imageView.mas_left);
+        make.right.mas_equalTo(_imageView.mas_right);
+        make.bottom.mas_equalTo(_imageView.mas_bottom).offset(-12);
+    }];
+}
+
++ (void)hiddenLoadingIndicator {
+    [_imageView removeFromSuperview];
+    [_maskView removeFromSuperview];
+    [_titleLabel removeFromSuperview];
+    _imageView = nil;
+    _maskView = nil;
+    _titleLabel = nil;
+}
+
+@end

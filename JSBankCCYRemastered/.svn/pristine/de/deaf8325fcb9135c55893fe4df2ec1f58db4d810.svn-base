@@ -1,0 +1,201 @@
+//
+//  AmountView.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/15.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "AmountView.h"
+#import "InputContentView.h"
+
+@interface AmountView ()
+@property (nonatomic, strong) UIView *separatView;
+@property (nonatomic, strong) InputContentView *inputContentView;
+@property (nonatomic, strong) UILabel *explainView;
+@property (nonatomic, strong) UILabel *nickName;
+@property (nonatomic, strong) UILabel *amountLabel;
+@property (nonatomic, strong) UIButton *forgetPwdButton;
+@property (nonatomic, strong) UILabel *tipLable;
+
+@property (nonatomic, copy) NSString *nick;
+@property (nonatomic, copy) NSString *amount;
+@property (nonatomic, copy) NSString *tipText;
+@property (nonatomic, assign) BOOL showButton;
+@property (nonatomic, strong) UIView *coverView;
+@property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic, assign) UIKeyboardType keyboardType;
+@end
+@implementation AmountView
+
+- (id)initWithNickName:(NSString *)nick
+                amount:(NSString *)amount
+               tipText:(NSString *)tipText
+               title:(NSString *)title
+          keyboardType:(UIKeyboardType)keyboardType
+            showButton:(BOOL)showButton {
+
+    if (self = [super init]) {
+        self.window = [UIApplication sharedApplication].delegate.window;
+
+        self.nick = nick.notNull ? nick : @"";
+        self.amount = amount.notNull ? amount : @"";
+        self.tipText = tipText;
+        self.showButton = showButton;
+        self.title = title;
+        self.keyboardType = keyboardType;
+        self.backgroundColor = [UIColor whiteColor];
+        self.layer.masksToBounds = YES;
+        self.layer.cornerRadius = 10;
+    }
+    return self;
+}
+
+- (void)addSubControls {
+    self.titleLabel = [[UILabel alloc] init];
+//    self.titleLabel.backgroundColor = [UIColor redColor];
+    self.titleLabel.text = self.title.notNull ? self.title : @"请输入交易密码";
+    self.titleLabel.font = [UIFont systemFontOfSize:16];
+    self.titleLabel.textColor = [UIColor blackColor];
+    self.titleLabel.textAlignment = NSTextAlignmentCenter;
+    [self addSubview:self.titleLabel];
+    
+    self.separatView = [[UILabel alloc] init];
+    self.separatView.backgroundColor = [UIColor groupTableViewBackgroundColor];
+    [self addSubview:self.separatView];
+    
+    __weak typeof(self) weakSelf = self;
+    self.inputContentView = [[InputContentView alloc] init];
+    self.inputContentView.keyboardType = self.keyboardType;
+    self.inputContentView.block = ^(NSString * _Nonnull password) {
+        if (weakSelf.inputPasswordBlock) {
+            weakSelf.inputPasswordBlock(password);
+        }
+    };
+    self.inputContentView.backgroundColor = [UIColor whiteColor];
+    [self addSubview:self.inputContentView];
+    
+    self.nickName = [[UILabel alloc] init];
+//    self.nickName.backgroundColor = [UIColor redColor];
+    self.nickName.text = self.nick;
+    self.nickName.font = [UIFont systemFontOfSize:15];
+    self.nickName.textColor = [UIColor blackColor];
+    self.nickName.textAlignment = NSTextAlignmentCenter;
+    [self addSubview:self.nickName];
+    
+    self.amountLabel = [[UILabel alloc] init];
+    self.amountLabel.text = self.amount;
+    self.amountLabel.font = [UIFont boldSystemFontOfSize:30];
+    self.amountLabel.textColor = [UIColor blackColor];
+    self.amountLabel.textAlignment = NSTextAlignmentCenter;
+    [self addSubview:self.amountLabel];
+    
+    self.explainView = [[UILabel alloc] init];
+    self.explainView.font = [UIFont systemFontOfSize:14];
+    self.explainView.numberOfLines = 0;
+    self.explainView.text = self.showButton ? @"我行串串盈与直销银行账户体系已统一，请输入原直销银行交易密码或您在任意端修改后的交易密码" : @"";
+    self.explainView.textColor = [UIColor redColor];
+    self.explainView.textAlignment = NSTextAlignmentLeft;
+    [self addSubview:self.explainView];
+    
+    self.forgetPwdButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [self.forgetPwdButton setTitle:@"忘记交易密码" forState:UIControlStateNormal];
+    self.forgetPwdButton.hidden = !self.showButton;
+    self.forgetPwdButton.titleLabel.font = [UIFont systemFontOfSize:16];
+    self.forgetPwdButton.hitTestEdgeInsets = UIEdgeInsetsMake(0, -20, -10, -20);
+    [self.forgetPwdButton setTitleColor:[UIColor colorFormString:@"#3F8DFF"] forState:UIControlStateNormal];
+    [self.forgetPwdButton addTarget:self action:@selector(forgetPasswordAction) forControlEvents:UIControlEventTouchUpInside];
+    [self addSubview:self.forgetPwdButton];
+    
+    self.tipLable = [[UILabel alloc] init];
+    self.tipLable.text = self.tipText.notNull && !self.showButton ? self.tipText : @" ";
+    self.tipLable.font = [UIFont boldSystemFontOfSize:16];
+    self.tipLable.textColor = [UIColor groupTableViewBackgroundColor];
+    self.tipLable.textAlignment = NSTextAlignmentLeft;
+    [self addSubview:self.tipLable];
+    
+    self.coverView = [[UIView alloc] init];
+    self.coverView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.6];
+    self.coverView.userInteractionEnabled = YES;
+    [self.window addSubview:self.coverView];
+    [self.coverView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideAction:)]];
+    [self.coverView addSubview:self];
+}
+
+- (void)hideAction:(UITapGestureRecognizer *)gesture {
+    [self dismiss];
+}
+
+- (void)show {
+    [self addSubControls];
+    [self layoutSubControls];
+    [self.inputContentView.textField becomeFirstResponder];
+}
+
+- (void)dismiss {
+    [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    [self.coverView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    [self.coverView removeFromSuperview];
+    self.coverView = nil;
+}
+
+- (void)forgetPasswordAction {
+    [self dismiss];
+    if (self.buttonAction) {
+        self.buttonAction();
+    }
+}
+
+- (void)layoutSubControls {
+    [self.titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.mas_centerX);
+        make.top.mas_equalTo(self.mas_top).offset(13);
+    }];
+    [self.separatView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.titleLabel.mas_bottom).offset(13);
+        make.left.mas_equalTo(self.mas_left).offset(10);
+        make.right.mas_equalTo(self.mas_right).offset(-10);
+        make.height.mas_equalTo(1);
+    }];
+    [self.nickName mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.mas_centerX);
+        make.top.mas_equalTo(self.separatView.mas_bottom).offset(13);
+    }];
+    [self.amountLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.mas_centerX);
+        make.top.mas_equalTo(self.nickName.mas_bottom).offset(self.nick.notNull ? 13 : 0);
+    }];
+    [self.inputContentView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.amountLabel.mas_bottom).offset(self.amount.notNull ? 13 : 0);
+        make.left.mas_equalTo(self.mas_left).offset(16);
+        make.right.mas_equalTo(self.mas_right).offset(-16);
+        make.height.mas_equalTo(46);
+    }];
+    [self.explainView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.inputContentView.mas_bottom).offset(13);
+        make.left.mas_equalTo(self.mas_left).offset(16);
+        make.right.mas_equalTo(self.mas_right).offset(-16);
+    }];
+    [self.tipLable mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.explainView.mas_bottom).offset(self.showButton ? 13 : 0);
+        make.left.mas_equalTo(self.mas_left).offset(16);
+        make.bottom.mas_equalTo(self.mas_bottom).offset(!self.tipText.notNull && !self.showButton ? 0 : -13);
+    }];
+    [self.forgetPwdButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.tipLable.mas_top);
+        make.centerX.mas_equalTo(self.mas_centerX);
+        make.height.mas_equalTo(16);
+        make.bottom.mas_equalTo(self.tipLable.mas_bottom);
+    }];
+    [self.coverView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(self.window);
+    }];
+    [self mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.mas_equalTo(self.coverView.mas_centerY).offset(-76);
+        make.left.mas_equalTo(self.coverView.mas_left).offset(22);
+        make.right.mas_equalTo(self.coverView.mas_right).offset(-22);
+    }];
+}
+
+@end

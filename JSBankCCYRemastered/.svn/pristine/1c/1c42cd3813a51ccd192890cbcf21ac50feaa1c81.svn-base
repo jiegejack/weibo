@@ -1,0 +1,527 @@
+//
+//  JSLoginViewController.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/4/16.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "JSLoginViewController.h"
+#import "JSRegistViewController.h"
+#import "JSTextFieldView.h"
+#import "JSCheckBox.h"
+#import "PCDSettingViewController.h"
+
+/**
+ * 枚举输入框
+ */
+typedef NS_ENUM(NSInteger, TextFieldType) {
+    TextFieldTypePhoneNo = 0,//号码
+    TextFieldTypePassword,   //密码
+    TextFieldTypeCode        //验证码
+};
+
+@interface JSLoginViewController ()
+@property (nonatomic, strong) PassGuardTextField     *phoneNoTextField;
+@property (nonatomic, strong) PassGuardTextField     *commonTextField;
+
+@property (nonatomic, strong) JSCheckBox         *checkBox;
+@property (nonatomic, strong) UIButton           *loginButton;
+@property (nonatomic, strong) UIButton           *toggleButton;
+@property (nonatomic, assign) TextFieldType       textFieldType;
+@property (nonatomic, strong) UIButton        *forgetPwdButton;
+@property (nonatomic, strong) NSMutableArray  *items;
+@property (nonatomic, strong) NSArray         *placeholds;
+@property (nonatomic, strong) NSArray         *titles;
+@property (nonatomic, assign) CGFloat          textField_Height;
+@property (nonatomic, strong) UIView *biometryBottomView;
+@property (nonatomic, strong) UIView *regularBottomView;
+//指纹
+
+@property (nonatomic, strong) UIImageView *userIcon;
+@property (nonatomic, strong) UIButton *otherLoginWay;
+@property (nonatomic, strong) UIImageView *backgroundImageView;
+@property (nonatomic, strong) UIButton *biometryTap;
+@property (nonatomic, strong) UIView *iconBottomView;
+
+@property(nonatomic,copy) void(^loginFaild)(NSString *MSG, LoginSession *session, id resultResponse);
+@property(nonatomic,copy) void(^loginSuccess)(id resultResponse, LoginSession *session);
+
+@end
+@implementation JSLoginViewController
+
+- (id)initWithSuccessBlock:(void(^)(id resultResponse, LoginSession *session))successBlock
+                faildBlock:(void(^)(NSString *MSG, LoginSession *session, id resultResponse))faildBlock {
+    
+    if (self = [super init]) {
+        self.loginSuccess = successBlock;
+        self.loginFaild   = faildBlock;
+    }
+    return self;
+}
+
+- (void)dealloc {
+    [JSCountDownView invalidTimer];
+}
+
+- (JSCheckBox *)checkBox {
+    if (!_checkBox) {
+        _checkBox = [[JSCheckBox alloc] initWithButton_key:@"savecheckBox_user"];
+        _checkBox.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+        _checkBox.selectedImageName = @"login_select.png";
+        _checkBox.imageName = @"login_normal.png";
+        [_checkBox setTitle:@"记住用户名" forState:UIControlStateNormal];
+        [_checkBox setTitleColor:Color().MainBlack forState:UIControlStateNormal];
+        _checkBox.titleLabel.font = [UIFont systemFontOfSize:14];
+        [self.view addSubview:_checkBox];
+        [_checkBox addTarget:self action:@selector(checkBoxAction:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _checkBox;
+}
+
+- (UIButton *)forgetPwdButton {
+    if (!_forgetPwdButton) {
+        _forgetPwdButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        _forgetPwdButton.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+        [_forgetPwdButton setTitleColor:Color().MainBlue forState:UIControlStateNormal];
+        [_forgetPwdButton setTitle:@"忘记密码?" forState:UIControlStateNormal];
+        _forgetPwdButton.titleLabel.font = [UIFont systemFontOfSize:14];
+        [self.view addSubview:_forgetPwdButton];
+        [_forgetPwdButton addTarget:self action:@selector(forgetPWDAction) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _forgetPwdButton;
+}
+
+- (UIButton *)loginButton {
+    if (!_loginButton) {
+        _loginButton = [[UIButton alloc] init];
+        [_loginButton setTitleColor:Color().White forState:UIControlStateNormal];
+        [_loginButton setTitle:@"登录" forState:UIControlStateNormal];
+        [_loginButton setBackgroundImage:[UIImage imageNamed:@"loginBtnBackImage.png"] forState:UIControlStateNormal];
+        _loginButton.titleLabel.font = [UIFont systemFontOfSize:16];
+        _loginButton.layer.cornerRadius = 4;
+        _loginButton.clipsToBounds = YES;
+        [self.view addSubview:_loginButton];
+        [_loginButton addTarget:self action:@selector(loginAction) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _loginButton;
+}
+//@"page/PP01/PP0104/PP0104.html?passwordType=reset"
+- (void)forgetPWDAction {
+    NSDictionary *expando = [PCDUtil IsIphoneX]?@{@"NSLayoutAttributeTop":@"88"}:@{@"NSLayoutAttributeTop":@"64"};
+    NSString *url = [PCDUtil js_getPublicServerURL:@"page/demo/demo.html"];
+    NSDictionary *param = @{@"url" : url};//
+    JSBaseWebViewController *webVC = [PCDWServiceGet() createPCDViewController:param viewControllerClass:[JSBaseWebViewController class] contentViewClass:nil withExpando:expando];
+    [self.tabBarController.navigationController pushViewController:webVC animated:YES];
+}
+
+#pragma mark - 登录动作
+- (void)loginAction {//13625503652
+    NSLog(@"点击了登录按钮");
+    [self.view endEditing:YES];
+    
+    if (![self checkParamValid]) {return;}
+    
+    LoginType type = LoginTypePassword;
+    if (self.textFieldType == TextFieldTypeCode) {
+        type = LoginTypeCode;
+    }
+    
+    NSString *key = type == LoginTypeCode ? @"code" : @"loginPassword";
+    
+    NSString *phoneNo = @"";
+    if ([self.phoneNoTextField.text isContainString:@"*"]) {
+        phoneNo = [DataCache getCacheStringForkey:@"username_jsyh_ccy"];
+    } else {
+        phoneNo = self.phoneNoTextField.text;
+    }
+    
+    if (self.checkBox.isSelectedBox) {
+        [DataCache setCacheString:phoneNo forkey:@"username_jsyh_ccy"];
+    }
+    
+    NSString *common = type == LoginTypeCode ? self.commonTextField.text : [self.commonTextField getOutput1];
+    NSDictionary *param = @{@"mobileNo" : phoneNo,
+                            key         : common};
+   
+    __weak typeof(self) weakSelf = self;
+    [JSLoginManager loginWithLoginType:type
+                            loginParam:param
+                                target:self
+                               success:^(id  _Nonnull resultResponse, LoginSession * _Nonnull session) {
+       if (weakSelf.loginSuccess) {
+           weakSelf.loginSuccess(resultResponse, session);
+       }
+    } faild:^(NSString * _Nonnull MSG, LoginSession * _Nonnull session, id resultResponse) {
+        if (weakSelf.loginFaild) {
+            weakSelf.loginFaild(MSG, session, resultResponse);
+        }
+        if (MSG.notNull) {
+            [JSDeftAlert js_showMessage:MSG isCentered:NO afterDelay:1.5 completeHandle:nil];
+        }
+    }];
+}
+
+- (BOOL)checkParamValid {
+    if (self.phoneNoTextField.text.length != 11) {
+        [JSDeftAlert js_showMessage:@"请输入正确的手机号码" isCentered:NO afterDelay:1.5 completeHandle:nil];
+        return NO;
+    }
+    if (!self.phoneNoTextField.text.notNull) {
+        [JSDeftAlert js_showMessage:@"请输入手机号码" isCentered:NO afterDelay:1.5 completeHandle:nil];
+        return NO;
+    }
+    if (self.textFieldType == TextFieldTypeCode) {
+        JSTextFieldView *item = (JSTextFieldView *)self.commonTextField.superview;
+        if (item.countDownView.codeState == CodeStateNotSend) {
+            [JSDeftAlert js_showMessage:@"请先获取验证码" isCentered:NO afterDelay:1.5 completeHandle:nil];
+            return NO;
+        }
+        if (item.countDownView.codeState == CodeStateInvalid) {
+            [JSDeftAlert js_showMessage:@"验证码已失效,请重新获取" isCentered:NO afterDelay:1.5 completeHandle:nil];
+            return NO;
+        }
+        if (self.textFieldType == TextFieldTypeCode) {
+            if (!self.commonTextField.text.notNull) {
+                [JSDeftAlert js_showMessage:@"请输入验证码" isCentered:NO afterDelay:1.5 completeHandle:nil];
+                return NO;
+            }
+        }
+    } else {
+        if (!self.commonTextField.text.notNull) {
+            [JSDeftAlert js_showMessage:@"请输入密码" isCentered:NO afterDelay:1.5 completeHandle:nil];
+            return NO;
+        }
+    }
+    return YES;
+}
+
+- (UIButton *)toggleButton {
+    if (!_toggleButton) {
+        _toggleButton = [[UIButton alloc] init];
+        _toggleButton.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+        [_toggleButton setTitleColor:Color().MainBlue forState:UIControlStateNormal];
+        [_toggleButton setTitle:@"使用手机验证码登录" forState:UIControlStateNormal];
+        _toggleButton.titleLabel.font = [UIFont systemFontOfSize:14];
+        [self.view addSubview:_toggleButton];
+        [_toggleButton addTarget:self action:@selector(togleClick:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _toggleButton;
+}
+
+- (void)sendCodeAction { // 验证码不同状态展示
+    [self.view endEditing:YES];
+    
+    NSString *phoneNo = @"";
+    if ([self.phoneNoTextField.text isContainString:@"*"]) {
+        phoneNo = [DataCache getCacheStringForkey:@"username_jsyh_ccy"];
+    } else {
+        phoneNo = self.phoneNoTextField.text;
+    }
+    if (!phoneNo.notNull) {
+        [JSDeftAlert js_showMessage:@"请输入手机号码" isCentered:NO afterDelay:1.5 completeHandle:nil];
+        return;
+    }
+    
+    __block JSTextFieldView *item = (JSTextFieldView *)self.commonTextField.superview;
+    [LoadIndicator showLoadingIndicatorWithText:@"正在获取..." shouldTap:YES];
+    [ClientNetManager fetchSMSCodeDataWithPhoneNO:phoneNo code:self.commonTextField.text type:LoginTypeCode success:^(id resultResponse, id resultModel) {
+        JSTextFieldView *item = (JSTextFieldView *)self.commonTextField.superview;
+        [item.countDownView startCounting];
+        item.isValidCode = YES;
+    } failure:^(NSString *MSG, LoginSession *session, id resultResponse) {
+        item.isValidCode = NO;
+        if (MSG.notNull) {
+            [JSDeftAlert js_showMessage:MSG isCentered:NO afterDelay:1.5 completeHandle:nil];
+        }
+    }];
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.title = @"登录";
+    self.navigationBar.titleItem.titleColor = Color().Black;
+    self.navigationBar.backgroundColor = Color().White;
+    self.navigationBar.separatorColor = Color().White;
+
+    self.regularBottomView = [[UIView alloc] init];
+    self.regularBottomView.backgroundColor = Color().White;
+    [self.view insertSubview:self.regularBottomView atIndex:0];
+    
+    [self addRightItem];
+    [self initBaseData];
+    [self addTextFieldControls];
+    [self layoutRegularSubControls];
+    [self addSettingInterface];
+    
+    if (self.isBiometryLoginInterface) {
+        self.biometryBottomView = [[UIView alloc] initWithFrame:self.view.bounds];
+        [self.view addSubview:self.biometryBottomView];
+        [self addBiometrySubControls];
+        [self layoutBiometrySubControls];
+        [self biometryTapAction];
+    }
+}
+
+- (void)switchViewFromView:(UIView *)fView toView:(UIView *)tView options:(UIViewAnimationOptions)option {
+    [UIView transitionFromView:fView toView:tView duration:1 options:option | UIViewAnimationOptionShowHideTransitionViews completion:^(BOOL finished) {
+    }];
+}
+
+- (void)initBaseData {
+    self.textField_Height = 60;
+    self.textFieldType    = TextFieldTypePassword;
+    self.items            = [NSMutableArray array];
+    
+    self.titles           = @[@"手机号",
+                              @"登录密码"];
+    
+    self.placeholds       = @[@"请输入手机号",
+                              @"必须为8-16位数字和字母组合"];
+}
+
+- (void)addTextFieldControls {
+    __weak typeof(self) weakSelf = self;
+    [self.placeholds enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        JSTextFieldView *textFieldItem = [[JSTextFieldView alloc] init];
+        [textFieldItem.textField setM_mode:idx ? NO : YES];
+        textFieldItem.textField.secureTextEntry = idx ? YES : NO;
+//        textFieldItem.clearIcon.hidden = idx ? YES : NO;
+//        textFieldItem.textField.clearButtonMode = UITextFieldViewModeWhileEditing;
+        textFieldItem.textField.inset = !idx ? 30 : 0;
+        [textFieldItem.textField setM_ikeyordertype:idx ? KEY_CHAOS_SWITCH_VIEW : KEY_NONE_CHAOS];
+        textFieldItem.textField.keyboardType = idx ? UIKeyboardTypeDefault : UIKeyboardTypeNumberPad;
+        textFieldItem.titleLabel.text = self.titles[idx];
+        textFieldItem.textField.placeholder = self.placeholds[idx];
+        textFieldItem.titleColor = Color().Black;
+        [weakSelf.regularBottomView addSubview:textFieldItem];
+        [weakSelf.items addObject:textFieldItem];
+        [weakSelf initItemsWithIndex:idx];
+    }];
+}
+
+- (void)initItemsWithIndex:(NSInteger)index {
+    JSTextFieldView *item = (JSTextFieldView *)self.items[index];
+    switch (index) {
+        case TextFieldTypePhoneNo: {
+            self.phoneNoTextField = item.textField;
+            item.maxLength = 11;
+            if (self.checkBox.isSelectedBox) {
+                NSString *userno = [self getUserName];
+                self.phoneNoTextField.text = userno.notNull ? userno : @"";
+            }
+        }
+            break;
+        case TextFieldTypePassword:
+            self.commonTextField  = item.textField;
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)addBiometrySubControls {
+    self.backgroundImageView = [[UIImageView alloc] init];
+    self.backgroundImageView.clipsToBounds = YES;
+    self.backgroundImageView.userInteractionEnabled = YES;
+    self.backgroundImageView.image = [UIImage imageNamed:@"gestureBg.png"];
+    [self.biometryBottomView addSubview:self.backgroundImageView];
+    
+    self.iconBottomView = [[UIView alloc] init];
+    self.iconBottomView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.3];
+    self.iconBottomView.clipsToBounds = YES;
+    [self.biometryBottomView addSubview:self.iconBottomView];
+    
+    self.userIcon = [[UIImageView alloc] init];
+    self.userIcon.contentMode = UIViewContentModeScaleAspectFit;
+    self.userIcon.image = [UIImage imageNamed:@"biometryLogin_head.png"];
+    [self.iconBottomView addSubview:self.userIcon];
+    
+    self.biometryTap = [[UIButton alloc] init];
+    self.biometryTap.hitTestEdgeInsets = UIEdgeInsetsMake(-25, -25, -25, -25);
+    self.biometryTap.contentMode = UIViewContentModeScaleAspectFit;
+    [self.biometryTap setBackgroundImage:[UIImage imageNamed:@"finger.png"] forState:UIControlStateNormal];
+    self.biometryTap.clipsToBounds = YES;
+    [self.biometryBottomView addSubview:self.biometryTap];
+    [self.biometryTap addTarget:self action:@selector(biometryTapAction) forControlEvents:UIControlEventTouchUpInside];
+    
+    self.otherLoginWay = [[UIButton alloc] init];
+    self.otherLoginWay.hitTestEdgeInsets = UIEdgeInsetsMake(-20, -20, -20, -20);
+    [self.otherLoginWay setTitle:@"其他方式登录" forState:UIControlStateNormal];
+    [self.otherLoginWay setTitleColor:Color().White forState:UIControlStateNormal];
+    self.otherLoginWay.titleLabel.font = [UIFont systemFontOfSize:16];
+    [self.otherLoginWay addTarget:self action:@selector(changeLoginWay) forControlEvents:UIControlEventTouchUpInside];
+    [self.backgroundImageView addSubview:self.otherLoginWay];
+}
+
+- (void)layoutBiometrySubControls {
+//    [self.biometryBottomView mas_makeConstraints:^(MASConstraintMaker *make) {
+//        make.edges.mas_equalTo(self.view);
+//    }];
+    [self.backgroundImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(self.biometryBottomView);
+    }];
+    [self.iconBottomView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(self.biometryBottomView.mas_top).offset(self.navigationBarHeight);
+        make.centerX.mas_equalTo(self.biometryBottomView.mas_centerX);
+        make.width.height.mas_equalTo(80);
+    }];
+    [self.userIcon mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.iconBottomView.mas_centerX);
+        make.centerY.mas_equalTo(self.iconBottomView.mas_centerY);
+        make.width.height.mas_equalTo(41);
+    }];
+    [self.biometryTap mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.backgroundImageView.mas_centerX);
+        make.centerY.mas_equalTo(self.backgroundImageView.mas_centerY);
+        make.width.height.mas_equalTo(60);
+    }];
+    [self.otherLoginWay mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.mas_equalTo(self.backgroundImageView.mas_centerX);
+        make.bottom.mas_equalTo(self.backgroundImageView.mas_bottom).offset(-30);
+        make.width.mas_equalTo(100);
+        make.height.mas_equalTo(20);
+    }];
+}
+
+- (void)layoutRegularSubControls {
+    [self.regularBottomView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(self.view);
+    }];
+    
+    __weak typeof(self) weakSelf = self;
+    //布局所有输入框
+    [self.items mas_distributeViewsAlongAxis:MASAxisTypeVertical withFixedItemLength:self.textField_Height leadSpacing:self.navigationBarHeight tailSpacing:Height - weakSelf.navigationBarHeight - self.placeholds.count * self.textField_Height];
+    [self.items mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.regularBottomView.mas_left);
+        make.right.mas_equalTo(weakSelf.regularBottomView.mas_right);
+    }];
+    //布局其他控件
+    [self.checkBox mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(weakSelf.regularBottomView.mas_left).offset(16);
+        make.top.mas_equalTo(weakSelf.commonTextField.superview.mas_bottom).offset(20);
+        make.height.mas_equalTo(16);
+        make.width.mas_equalTo(160);
+    }];
+    [self.forgetPwdButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.mas_equalTo(weakSelf.checkBox.mas_centerY);
+        make.right.mas_equalTo(weakSelf.regularBottomView.mas_right).offset(-16);
+    }];
+    [self.loginButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(weakSelf.forgetPwdButton.mas_bottom).offset(20);
+        make.right.mas_equalTo(weakSelf.regularBottomView.mas_right).offset(-16);
+        make.left.mas_equalTo(weakSelf.regularBottomView.mas_left).offset(16);
+        make.height.mas_equalTo(50);
+    }];
+    [self.toggleButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(weakSelf.loginButton.mas_bottom).offset(27);
+        make.centerX.mas_equalTo(weakSelf.regularBottomView.mas_centerX);
+        make.height.mas_equalTo(20);
+    }];
+}
+
+- (void)togleClick:(UIButton *)button {
+    [self.view endEditing:YES];
+
+    self.commonTextField.text = NULL;
+    
+    JSTextFieldView *item = (JSTextFieldView *)self.commonTextField.superview;
+    
+    self.textFieldType = self.textFieldType == TextFieldTypeCode ? TextFieldTypePassword : TextFieldTypeCode;
+    [self.commonTextField setM_mode:self.textFieldType == TextFieldTypePassword ? NO : YES];
+    self.commonTextField.secureTextEntry = self.textFieldType == TextFieldTypePassword ? YES : NO;
+    [self.commonTextField setM_ikeyordertype:self.textFieldType == TextFieldTypePassword ? KEY_CHAOS_SWITCH_VIEW : KEY_NONE_CHAOS];
+    self.commonTextField.keyboardType = self.textFieldType == TextFieldTypePassword ? UIKeyboardTypeDefault : UIKeyboardTypeNumberPad;
+    
+    if (self.textFieldType == TextFieldTypeCode) {
+        item.maxLength = 6;
+    }
+    if (self.textFieldType == TextFieldTypePassword) {
+        item.maxLength = 16;
+    }
+
+    [self.toggleButton setTitle:self.textFieldType == TextFieldTypePassword ? @"使用手机验证码登录" : @"使用登录密码登录" forState:UIControlStateNormal];
+    self.commonTextField.placeholder = self.textFieldType == TextFieldTypePassword ? @"必须为8-16位数字和字母组合" : @"请输入验证码";
+    item.titleLabel.text = self.textFieldType == TextFieldTypePassword ? @"登录密码" : @"验证码";
+    self.forgetPwdButton.hidden = self.textFieldType == TextFieldTypeCode     ? YES : NO;
+    item.countDownView.hidden = self.textFieldType == TextFieldTypePassword ? YES : NO;
+    item.markIcon.hidden = item.countDownView.hidden;
+    item.sendCodeAction = ^{
+        [self sendCodeAction];
+    };
+}
+
+- (void)checkBoxAction:(JSCheckBox *)button {
+    if (!self.checkBox.isSelectedBox) {
+        [DataCache setCacheString:@"" forkey:@"username_jsyh_ccy"];
+    }
+}
+
+- (NSString *)getUserName {
+    NSString *phoneNo = [DataCache getCacheStringForkey:@"username_jsyh_ccy"];
+    if (phoneNo.length == 11) {
+        NSString *headString = [phoneNo substringToIndex:3];
+        NSString *tailString = [phoneNo substringFromIndex:7];
+        NSString *phoneString = [NSString stringWithFormat:@"%@****%@",headString,tailString];
+        return phoneString;
+    }
+    return @"";
+}
+
+- (void)addRightItem {
+    PCDBarButtonItem *rightItem = [[PCDBarButtonItem alloc] initWithTitle:@"注册" target:self action:@selector(rightItem)];
+    rightItem.titleInsets = UIEdgeInsetsMake(0, -20, 0, 0);
+    self.navigationBar.rightBarButtonItem = rightItem;
+}
+
+- (void)rightItem {
+    JSRegistViewController *registVC = [[JSRegistViewController alloc] init];
+    registVC.hidesBottomBarWhenPushed = YES;
+    [self.tabBarController.navigationController pushViewController:registVC animated:YES];
+}
+
+- (void)biometryTapAction {
+    [TouchIDManager touchIDAuthenticateWithBackTitle:@"" cancelTitle:@"" reason:@"" complete:^{
+        [JSLoginManager loginWithLoginType:LoginTypeBiometry loginParam:@{} target:self success:^(id  _Nonnull resultResponse, LoginSession * _Nonnull session) {
+            if (self.loginSuccess) {
+                self.loginSuccess(resultResponse, session);
+            }
+        } faild:^(NSString * _Nonnull MSG, LoginSession * _Nonnull session, id resultResponse) {
+            if (self.loginFaild) {
+                self.loginFaild(MSG, session, resultResponse);
+            }
+        }];
+    } fiald:^(LAErrorState resultStatus) {}];
+}
+
+- (void)changeLoginWay {
+    [self switchViewFromView:self.biometryBottomView toView:self.regularBottomView options:UIViewAnimationOptionTransitionFlipFromRight];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    
+    self.iconBottomView.layer.cornerRadius = self.iconBottomView.frame.size.height / 2;
+}
+
+/***********************************以下为调试用*******************************************************/
+- (void)addSettingInterface {
+    if (![PCDUtil isReleaseVersion]) {
+        UIButton *settingVC = [UIButton buttonWithType:UIButtonTypeInfoLight];
+        [self.view addSubview:settingVC];
+        [settingVC addTarget:self action:@selector(settingClick) forControlEvents:UIControlEventTouchUpInside];
+        [settingVC mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.mas_equalTo(self.toggleButton.mas_bottom).offset(50);
+            make.centerX.mas_equalTo(self.view.mas_centerX);
+        }];
+    }
+}
+- (void)settingClick {
+    [TouchIDManager resetBiometryState];
+
+    PCDSettingViewController *settingVC = [[PCDSettingViewController alloc] init];
+    [self.tabBarController.navigationController pushViewController:settingVC animated:YES];
+}
+
+@end

@@ -1,0 +1,362 @@
+//
+//  ClientNetManager.m
+//  JSBankQNXY
+//
+//  Created by Jack on 2019/04/15.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "ClientNetManager.h"
+#import <objc/runtime.h>
+#import "MJExtension.h"
+#import "LoginSession.h"
+#import "TabBarModel.h"
+#import "NetWorkObserver.h"
+
+@implementation ClientNetManager
+
++ (void)fetchShopDataSuccess:(void (^)(id resultResponse, ShopModel *shopModel))success
+                     failure:(void (^)(NSString *MSG, ShopModel *shopModel))failure {
+    [self publicFetchDataWithRequestPath:Request().shop
+                                   param:nil
+                             resultModel:nil
+                                 success:^(id resultResponse, id resultModel) {
+                                     
+         if (success) {
+             success(resultResponse, resultModel);
+         }
+     } failure:^(NSString *MSG, id resultModel, id resultResponse) {
+         if (failure) {
+             failure(MSG, resultModel);
+         }
+     }];
+}
+
++ (void)fetchFaceRecordDataWithImage:(UIImage *)image
+                            mobileNo:(NSString *)mobileNo
+                             success:(void (^)(id resultResponse, FaceRecord *faceRecord))success
+                             failure:(void (^)(NSString *MSG, FaceRecord *faceRecord))failure {
+    
+    
+    NSData *data=UIImageJPEGRepresentation(image, 0.2f);
+    
+    NSString *encodedImageStr = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+    
+    NSDictionary *param = @{@"TYPE"         : @"03",
+                            @"mobileNo"     : mobileNo,
+                            @"IMAGE_BEST"   : encodedImageStr,
+                            @"LoginChannel" : @"iOS"};
+    
+    [self publicFetchDataWithRequestPath:Request().faceRecord
+                                   param:param
+                             resultModel:[FaceRecord class]
+                                 success:^(id resultResponse, id resultModel) {
+                                     
+        if (success) {
+            success(resultResponse, resultModel);
+        }
+    } failure:^(NSString *MSG, id resultModel, id resultResponse) {
+        if (failure) {
+            failure(MSG, resultModel);
+        }
+    }];
+}
+
++ (void)fetchTabBarIconWithSuccess:(void (^)(id resultResponse, id resultModel))success
+                           failure:(void (^)(NSString *MSG, LoginSession *session, id resultResponse))failure {
+    
+    NSDictionary *param = @{@"channel"  : @"1"};
+    
+    [self publicFetchDataWithRequestPath:Request().tabBarIcon
+                            param:param
+                      resultModel:[TabBarModel class]
+                          success:^(id resultResponse, id resultModel) {
+                              
+        if (success) {
+            success(resultResponse, resultModel);
+        }
+    } failure:^(NSString *MSG, id resultModel, id resultResponse) {
+        if (failure) {
+            failure(MSG, resultModel, resultResponse);
+        }
+    }];
+}
+
++ (void)fetchVersionUpdateWithSuccess:(void (^)(id resultResponse, id resultModel))success
+                              failure:(void (^)(NSString *MSG, VersionModel *versionModel, id resultResponse))failure {
+    
+    NSDictionary *param = @{@"CLIENT_OS"  : @"I",
+                            @"APP_VER_NO" : [PCDUtil appVersion]};
+    
+    [self publicFetchDataWithRequestPath:Request().versionUpdate
+                            param:param
+                      resultModel:[VersionModel class]
+                          success:^(id resultResponse, id resultModel) {
+      
+      if (success) {
+          success(resultResponse, resultModel);
+      }
+  } failure:^(NSString *MSG, id resultModel, id resultResponse) {
+      if (failure) {
+          failure(MSG, resultModel, resultResponse);
+      }
+  }];
+}
+
++ (void)fetchSettingPasswordDataWithPwd:(NSString *)pwd
+                              verifyPwd:(NSString *)vPwd
+                                success:(void (^)(id resultResponse, id resultModel))success
+                                failure:(void (^)(NSString *MSG, LoginSession *session, id resultResponse))failure {
+    
+    NSString *custemployeNo = [JSSharedInstance sharedInstance].loginSession.custemployeNo;
+    custemployeNo = custemployeNo.notNull ? custemployeNo : @"";
+    NSDictionary *param = @{@"transChannel"  : @"iOS",
+                            @"loginflag"     : @"3",
+                            @"checkflag"     : @"2",
+                            @"password"      : pwd,
+                            @"repassword"    : vPwd,
+                            @"custemployeNo" : custemployeNo};
+    
+    [self publicFetchDataWithRequestPath:Request().setPassword
+                            param:param
+                      resultModel:nil
+                          success:^(id resultResponse, id resultModel) {
+                              
+        if (success) {
+            success(resultResponse, resultModel);
+        }
+    } failure:^(NSString *MSG, id resultModel, id resultResponse) {
+        if (failure) {
+            failure(MSG, resultModel, resultResponse);
+        }
+    }];
+}
+
++ (void)fetchRegistDataWithPhoneNO:(NSString *)phoneNO1
+                    recommentPhone:(NSString *)phoneNO2
+                              code:(NSString *)code
+                           success:(void (^)(id resultResponse, id resultModel))success
+                           failure:(void (^)(NSString *MSG, LoginSession *session, id resultResponse))failure {
+    
+    phoneNO1 = phoneNO1.notNull ? phoneNO1 : @"";
+    phoneNO2 = phoneNO2.notNull ? phoneNO2 : @"";
+    code     = code.notNull     ? code     : @"";
+    
+    NSDictionary *param = @{@"code"      : code,
+                            @"mobileNo"  : phoneNO1,
+                            @"recommend" : phoneNO2};
+    
+    [JSLoginManager loginWithLoginType:LoginTypeRegister loginParam:param target:nil success:^(id  _Nonnull resultResponse, LoginSession * _Nonnull session) {
+        if (success) {
+            success(resultResponse, session);
+        }
+    } faild:^(NSString *MSG, LoginSession * _Nonnull session, id resultResponse) {
+        if (failure) {
+            failure(MSG, session, resultResponse);
+        }
+    }];
+}
+
++ (void)fetchSMSCodeDataWithPhoneNO:(NSString *)phoneNO
+                               code:(NSString *)code
+                               type:(LoginType)type
+                            success:(void (^)(id resultResponse, id resultModel))success
+                            failure:(void (^)(NSString *MSG, LoginSession *session, id resultResponse))failure {
+    
+    NSString *codeType = type == LoginTypeRegister ? @"register" : @"login";
+    NSString *flagType = type == LoginTypeRegister ? @"0" : @"3";
+    NSDictionary *param = @{@"mobile" : phoneNO,
+                            @"type"   : codeType,
+                            @"flag"   : flagType,
+                            @"code"   : code};
+
+    [self publicFetchDataWithRequestPath:Request().SMSCode
+                            param:param
+                      resultModel:nil
+                          success:^(id resultResponse, id resultModel) {
+                              
+          if (success) {
+              success(resultResponse, resultModel);
+          }
+      } failure:^(NSString *MSG, id resultModel, id resultResponse) {
+          if (failure) {
+              failure(MSG, resultModel, resultResponse);
+          }
+      }];
+}
+
++ (void)fetchPlaceholderContentWithSuccess:(void (^)(id resultResponse, id resultModel))success
+                                   failure:(void (^)(NSString *MSG, LoginSession *session, id resultResponse))failure {
+    
+    [self publicFetchDataWithRequestPath:Request().placeholder
+                            param:nil
+                      resultModel:nil
+                          success:^(id resultResponse, id resultModel) {
+                              
+        if (success) {
+            success(resultResponse, resultModel);
+        }
+    } failure:^(NSString *MSG, id resultModel, id resultResponse) {
+        if (failure) {
+            failure(MSG, resultModel, resultResponse);
+        }
+    }];
+}
+
++ (void)fetchSplashScreenImageWithUrl:(NSString *)url
+                              success:(void (^)(id resultResponse))success
+                              failure:(void (^)(NSString *MSG, LoginSession *session, id resultResponse))failure {
+    
+    PCDNetWorkItem *tempItem = [[PCDNetWorkItem alloc] init];
+    tempItem.urlString       = url;
+    tempItem.completionBlock = ^(PCDNetWorkItem *object) {
+        NSData *dataStr      = object.responseData;
+        if (success) {
+            success(dataStr);
+        }
+    };
+    [PCDNetWorkServiceGet() addNetWork:tempItem];
+}
+
++ (void)fetchSplashScreenDataWithSuccess:(void (^)(id resultResponse, id resultModel))success
+                                 failure:(void (^)(NSString *MSG, LoginSession *session, id resultResponse))failure {
+    
+    NSDictionary *param = @{@"OS" : @"ios",
+                            @"PAGE_TYPE" : @"1"};
+    
+    [self publicFetchDataWithRequestPath:Request().splashRequest
+                            param:param
+                      resultModel:[SplashModel class]
+                          success:^(id resultResponse, id resultModel) {
+                              
+        if (success) {
+            success(resultResponse, resultModel);
+        }
+    } failure:^(NSString *MSG, id resultModel, id resultResponse) {
+        if (failure) {
+            failure(MSG, resultModel, resultResponse);
+        }
+    }];
+}
+
++ (void)fetchLoginDataWithParam:(NSDictionary *)param
+                       RequestPath:(NSString *)path
+                        success:(void (^)(id resultResponse, id resultModel))success
+                        failure:(void (^)(NSString *MSG, LoginSession *session, id resultResponse))failure {
+    
+    __weak typeof(self) weakSelf = self;
+
+    [self publicFetchDataWithRequestPath:path
+                                   param:param
+                             resultModel:[LoginSession class]
+                                 success:^(id resultResponse, id resultModel) {
+                   
+        [weakSelf loginTimeoutWithSession:(LoginSession *)resultModel];
+        if (success) {
+            success(resultResponse, resultModel);
+        }
+    } failure:^(NSString *MSG, LoginSession *session, id resultResponse) {
+        if (failure) {
+            failure(MSG, session, resultResponse);
+        }
+    }];
+}
+
++ (void)publicFetchDataWithRequestPath:(NSString *)path
+                          param:(NSDictionary *)param
+                    resultModel:(Class)resultModel
+                        success:(void (^)(id resultResponse, id resultModel))success
+                        failure:(void (^)(NSString *MSG, id resultModel, id resultResponse))failure {
+    
+    param = param.notNull ? param : @{};
+    [ClientNetManager requstWithRequestPath:[PCDUtil getServerURL:path]
+                       requestParam:param
+              requestCompleteHandle:^(NSDictionary *resultDataDict) {
+                  
+        id modelClass = [self getModelClass:resultModel];
+        if (resultModel && modelClass) {
+            if ([resultDataDict isKindOfClass:[NSArray class]]) {
+                NSMutableArray *dataArray = [modelClass mj_objectArrayWithKeyValuesArray:(NSArray *)resultDataDict];
+                if (success) {
+                    success(resultDataDict, dataArray);
+                }
+            } else {
+                modelClass = [modelClass mj_objectWithKeyValues:(NSDictionary *)resultDataDict];
+                if (success) {
+                    success(resultDataDict, modelClass);
+                }
+            }
+        } else {
+            if (success) {
+                success(resultDataDict, nil);
+            }
+        }
+    } requestFailedHandle:^(NSString *MSG, id resultModel, id resultResponse) {
+        if (failure) {
+            failure(MSG, resultModel, resultResponse);
+        }
+    }];
+}
+
++ (void)requstWithRequestPath:(NSString *)path
+      requestParam:(NSDictionary *)param
+requestCompleteHandle:(void(^)(NSDictionary * resultDataDict))completeHandle
+  requestFailedHandle:(void(^)(NSString *MSG, id resultModel, id resultResponse))faileHandle {
+    
+    if ([NetWorkObserver reachableStatus] == NotReachable) {
+        [JSDeftAlert showAlert:@"请检查您的网络连接或稍后再试" doneTitle:@"确定" cancelTitle:nil doneHandle:nil cancelHandle:nil];
+        return;
+    }
+    
+    [PCDNetWorkServiceGet() sendRequestWithUrlString:path requestType:REQUEST_METHOD_DEFAULT contentType:REQUEST_CONTENTTYPE_DEFAULT configEncryptBlock:^NSString * _Nonnull(NSString * _Nonnull unencryptJsonString) {
+        return nil;
+    } body:param andCompletionBlock:^(PCDNetWorkItem * _Nonnull item, BOOL success) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [LoadIndicator hiddenLoadingIndicator];
+            
+            NSDictionary *responseDict = [item.responseString JSONValue];
+            NSDictionary *dict = [responseDict objectForKey:@"body"];
+            NSString *status = [dict objectForKey:@"STATUS"];
+            NSString *msg = [dict objectForKey:@"MSG"];
+            if (!msg.notNull) {
+                NSDictionary *head = [responseDict objectForKey:@"head"];
+                msg = [head objectForKey:@"H_MSG"];
+            }
+            if (status.integerValue == 1) {
+                if (success) {
+                    if (completeHandle) {
+                        completeHandle(dict);
+                    }
+                }
+            } else {
+                if (faileHandle) {
+                    faileHandle(msg, nil, dict);
+                }
+                
+            }
+        });
+    }];
+}
+
++ (void)loginTimeoutWithSession:(LoginSession *)session {
+    if ([session.STATUS isEqualToString:@"login_out"]) {
+        [JSDeftAlert showAlert:session.MSG doneTitle:@"确定" cancelTitle:nil doneHandle:^{
+            [JSLoginManager indexToHomePage:0];
+            [JSLoginManager logoutClient];
+        } cancelHandle:nil];
+    }
+}
+
++ (id)getModelClass:(Class)model {
+    if (model) {
+        NSString *class = NSStringFromClass([model class]);
+        const char *className = [class cStringUsingEncoding:NSASCIIStringEncoding];
+        Class modelClass = objc_getClass(className);
+        
+        return modelClass;
+    }
+    return nil;
+}
+
+
+@end

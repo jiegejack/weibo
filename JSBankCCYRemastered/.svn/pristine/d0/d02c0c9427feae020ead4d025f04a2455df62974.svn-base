@@ -1,0 +1,25 @@
+//
+//  SessionTimeoutH5Plugin.m
+//  PCDBank
+//
+//  Created by 王俣 on 2018/9/14.
+//  Copyright © 2018年 yt. All rights reserved.
+//
+
+#import "SessionTimeoutH5Plugin.h"
+//#import "PlatformLoginViewController.h"
+
+@implementation SessionTimeoutH5Plugin
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback{
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+    NSString *msg = [dict objectForKey:@"msg"];
+
+    [JSLoginManager logoutClient];
+    [JSDeftAlert showAlert:msg doneTitle:@"确定" cancelTitle:nil doneHandle:^{
+        [JSLoginManager clientLoginSuccess:nil faild:nil];
+    } cancelHandle:nil];
+}
+
+@end

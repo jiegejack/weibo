@@ -1,0 +1,71 @@
+//
+//  SharePagesH5Plugin.m
+//  PCDBank
+//
+//  Created by 王俣 on 2018/9/13.
+//  Copyright © 2018年 yt. All rights reserved.
+//
+
+#import "SharePagesH5Plugin.h"
+#import "PCShareModel.h"
+#import <ShareSDKUI/ShareSDKUI.h>
+
+@implementation SharePagesH5Plugin
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback{
+    NSDictionary *dict = (NSDictionary *)data;
+    NSMutableArray *tmpArr = [NSMutableArray new];
+    NSArray *dataArray = [dict objectForKey:@"shareList"];
+    NSString *callBack = @"";
+
+    NSMutableDictionary *shareParams = [NSMutableDictionary dictionary];
+    
+    for (NSDictionary *dict in dataArray) {
+        NSString *detailMessage = [dict objectForKey:@"SHARE_CONTENT"];
+        NSString *title         = [dict objectForKey:@"SHARE_TITLE"];
+        NSString *imageSrc      = [dict objectForKey:@"IMG_URL"];
+        NSString *url           = [dict objectForKey:@"LINK_URL"];
+        NSString *type          = [dict objectForKey:@"SHARE_TYPE"];//22微信好友; 23微信朋友圈; 01新浪微博
+        if (!callBack.notNull) {
+            callBack = [dict objectForKey:@"callback"];
+        }
+        detailMessage = (type.integerValue == SSDKPlatformTypeSinaWeibo) ? [NSString stringWithFormat:@"%@%@",detailMessage, url] : detailMessage;
+        
+        id image = [self getImageSource:imageSrc];
+        image    = image ? image : @"";
+        SSDKContentType contentType = [image isKindOfClass:[NSString class]] ? SSDKContentTypeAuto : SSDKContentTypeImage;
+        
+        [tmpArr addObject:@(type.integerValue)];
+        [shareParams SSDKSetupShareParamsByText:detailMessage images:image url:[NSURL URLWithString:url] title:title type:contentType];
+    }
+    
+    SSUIShareSheetConfiguration *config = [[SSUIShareSheetConfiguration alloc] init];
+    [ShareSDK showShareActionSheet:nil customItems:tmpArr shareParams:shareParams sheetConfiguration:config onStateChanged:^(SSDKResponseState state, SSDKPlatformType platformType, NSDictionary *userData, SSDKContentEntity *contentEntity, NSError *error, BOOL end) {
+        NSLog(@"error : %@",error);
+        if (state == SSDKResponseStateSuccess) {
+            [JSDeftAlert showMessage:@"分享成功" afterDelay:1.5 completeHandle:nil];
+            if (callBack.notNull) {
+                evaluateJavaScriptOnMainThread_quotes(self, callBack, @"");
+            }
+        } else {
+            [JSDeftAlert showMessage:@"分享失败" afterDelay:1.5 completeHandle:nil];
+        }
+    }];
+}
+
+- (id)getImageSource:(NSString *)imageSource {
+    if (!imageSource.notNull) {return nil;}
+    
+    if ([imageSource hasPrefix:@"http"] || [imageSource hasPrefix:@"https"]) {
+        return imageSource;
+    } else {
+        NSData * imageData =[[NSData alloc] initWithBase64EncodedString:imageSource options:NSDataBase64DecodingIgnoreUnknownCharacters];
+        UIImage *base64Image = [UIImage imageWithData:imageData ];
+        return base64Image;
+    }
+    
+    return nil;
+}
+
+@end
+

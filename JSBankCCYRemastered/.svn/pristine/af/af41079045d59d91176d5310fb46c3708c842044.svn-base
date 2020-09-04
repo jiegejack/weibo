@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>rsaFilePath</key>
+	<string>serverrsa.cer</string>
+	<key>AesVector</key>
+	<string>SHYTBASESHYTBASE
+</string>
+	<key>AesKey</key>
+	<string>HTONEMBANKPSKEYS</string>
+	<key>publicKeyX</key>
+	<string>7a08325cf5fd16f3bf8257b9abb0f5aae8e57d384aea1334f9de69ad57057132</string>
+	<key>publicKeyY</key>
+	<string>8c7cd08c6a9ee1945c677d17f09b110da054d19bbe826983d640f91599e0176e</string>
+	<key>appTag</key>
+	<string>YTBASE</string>
+</dict>
+</plist>

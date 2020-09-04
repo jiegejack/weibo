@@ -1,0 +1,52 @@
+//
+//  PCDActionSheet.h
+//  PCKit
+//
+//  Created by ZR on 16/4/18.
+//  Copyright © 2016年 P&C Information. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+/**
+ *  @brief 自定义 actionSheet，可以作为载体把将subview从底部弹出
+ */
+@interface PCDActionSheet : UIView
+
+/**
+*  @brief 是否已经显示
+*/
+@property (nonatomic) BOOL visible;
+
+/**
+ *  @brief 增加view
+ *
+ *  @param subview 增加的subView
+ */
+-(void)addView:(nonnull UIView *) subview;
+
+/**
+ *  @brief 初始化
+ *
+ *  @param subview 显示的view
+ *
+ *  @return 实例
+ */
+-(nonnull instancetype)initWithSubview:(nonnull UIView *)subview;
+
+/**
+ *  @brief 点击空白消失回调
+ */
+@property(nullable,nonatomic,copy) void (^tapDismiss)(void);
+
+/**
+ *  @brief 显示view
+ */
+- (void)show;
+
+/**
+ *  @brief 隐藏view
+ */
+- (void)dismiss;
+
+@end

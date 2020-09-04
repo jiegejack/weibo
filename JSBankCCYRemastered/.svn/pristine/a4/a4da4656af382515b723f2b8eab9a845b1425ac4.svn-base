@@ -1,0 +1,42 @@
+//
+//  APPConfig.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/7/2.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "APPConfig.h"
+
+@implementation APPConfig
+
+- (id)init {
+    if (self = [super init]) {
+        self.baidu_appKey = @"3a42ed3e5c8c94dafe97b2e43d0e758c";
+    }
+    return self;
+}
+
++ (instancetype)sharedApp {
+    static APPConfig *Config = nil;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Config = [[self alloc] init];
+    });
+    
+    return Config;
+}
+
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    APPConfig *Config() {
+        
+        return [APPConfig sharedApp];
+    }
+#ifdef __cplusplus
+}
+#endif

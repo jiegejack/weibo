@@ -1,0 +1,195 @@
+//
+//  BottomAnimationView.m
+//  LivenessDetection
+//
+//  Created by 张英堂 on 15/1/8.
+//  Copyright (c) 2015年 megvii. All rights reserved.
+//
+
+#import "BottomAnimationView.h"
+#import "YTMacro.h"
+#import "ImhtPlayAudio.h"
+
+#define MG_WIN_WIDTH  [UIScreen mainScreen].bounds.size.width
+#define MG_WIN_HEIGHT [UIScreen mainScreen].bounds.size.height
+
+@interface BottomAnimationView ()
+{
+    CGFloat _aniViewHeigh, _aniViewWidth;
+    BOOL _stopAnimaiton;
+}
+@property (nonatomic, strong) UIImageView *imageViewA;
+@property (nonatomic, strong) UIImageView *imageViewB;
+@property (nonatomic, assign) CGFloat cencerX;
+@property (nonatomic, strong) UILabel *messageLabel;
+@property (nonatomic, assign) CGFloat topDistance;
+
+
+@end
+
+#define kTopDis  170
+
+@implementation BottomAnimationView
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        self.topDistance = 60.0f;
+        self.imageViewA = [[UIImageView alloc] initWithFrame:CGRectZero];
+        self.imageViewB = [[UIImageView alloc] initWithFrame:CGRectZero];
+        
+        [self.imageViewA setContentMode:UIViewContentModeScaleAspectFit];
+        [self.imageViewB setContentMode:UIViewContentModeScaleAspectFit];
+        
+        _aniViewHeigh = self.frame.size.height-self.topDistance-20;
+        _aniViewWidth = _aniViewHeigh;
+        _cencerX = (self.frame.size.width - _aniViewWidth)*0.5;
+        
+        [self.imageViewB setFrame:CGRectMake(self.frame.size.width, self.topDistance, _aniViewWidth, _aniViewHeigh)];
+        
+        [self addSubview:self.imageViewA];
+        [self addSubview:self.imageViewB];
+        
+        self.rightRing = [[CircularRing alloc] initWithFrame:CGRectMake(self.frame.size.width-80, self.topDistance*0.7, 60, 60)];
+        self.rightRing.backgroundColor =[UIColor clearColor];
+        [self addSubview:self.rightRing];
+        
+        self.messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, self.topDistance)];
+        [self.messageLabel setFont:[UIFont systemFontOfSize:18]];
+        [self.messageLabel setTextColor:[UIColor whiteColor]];
+        [self.messageLabel setTextAlignment:NSTextAlignmentCenter];
+        [self addSubview:self.messageLabel];
+        [self recovery];
+    }
+    return self;
+}
+
+- (void)recovery
+{
+    _stopAnimaiton = YES;
+    [self.rightRing stopAnimation];
+    [self.messageLabel setText:@"请将正脸置于取景框内"];
+    [self.imageViewA stopAnimating];
+    self.imageViewA.animationImages = nil;
+    
+    CGRect sourceRect = CGRectMake(_cencerX, self.topDistance,  _aniViewWidth, _aniViewHeigh);
+    [self.imageViewA setImage:[UIImage imageNamed:@"header_first"]];
+    [self.imageViewA setFrame:sourceRect];
+}
+
+- (void)willChangeAnimation:(MGLivenessDetectionType)state outTime:(CGFloat)time
+{
+    [self.imageViewA stopAnimating];
+    _stopAnimaiton = NO;
+    
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:2];
+    NSString *title = nil;
+    NSString *videoName = nil;
+    [self outTime:time];
+    switch (state)
+    {
+        case DETECTION_TYPE_BLINK:
+        {
+            [array addObject:[UIImage imageNamed:@"head-eye"]];
+            [array addObject:[UIImage imageNamed:@"head-blink"]];
+            title = @"眨眼";
+            videoName = @"zhayan";
+            break;
+        }
+        case DETECTION_TYPE_MOUTH:
+        {
+            [array addObject:[UIImage imageNamed:@"head-blink"]];
+            [array addObject:[UIImage imageNamed:@"head-openMouse"]];
+            title = @"张嘴";
+            videoName = @"zhangzui";
+
+            break;
+        }
+        case DETECTION_TYPE_POS_YAW:
+        {
+            [array addObject:[UIImage imageNamed:@"head-left"]];
+            [array addObject:[UIImage imageNamed:@"head-right"]];
+            title = @"左右转头";
+            videoName = @"youzhuan";
+
+            break;
+        }
+        case DETECTION_TYPE_POS_PITCH:
+        {
+            [array addObject:[UIImage imageNamed:@"head-up"]];
+            [array addObject:[UIImage imageNamed:@"head-down"]];
+            title = @"上下点头";
+            videoName = @"dt";
+            break;
+        }
+        case DETECTION_TYPE_DONE:
+        {
+            [array addObject:[UIImage imageNamed:@"head-blink"]];
+            title = @"完成";
+            break;
+        }
+        default:
+            break;
+    }
+    self.messageLabel.text = title;
+    if ([UIScreen mainScreen].bounds.size.height >= 568)
+    {
+        [[ImhtPlayAudio sharedAudioPlayer] playWithFileName:videoName];
+    }
+    if (array.count != 0) {
+        CGRect sourceRect = CGRectMake(_cencerX, self.topDistance , _aniViewWidth, _aniViewHeigh);
+        CGRect leftHideRect = CGRectMake(-_aniViewHeigh, self.topDistance , _aniViewWidth, _aniViewHeigh);
+        CGRect rightHideRect = CGRectMake(self.frame.size.width, self.topDistance , _aniViewWidth, _aniViewHeigh);
+        self.imageViewB.image = array[0];
+        [UIView animateWithDuration:0.2f
+                         animations:^{
+                             if (!_stopAnimaiton) {
+                                 [self.imageViewA setFrame:leftHideRect];
+                                 [self.imageViewB setFrame:sourceRect];
+                             }else{
+                                 [self.imageViewA setImage:[UIImage imageNamed:@"header_first"]];
+                             }
+                         }
+                         completion:^(BOOL finished) {
+                             
+                             if (!_stopAnimaiton) {
+                                 self.imageViewA.image = self.imageViewB.image;
+                                 
+                                 [self.imageViewA setFrame:sourceRect];
+                                 [self.imageViewB setFrame:rightHideRect];
+                                 
+                                 [self.imageViewA setAnimationImages:array];
+                                 [self.imageViewA setAnimationRepeatCount:999];
+                                 [self.imageViewA setAnimationDuration:1.5f];
+                                 [self.imageViewA startAnimating];
+                             }else{
+                                 self.imageViewA.animationImages = nil;
+                                 
+                                 [self.imageViewA setFrame:sourceRect];
+                                 [self.imageViewB setFrame:rightHideRect];
+                                 [self.imageViewA setImage:[UIImage imageNamed:@"header_first"]];
+                             }
+                         }];
+    }
+}
+
+- (void)outTime:(CGFloat)time
+{
+    [self.rightRing setMaxTime:time];
+}
+
+- (void)startRollAnimation
+{
+    [self.rightRing startAnimation];
+}
+
+- (void)stopAnimation
+{
+    [self.rightRing stopAnimation];
+    [self.imageViewA stopAnimating];
+    [self.imageViewA setImage:[UIImage imageNamed:@"icon-ture.png"]];
+}
+
+@end

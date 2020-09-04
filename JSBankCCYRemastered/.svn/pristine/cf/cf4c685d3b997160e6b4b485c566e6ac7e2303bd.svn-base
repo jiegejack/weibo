@@ -1,0 +1,52 @@
+//
+//  AmountKeyboard.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/17.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "AmountKeyboard.h"
+#import "AmountView.h"
+
+@interface AmountKeyboard ()
+@property (nonatomic, strong) AmountView *amountView;
+
+@end
+
+@implementation AmountKeyboard
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback {
+    NSDictionary *dict = (NSDictionary *)data;
+    if (!dict.notNull) {return;}
+    NSString *callback =[dict objectForKey:@"callback"];
+    NSString *title=[dict objectForKey:@"title"];
+    NSString *endTitle=[dict objectForKey:@"endTitle"];
+    NSString *isShowF=[NSString stringWithFormat:@"%@",[dict objectForKey:@"isShowForget"]];
+    NSString *url =[dict objectForKey:@"url"];
+    NSString *transMoney    = [dict objectForKey:@"transMoney"];
+    NSString *commodityName = [dict objectForKey:@"commodityName"];
+    isShowF = !isShowF.notNull ? @"1" : isShowF;
+    BOOL isShowForget = isShowF.boolValue;
+    
+    __weak typeof(self) weakSelf = self;
+    self.amountView = [[AmountView alloc] initWithNickName:commodityName
+                                                    amount:transMoney
+                                                   tipText:endTitle
+                                                     title:title
+                                                showButton:isShowForget];
+    
+    self.amountView.inputPasswordBlock = ^(NSString * _Nonnull password) {
+        NSLog(@"输入密码 : %@", password);
+        evaluateJavaScriptOnMainThread_quotes(weakSelf, callback, password);
+        [weakSelf.amountView dismiss];
+    };
+//    self.amountView.titleLabel.text = title;
+    self.amountView.buttonAction = ^{
+        [weakSelf.amountView dismiss];
+        [JSBaseWebViewController goWebViewWithUrl:url];
+    };
+    [self.amountView show];
+}
+
+@end

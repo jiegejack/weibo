@@ -1,0 +1,13 @@
+//
+//  FaceRecord.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/11.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "FaceRecord.h"
+
+@implementation FaceRecord
+
+@end

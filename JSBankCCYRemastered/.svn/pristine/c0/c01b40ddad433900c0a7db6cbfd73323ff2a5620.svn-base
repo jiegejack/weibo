@@ -1,0 +1,81 @@
+//
+//  PCDUrlConfig.h
+//  PNCMobileBank
+//
+//  Created by Mac-陶(tzw) on 2018/3/6.
+//  Copyright © 2018年 MacBook-陶(tzw). All rights reserved.
+//
+
+#ifndef PCUrlConfig_h
+#define PCUrlConfig_h
+
+
+//跳转页面是否带动画
+
+#define ANIMATIONY                    YES
+
+//MARK: - 防篡改请求SR(服务端随机数)
+#define get_SR_Url @"common/prevTamperCodeGet.do"
+//MARK: - 防篡改校验请求
+#define tamper_Check_Url @"common/prevTamperCodeCheck.do"
+
+//MARK: - 检查补丁
+#define check_HotFix_Url @"common/checkAppHotfix.do"
+
+//MARK: - 创建会话
+#define Get_Connetc_Url @"common/connect.do"
+//MARK: - 登录 企业:@"login/userLogin.do" 平台:@"login/userLogin.do"
+#define login_Url @"login/userLogin.do"
+//启动页 企业银行:@"common/queryStartPage.do" 平台:@"advert/queryStartPage.do"
+#define launchImg_Url @"advert/queryStartPage.do"
+//登录图形验证码 企业:@"common/ImageCode.do" 平台:@"common/ImageCode.do?chnlId=1000&sid=xxxxxxxx"
+#define login_ImgCode_Url @"common/imageCode.do"
+
+//崩溃日志采集  -- 和行为采集同接口
+//#define crashLog_Url   @"transMsg.do"
+//资源配置 企业:@"login/queryCache.do" 平台:@"common/queryCache.do"
+#define ResourceConfig_Url @"common/queryCache.do"
+//推送id上传
+#define PushRegisterId_Url @"common/notificationRigestr.do"
+//获取用户的卡数、积分、等级
+#define UserCardsInfo_Url @"session/sessionNumber.do"
+
+//MARK: - banner广告 企业:@"common/queryBanner.do" 平台:@"advert/queryBanner.do"
+#define Banner_Ad_Url @"advert/queryBanner.do"
+
+//MARK: - 公告 企业:@"notice/queryNotice.do" 平台:@"notice/queryNotice.do"
+#define Homepage_Notice_Url @"notice/queryNotice.do"
+
+//扫描授权登录
+#define ScanQRAuthLogin_Url @"login/authQrcodeLogin.do"
+
+//首次请求网点信息
+#define  firstLoadnetDotInfoServer_Url     @"common/branchInfoQuery.do"
+#define CityList_Url @"common/branchAreaQuery.do"
+//强制绑定页面
+#define Bind_Url @"page/iphone.html?path=page/01/07/P070101.html&cId=%@&pId=%@&cType=%@&pType=%@"
+#define  loadMoreNetDotInfoServer_Url      @"common/branchPageQuery.do"
+//注册页面地址
+#define Register_Url @"page/iphone.html?path=page/01/01/P010101.html"
+
+//Push页面url
+#define  PushWeb_Url @"page/iphone.html?path=page/08/P080101.html"
+//二维码扫描结果跳转页
+#define QRResultREC_Url @"page/iphone.html?path=page/02/01/03/03/P02010303.html"
+#define QRResultPAY_Url @"page/iphone.html?path=page/02/01/03/04/P02010304.html"
+
+//热门活动
+#define HotActivity_Url @"page/iphone.html?path=page/03/03/P030302.html"
+
+//实名认证页面
+#define MenuVerify_Url @"page/iphone.html?path=page/01/04/P010401.html"
+
+//common/sysDate.do
+#define SysDate_Url @"common/sysDate.do"
+
+
+
+#endif /* PCUrlConfig_h */
+
+
+

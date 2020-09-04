@@ -1,0 +1,94 @@
+//
+//  SharePagesH5Plugin.m
+//  PCDBank
+//
+//  Created by 王俣 on 2018/9/13.
+//  Copyright © 2018年 yt. All rights reserved.
+//
+
+#import "SharePagesH5Plugin.h"
+#import "PCShareModel.h"
+#import <ShareSDKUI/ShareSDKUI.h>
+
+@implementation SharePagesH5Plugin
+
+- (void)handler:(id)data andContext:(PCDContext *)context ResponseCallback:(WVJBResponseCallback )responseCallback{
+    NSDictionary *dict = (NSDictionary *)data;
+    NSString *title        = dict[@"title"];
+    NSString *hrefUrl      = dict[@"hrefUrl"];
+    NSString *content      = dict[@"content"];
+    NSString *type         = dict[@"type"];
+    NSString *callBack     = dict[@"callback"];
+    NSString *imageSrc     = dict[@"imgUrl"];
+    NSArray *typeArr       = [type componentsSeparatedByString:@","];
+    NSMutableArray *tmpArr = [NSMutableArray new];
+    
+    for (NSString *t in typeArr) {
+        
+        if ([t isEqualToString:@"WX"]) {
+            [tmpArr addObject:@(SSDKPlatformSubTypeWechatSession)];
+        }
+        if ([t isEqualToString:@"PYQ"]) {
+            [tmpArr addObject:@(SSDKPlatformSubTypeWechatTimeline)];
+        }
+        if ([t isEqualToString:@"QQ"]) {
+            [tmpArr addObject:@(SSDKPlatformSubTypeQQFriend)];
+        }
+        if ([t isEqualToString:@"WB"]) {
+            [tmpArr addObject:@(SSDKPlatformTypeSinaWeibo)];
+        }
+        if ([t isEqualToString:@"DX"]) {
+            [tmpArr addObject:@(SSDKPlatformTypeSMS)];
+        }
+        if ([t isEqualToString:@"YX"]) {
+            [tmpArr addObject:@(SSDKPlatformTypeMail)];
+        }
+    }
+    
+    NSMutableDictionary *shareParams = [NSMutableDictionary dictionary];
+    
+    id image                    = [self getImageSource:imageSrc];
+    SSDKContentType contentType = [image isKindOfClass:[NSString class]] ? SSDKContentTypeAuto : SSDKContentTypeImage;
+    
+    [shareParams SSDKSetupShareParamsByText:content images:image url:[NSURL URLWithString:hrefUrl] title:title type:contentType];
+    
+    SSUIShareSheetConfiguration *config = [[SSUIShareSheetConfiguration alloc] init];
+    //    config.style = SSUIActionSheetStyleSimple;
+    //    config.menuBackgroundColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha:0.5];
+
+    
+    [ShareSDK showShareActionSheet:nil customItems:tmpArr shareParams:shareParams sheetConfiguration:config onStateChanged:^(SSDKResponseState state, SSDKPlatformType platformType, NSDictionary *userData, SSDKContentEntity *contentEntity, NSError *error, BOOL end) {
+        switch (state) {
+            case SSDKResponseStateSuccess:
+            {
+                [JSDeftAlert showMessage:@"分享成功" afterDelay:1.5 completeHandle:nil];
+                evaluateJavaScriptOnMainThread_quotes(self, callBack, @"分享成功");
+                break;
+            }
+            case SSDKResponseStateFail:
+            {
+                [JSDeftAlert showMessage:@"分享失败" afterDelay:1.5 completeHandle:nil];
+                evaluateJavaScriptOnMainThread_quotes(self, callBack, @"分享失败");
+                break;
+            }
+            default:
+                break;
+        }
+    }];
+}
+
+- (id)getImageSource:(NSString *)imageSource {
+    if (!imageSource.notNull) {return nil;}
+    
+    if ([imageSource hasPrefix:@"http"] || [imageSource hasPrefix:@"https"]) {
+        return imageSource;
+    } else {
+        NSData * imageData =[[NSData alloc] initWithBase64EncodedString:imageSource options:NSDataBase64DecodingIgnoreUnknownCharacters];
+        UIImage *base64Image = [UIImage imageWithData:imageData ];
+        return base64Image;
+    }
+    
+    return nil;
+}
+
+@end

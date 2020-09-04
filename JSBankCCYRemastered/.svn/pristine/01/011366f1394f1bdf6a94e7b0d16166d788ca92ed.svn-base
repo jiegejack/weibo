@@ -1,0 +1,14 @@
+//
+//  UIViewController+Extension.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/23.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "UIViewController+Extension.h"
+
+@implementation UIViewController (Extension)
+
+
+@end

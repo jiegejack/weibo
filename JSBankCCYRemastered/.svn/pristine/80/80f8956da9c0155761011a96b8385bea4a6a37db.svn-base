@@ -1,0 +1,21 @@
+//
+//  TabBarModel.m
+//  JSBankCCYRemastered
+//
+//  Created by Jack on 2019/6/4.
+//  Copyright © 2019 Jack. All rights reserved.
+//
+
+#import "TabBarModel.h"
+
+@implementation TabBarModel
+
++ (NSDictionary *)mj_objectClassInArray {
+    return @{@"menu"  : [Menu class]};
+}
+
+@end
+
+@implementation Menu
+
+@end
