@@ -20,6 +20,8 @@
     NSLog(@"");
     NSLog(@"2");
     
+    NSLog(@"3");
+    
     return YES;
 }
 
