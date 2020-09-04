@@ -1,6 +1,0 @@
-framework module PCDH5Container {
-  umbrella header "PCDH5Container.h"
-
-  export *
-  module * { export * }
-}

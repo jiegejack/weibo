@@ -1,6 +1,0 @@
-framework module PCDSecurity {
-  umbrella header "PCDSecurity.h"
-
-  export *
-  module * { export * }
-}

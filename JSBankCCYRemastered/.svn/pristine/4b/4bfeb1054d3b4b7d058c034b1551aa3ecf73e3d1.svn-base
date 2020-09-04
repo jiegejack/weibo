@@ -1,6 +1,0 @@
-framework module PCDUserDataCollect {
-  umbrella header "PCDUserDataCollect.h"
-
-  export *
-  module * { export * }
-}

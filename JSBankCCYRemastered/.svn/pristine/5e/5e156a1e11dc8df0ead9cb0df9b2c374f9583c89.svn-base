@@ -1,6 +1,0 @@
-framework module YTKeyboard {
-  umbrella header "YTKeyboard.h"
-
-  export *
-  module * { export * }
-}

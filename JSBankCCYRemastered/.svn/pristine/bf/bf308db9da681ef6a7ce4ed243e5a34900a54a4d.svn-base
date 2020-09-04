@@ -1,6 +1,0 @@
-framework module PCDQRCode {
-  umbrella header "PCDQRCode.h"
-
-  export *
-  module * { export * }
-}
