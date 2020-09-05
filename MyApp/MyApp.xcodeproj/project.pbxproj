@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6387920D2503B551007D76BF /* Test1.m in Sources */ = {isa = PBXBuildFile; fileRef = 6387920C2503B551007D76BF /* Test1.m */; };
+		638792102503B55B007D76BF /* Test2.m in Sources */ = {isa = PBXBuildFile; fileRef = 6387920F2503B55B007D76BF /* Test2.m */; };
 		63A2069C2502817500C213E7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A2069B2502817500C213E7 /* AppDelegate.m */; };
 		63A2069F2502817500C213E7 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A2069E2502817500C213E7 /* SceneDelegate.m */; };
 		63A206A22502817500C213E7 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A206A12502817500C213E7 /* ViewController.m */; };
@@ -36,6 +38,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6387920B2503B551007D76BF /* Test1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Test1.h; sourceTree = "<group>"; };
+		6387920C2503B551007D76BF /* Test1.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Test1.m; sourceTree = "<group>"; };
+		6387920E2503B55B007D76BF /* Test2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Test2.h; sourceTree = "<group>"; };
+		6387920F2503B55B007D76BF /* Test2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Test2.m; sourceTree = "<group>"; };
 		63A206972502817500C213E7 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		63A2069A2502817500C213E7 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		63A2069B2502817500C213E7 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -81,6 +87,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6387920A2503B539007D76BF /* Group */ = {
+			isa = PBXGroup;
+			children = (
+				6387920B2503B551007D76BF /* Test1.h */,
+				6387920C2503B551007D76BF /* Test1.m */,
+				6387920E2503B55B007D76BF /* Test2.h */,
+				6387920F2503B55B007D76BF /* Test2.m */,
+			);
+			path = Group;
+			sourceTree = "<group>";
+		};
 		63A2068E2502817500C213E7 = {
 			isa = PBXGroup;
 			children = (
@@ -104,6 +121,7 @@
 		63A206992502817500C213E7 /* MyApp */ = {
 			isa = PBXGroup;
 			children = (
+				6387920A2503B539007D76BF /* Group */,
 				63A2069A2502817500C213E7 /* AppDelegate.h */,
 				63A2069B2502817500C213E7 /* AppDelegate.m */,
 				63A2069D2502817500C213E7 /* SceneDelegate.h */,
@@ -267,8 +285,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				638792102503B55B007D76BF /* Test2.m in Sources */,
 				63A206A22502817500C213E7 /* ViewController.m in Sources */,
 				63A2069C2502817500C213E7 /* AppDelegate.m in Sources */,
+				6387920D2503B551007D76BF /* Test1.m in Sources */,
 				63A206AD2502817700C213E7 /* main.m in Sources */,
 				63A2069F2502817500C213E7 /* SceneDelegate.m in Sources */,
 			);
