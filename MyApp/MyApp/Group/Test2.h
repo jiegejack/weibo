@@ -11,6 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface Test2 : NSObject
+@property(nonatomic, copy) NSString *string1;
 
 @end
 
